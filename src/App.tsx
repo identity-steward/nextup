@@ -19,6 +19,8 @@ import AthleteProfilePage from './pages/AthleteProfilePage';
 import SupportPage from './pages/SupportPage';
 import ContactPage from './pages/ContactPage';
 import ParentIntakePage from './pages/ParentIntakePage';
+import { isSupabaseConfigured } from './lib/supabase';
+import JacobFousePage from './pages/JacobFousePage';
 
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminAthletesPage } from './pages/AdminAthletesPage';
@@ -53,6 +55,8 @@ function AppContent() {
       return <AthletesPage onNavigate={handleNavigate} />;
     case 'athlete-profile':
       return <AthleteProfilePage slug={pageSlug} onNavigate={handleNavigate} />;
+    case 'jacob-fouse':
+      return <JacobFousePage onNavigate={handleNavigate} />;
     case 'join':
       return <JoinPage onNavigate={handleNavigate} />;
     case 'signin':
@@ -113,7 +117,16 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-white">
       <Header onNavigate={handleNavigate} currentPage={currentPage} />
-      <main>{renderPage()}</main>
+      <main>
+        {!isSupabaseConfigured && (
+          <div className="bg-amber-50 border-b border-amber-200 text-amber-900 pt-24">
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 py-3 text-sm">
+              Running in local preview mode. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env` to enable sign-in and form submissions.
+            </div>
+          </div>
+        )}
+        {renderPage()}
+      </main>
       <Footer onNavigate={handleNavigate} />
     </div>
   );

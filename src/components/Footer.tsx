@@ -11,7 +11,7 @@ export default function Footer({ onNavigate }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src="/Next Up Logo.png" alt="NextUp Logo" className="w-8 h-8" />
+              <img src="/nextup-logo.png" alt="NextUp Logo" className="w-8 h-8" />
               <span className="text-2xl font-bold text-white">NextUpMemphis</span>
             </div>
             <p className="text-gray-400 leading-relaxed mb-2">

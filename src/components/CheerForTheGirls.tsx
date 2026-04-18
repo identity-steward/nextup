@@ -71,7 +71,7 @@ function GirlAthleteCard({
 
   const handleViewProfile = () => {
     if (!isPlaceholder && athlete.slug) {
-      onNavigate?.('athlete', athlete.slug);
+      onNavigate?.('athlete-profile', athlete.slug);
     }
   };
 

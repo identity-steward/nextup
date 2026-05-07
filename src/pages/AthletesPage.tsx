@@ -74,7 +74,13 @@ export default function AthletesPage({ onNavigate }: AthletesPageProps) {
                     <p className="text-gray-600 mb-1">{athlete.position} • {athlete.grade}</p>
                     <p className="text-gold font-semibold text-sm mb-4">{athlete.descriptor}</p>
                     <button
-                      onClick={() => onNavigate?.('athlete-profile', athlete.slug)}
+                      onClick={() => {
+                        if (athlete.slug === 'jacob-f') {
+                          onNavigate?.('jacob-fouse');
+                        } else {
+                          onNavigate?.('athlete-profile', athlete.slug);
+                        }
+                      }}
                       className="btn-primary w-full flex items-center justify-center gap-2"
                     >
                       View Profile

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import ProfileHero from '../components/jacob/ProfileHero';
 import ProfileHighlightVideo from '../components/jacob/ProfileHighlightVideo';
 import ProfileAbout from '../components/jacob/ProfileAbout';
@@ -9,6 +10,8 @@ import ProfileUpdates from '../components/jacob/ProfileUpdates';
 import ProfileShare from '../components/jacob/ProfileShare';
 import ProfileTrustStrip from '../components/jacob/ProfileTrustStrip';
 import ProfileFooterCTA from '../components/jacob/ProfileFooterCTA';
+import ProfileDisclaimerStrip from '../components/jacob/ProfileDisclaimerStrip';
+import ProfileUpdateModal from '../components/jacob/ProfileUpdateModal';
 
 interface JacobFousePageProps {
   onNavigate?: (page: string, slug?: string) => void;
@@ -21,6 +24,8 @@ const STILL_NEEDED = GOAL - RAISED;
 const PROGRESS_PCT = Math.round((RAISED / GOAL) * 100);
 
 export default function JacobFousePage({ onNavigate }: JacobFousePageProps) {
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+
   const scrollToSupport = () => {
     document.getElementById('support')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -72,17 +77,29 @@ export default function JacobFousePage({ onNavigate }: JacobFousePageProps) {
         stillNeeded={STILL_NEEDED}
       />
 
-      {/* 7. Journey Updates */}
+      {/* 8. Journey Updates */}
       <ProfileUpdates />
 
-      {/* 8. Share */}
+      {/* 9. Share */}
       <ProfileShare />
 
-      {/* 9. Trust */}
+      {/* 10. Trust */}
       <ProfileTrustStrip />
 
-      {/* 10. Footer CTA */}
+      {/* 11. Disclaimer strip with update request link */}
+      <ProfileDisclaimerStrip onRequestUpdate={() => setShowUpdateModal(true)} />
+
+      {/* 12. Footer CTA */}
       <ProfileFooterCTA onSupportClick={scrollToSupport} onNavigate={onNavigate} />
+
+      {/* Profile update modal */}
+      {showUpdateModal && (
+        <ProfileUpdateModal
+          athleteSlug="jacob-fouse"
+          athleteName="Jacob Fouse"
+          onClose={() => setShowUpdateModal(false)}
+        />
+      )}
 
     </div>
   );

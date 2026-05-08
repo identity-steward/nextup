@@ -224,7 +224,7 @@ export default function ContactPage({ onNavigate }: ContactPageProps) {
 
           <div className="mt-8 text-center">
             <p className="text-gray-600 mb-4">
-              Or email us directly at <a href="mailto:kenneth@flmlifestyle.com" className="text-gold hover:underline font-semibold">kenneth@flmlifestyle.com</a>
+              Or email us directly at <a href="mailto:info@NextUpMemphis.com" className="text-gold hover:underline font-semibold">info@NextUpMemphis.com</a>
             </p>
             <button
               onClick={() => onNavigate?.('athletes')}

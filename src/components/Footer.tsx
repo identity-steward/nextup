@@ -1,4 +1,11 @@
-import { Mail, Twitter, Instagram, Youtube } from 'lucide-react';
+import { Mail, Instagram, Youtube, Linkedin } from 'lucide-react';
+
+// Social links — update LinkedIn once final URL is confirmed
+const SOCIALS = {
+  instagram: 'https://www.instagram.com/nextupmemphis?igsh=dTg4bHg0dnVnODBv&utm_source=qr',
+  youtube: 'https://youtube.com/@nextupmemphis-ip?si=LLAr7-1L8l1hqo1A',
+  linkedin: 'https://www.linkedin.com/company/nextupmemphis', // placeholder — update when confirmed
+};
 
 interface FooterProps {
   onNavigate?: (page: string) => void;
@@ -9,25 +16,25 @@ export default function Footer({ onNavigate }: FooterProps) {
     <footer className="bg-navy text-gray-300 border-t-4 border-gold">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+
+          {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
               <img src="/nextup-logo.png" alt="NextUp Logo" className="w-8 h-8" />
               <span className="text-2xl font-bold text-white">NextUpMemphis</span>
             </div>
-            <p className="text-gray-400 leading-relaxed mb-2">
-              Youth Athlete Network
-            </p>
-            <p className="text-gray-400 leading-relaxed mb-6">
-              Memphis, TN
-            </p>
+            <p className="text-gray-400 leading-relaxed mb-1">Youth Athlete Network</p>
+            <p className="text-gray-400 leading-relaxed mb-1">Memphis, TN</p>
+            <p className="text-gray-500 text-sm leading-relaxed mb-5">Founded by Kenneth Fouse</p>
             <div className="flex items-center gap-2 text-gray-400">
-              <Mail className="w-5 h-5 text-gold" />
-              <a href="mailto:kenneth@flmlifestyle.com" className="hover:text-gold transition-colors">
-                kenneth@flmlifestyle.com
+              <Mail className="w-4 h-4 text-gold flex-shrink-0" />
+              <a href="mailto:info@NextUpMemphis.com" className="hover:text-gold transition-colors text-sm">
+                info@NextUpMemphis.com
               </a>
             </div>
           </div>
 
+          {/* Quick Links */}
           <div>
             <h4 className="text-white font-semibold mb-4 text-lg">Quick Links</h4>
             <ul className="space-y-3">
@@ -54,21 +61,40 @@ export default function Footer({ onNavigate }: FooterProps) {
             </ul>
           </div>
 
+          {/* Connect */}
           <div>
-            <h4 className="text-white font-semibold mb-4 text-lg">Connect</h4>
-            <div className="flex gap-4 mb-6">
-              <a href="#" className="w-10 h-10 bg-navy-light hover:bg-gold rounded-lg flex items-center justify-center transition-colors duration-200">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 bg-navy-light hover:bg-gold rounded-lg flex items-center justify-center transition-colors duration-200">
+            <h4 className="text-white font-semibold mb-4 text-lg">Follow Us</h4>
+            <div className="flex gap-3 mb-5">
+              <a
+                href={SOCIALS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="NextUp Memphis on Instagram"
+                className="w-10 h-10 bg-navy-light hover:bg-gold hover:text-navy rounded-lg flex items-center justify-center transition-all duration-200"
+              >
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 bg-navy-light hover:bg-gold rounded-lg flex items-center justify-center transition-colors duration-200">
+              <a
+                href={SOCIALS.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="NextUp Memphis on YouTube"
+                className="w-10 h-10 bg-navy-light hover:bg-gold hover:text-navy rounded-lg flex items-center justify-center transition-all duration-200"
+              >
                 <Youtube className="w-5 h-5" />
               </a>
+              <a
+                href={SOCIALS.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="NextUp Memphis on LinkedIn"
+                className="w-10 h-10 bg-navy-light hover:bg-gold hover:text-navy rounded-lg flex items-center justify-center transition-all duration-200"
+              >
+                <Linkedin className="w-5 h-5" />
+              </a>
             </div>
-            <p className="text-sm text-gray-400">
-              Follow us on social media for updates on Memphis youth athletes.
+            <p className="text-sm text-gray-400 leading-relaxed">
+              Follow us for updates on Memphis youth athletes, highlights, and community news.
             </p>
           </div>
         </div>

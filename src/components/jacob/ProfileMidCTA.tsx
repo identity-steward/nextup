@@ -9,7 +9,7 @@ interface ProfileMidCTAProps {
 
 export default function ProfileMidCTA({ raised, goal, progressPct, onSupportClick }: ProfileMidCTAProps) {
   return (
-    <section className="relative py-14 overflow-hidden" style={{ background: '#07090f' }}>
+    <section className="relative py-14 overflow-hidden" style={{ background: '#111318' }}>
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.3), transparent)' }} />
       <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.2), transparent)' }} />
 

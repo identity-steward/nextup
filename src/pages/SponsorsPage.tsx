@@ -206,7 +206,7 @@ export default function SponsorsPage({ onNavigate }: SponsorsPageProps) {
             Request Sponsorship Info
           </button>
           <p className="text-gray-600 mt-6">
-            Or email us at <a href="mailto:kenneth@flmlifestyle.com" className="text-gold hover:underline font-semibold">kenneth@flmlifestyle.com</a>
+            Or email us at <a href="mailto:info@NextUpMemphis.com" className="text-gold hover:underline font-semibold">info@NextUpMemphis.com</a>
           </p>
         </div>
       </section>

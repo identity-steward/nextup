@@ -370,7 +370,7 @@ export default function ForSchoolsPage({ onNavigate }: ForSchoolsPageProps) {
           </form>
 
           <p className="text-gray-600 mt-6 text-center">
-            Questions? Email us at <a href="mailto:kenneth@flmlifestyle.com" className="text-gold hover:underline font-semibold">kenneth@flmlifestyle.com</a>
+            Questions? Email us at <a href="mailto:info@NextUpMemphis.com" className="text-gold hover:underline font-semibold">info@NextUpMemphis.com</a>
           </p>
         </div>
       </section>

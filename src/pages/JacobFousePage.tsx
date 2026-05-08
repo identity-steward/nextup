@@ -35,7 +35,7 @@ export default function JacobFousePage({ onNavigate }: JacobFousePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090f] pt-16">
+    <div className="min-h-screen bg-[#111318] pt-16">
 
       {/* 1. Hero */}
       <ProfileHero

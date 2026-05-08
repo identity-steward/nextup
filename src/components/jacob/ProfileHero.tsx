@@ -24,7 +24,7 @@ export default function ProfileHero({
   return (
     <section
       className="relative min-h-screen flex flex-col overflow-hidden"
-      style={{ background: '#050709' }}
+      style={{ background: '#0e1016' }}
     >
       {/* Neon top edge */}
       <div
@@ -290,7 +290,7 @@ export default function ProfileHero({
       {/* Bottom fade-out */}
       <div
         className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
-        style={{ background: 'linear-gradient(to top, #07090f, transparent)' }}
+        style={{ background: 'linear-gradient(to top, #111318, transparent)' }}
       />
     </section>
   );

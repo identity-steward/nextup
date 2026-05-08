@@ -149,9 +149,9 @@ export default function AboutPage() {
             </p>
             <div className="border-t-2 border-navy/10 pt-8">
               <div className="w-24 h-24 bg-navy rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-3xl font-bold text-gold">K</span>
+                <span className="text-3xl font-bold text-gold">KF</span>
               </div>
-              <h3 className="text-2xl font-bold text-navy mb-2">Kenneth</h3>
+              <h3 className="text-2xl font-bold text-navy mb-2">Kenneth Fouse</h3>
               <p className="text-gray-600">Founder, NextUp Memphis</p>
             </div>
           </div>

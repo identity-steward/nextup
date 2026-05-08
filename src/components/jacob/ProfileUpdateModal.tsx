@@ -97,12 +97,12 @@ export default function ProfileUpdateModal({ athleteSlug, athleteName, onClose }
     >
       <div
         className="relative w-full sm:max-w-xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl"
-        style={{ background: '#0c1018', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: '#161b24', border: '1px solid rgba(255,255,255,0.08)' }}
       >
         {/* Header */}
         <div
           className="sticky top-0 z-10 flex items-center justify-between px-6 py-5"
-          style={{ background: '#0c1018', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ background: '#161b24', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
         >
           <div>
             <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.18em] mb-0.5">Profile Correction</p>
@@ -158,9 +158,9 @@ export default function ProfileUpdateModal({ athleteSlug, athleteName, onClose }
                       required
                       className={`${inputClass} appearance-none pr-10 cursor-pointer`}
                     >
-                      <option value="" disabled style={{ background: '#0c1018' }}>Select your relationship</option>
+                      <option value="" disabled style={{ background: '#161b24' }}>Select your relationship</option>
                       {ROLES.map((r) => (
-                        <option key={r} value={r} style={{ background: '#0c1018' }}>{r}</option>
+                        <option key={r} value={r} style={{ background: '#161b24' }}>{r}</option>
                       ))}
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />

@@ -11,7 +11,7 @@ export default function ProfileShare() {
   };
 
   return (
-    <section className="relative py-14 border-t overflow-hidden" style={{ background: '#070a10', borderColor: 'rgba(255,255,255,0.05)' }}>
+    <section className="relative py-14 border-t overflow-hidden" style={{ background: '#12151c', borderColor: 'rgba(255,255,255,0.05)' }}>
       <div className="max-w-xl mx-auto px-6 lg:px-8 text-center">
         <div className="flex items-center gap-3 mb-6 justify-center">
           <Share2 className="w-4 h-4 text-sky-400" />

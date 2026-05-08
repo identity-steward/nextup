@@ -26,7 +26,7 @@ export default function ThankYouPage({ onNavigate }: ThankYouPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090f] flex flex-col items-center justify-center px-6 py-24 relative overflow-hidden">
+    <div className="min-h-screen bg-[#111318] flex flex-col items-center justify-center px-6 py-24 relative overflow-hidden">
 
       {/* Background glow */}
       <div
@@ -84,7 +84,7 @@ export default function ThankYouPage({ onNavigate }: ThankYouPageProps) {
         <div
           className="rounded-2xl p-6 mb-8 text-left"
           style={{
-            background: '#0c1016',
+            background: '#161b24',
             border: '1px solid rgba(245,158,11,0.15)',
           }}
         >

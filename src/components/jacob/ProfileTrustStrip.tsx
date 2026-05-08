@@ -8,7 +8,7 @@ const trustItems = [
 
 export default function ProfileTrustStrip() {
   return (
-    <section className="py-8 border-t" style={{ background: '#07090f', borderColor: 'rgba(255,255,255,0.05)' }}>
+    <section className="py-8 border-t" style={{ background: '#111318', borderColor: 'rgba(255,255,255,0.05)' }}>
       <div className="max-w-3xl mx-auto px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-6 sm:gap-10">
           {trustItems.map(({ icon: Icon, text, sub }) => (

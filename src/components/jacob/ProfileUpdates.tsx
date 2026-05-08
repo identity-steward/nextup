@@ -44,7 +44,7 @@ const accentClasses = {
 
 export default function ProfileUpdates() {
   return (
-    <section className="relative py-14 border-t overflow-hidden" style={{ background: '#07090f', borderColor: 'rgba(255,255,255,0.05)' }}>
+    <section className="relative py-14 border-t overflow-hidden" style={{ background: '#111318', borderColor: 'rgba(255,255,255,0.05)' }}>
       <div className="max-w-2xl mx-auto px-6 lg:px-8">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-px h-8 bg-amber-500" />

@@ -82,7 +82,7 @@ export default function FAQ() {
           <p className="text-gray-600">
             Have another question?{' '}
             <a
-              href="mailto:kenneth@flmlifestyle.com"
+              href="mailto:info@NextUpMemphis.com"
               className="text-gold hover:text-gold-dark font-semibold transition-colors"
             >
               Contact us

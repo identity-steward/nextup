@@ -1,4 +1,4 @@
-import { Handshake, Target, Users, TrendingUp, Heart, Building2, Mail, CheckCircle } from 'lucide-react';
+import { Handshake, Target, Users, TrendingUp, Heart, Building2, Mail, CheckCircle, UserPlus, ArrowRight } from 'lucide-react';
 import { STRIPE_LINKS } from '../config/stripeLinks';
 
 interface SponsorsPageProps {
@@ -191,23 +191,64 @@ export default function SponsorsPage({ onNavigate }: SponsorsPageProps) {
       </section>
 
       <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-          <Mail className="w-12 h-12 text-gold mx-auto mb-6" />
-          <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
-            Ready to Make a Difference?
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Let's discuss how your organization can support Memphis youth athletes.
-          </p>
-          <button
-            onClick={() => onNavigate?.('support')}
-            className="btn-primary text-lg px-10 py-4"
-          >
-            Request Sponsorship Info
-          </button>
-          <p className="text-gray-600 mt-6">
-            Or email us at <a href="mailto:info@NextUpMemphis.com" className="text-gold hover:underline font-semibold">info@NextUpMemphis.com</a>
-          </p>
+        <div className="max-w-4xl mx-auto px-6 lg:px-8">
+
+          {/* Primary CTA */}
+          <div className="text-center mb-12">
+            <Mail className="w-12 h-12 text-gold mx-auto mb-6" />
+            <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+              Ready to Make a Difference?
+            </h2>
+            <p className="text-xl text-gray-600 mb-8">
+              Let's discuss how your organization can support Memphis youth athletes.
+            </p>
+            <button
+              onClick={() => onNavigate?.('contact')}
+              className="btn-primary text-lg px-10 py-4"
+            >
+              Request Sponsorship Info
+            </button>
+            <p className="text-gray-600 mt-6">
+              Or email us at <a href="mailto:info@NextUpMemphis.com" className="text-gold hover:underline font-semibold">info@NextUpMemphis.com</a>
+            </p>
+          </div>
+
+          {/* Secondary action cards */}
+          <div className="grid sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+            <div className="bg-navy rounded-2xl p-6 text-center">
+              <div className="w-12 h-12 bg-gold/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-6 h-6 text-gold" />
+              </div>
+              <h3 className="text-white font-bold text-lg mb-2">Sponsor an Athlete</h3>
+              <p className="text-gray-400 text-sm mb-5 leading-relaxed">
+                Directly fund a Memphis youth athlete's training, travel, and development.
+              </p>
+              <button
+                onClick={() => onNavigate?.('athletes')}
+                className="inline-flex items-center gap-2 bg-gold hover:bg-gold-dark text-navy font-black text-sm px-6 py-3 rounded-xl transition-all duration-200 uppercase tracking-wide"
+              >
+                Browse Athletes
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 text-center">
+              <div className="w-12 h-12 bg-navy/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <UserPlus className="w-6 h-6 text-navy" />
+              </div>
+              <h3 className="text-navy font-bold text-lg mb-2">Nominate an Athlete</h3>
+              <p className="text-gray-600 text-sm mb-5 leading-relaxed">
+                Know a Memphis youth athlete who deserves a platform? Submit their info.
+              </p>
+              <button
+                onClick={() => onNavigate?.('parent-intake')}
+                className="inline-flex items-center gap-2 btn-secondary text-sm px-6 py-3 rounded-xl uppercase tracking-wide"
+              >
+                Nominate Now
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </section>
     </div>

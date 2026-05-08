@@ -13,10 +13,10 @@ export default function EventUrgencyBanner({ onScrollToAthletes }: EventUrgencyB
         className="w-full flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5 py-4 px-6 text-center group"
       >
         <span className="flex items-center gap-2.5 font-black text-white text-base md:text-lg uppercase tracking-wide drop-shadow">
-          <span className="text-xl" style={{ animation: 'bounce 1s infinite' }}>&#x1F3C0;</span>
-          LIVE NOW: MADE HOOPS – Memphis
+          <span className="w-2 h-2 rounded-full bg-white animate-pulse flex-shrink-0" />
+          LIVE NOW: NXTPro Session 7 – Memphis, TN
           <span className="hidden sm:inline bg-white/25 text-white font-bold text-xs px-2.5 py-0.5 rounded-full border border-white/30 normal-case tracking-normal">
-            April 18–19
+            Today
           </span>
         </span>
         <span className="hidden sm:block w-px h-5 bg-white/30" />
@@ -24,7 +24,7 @@ export default function EventUrgencyBanner({ onScrollToAthletes }: EventUrgencyB
           Support Athletes Now
           <span className="group-hover:translate-x-0.5 transition-transform inline-block">&#x2192;</span>
         </span>
-        <span className="sm:hidden text-xs text-amber-100 font-semibold mt-0.5">(April 18–19)</span>
+        <span className="sm:hidden text-xs text-amber-100 font-semibold mt-0.5">(Today)</span>
       </button>
     </div>
   );

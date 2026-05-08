@@ -25,7 +25,7 @@ export default function ProfileSupport({ raised, goal, supporters, progressPct, 
   const stripeLink = !customAmount && selectedAmount ? AMOUNT_TO_STRIPE_LINK[selectedAmount] ?? STRIPE_LINKS.SUPPORT_JACOB_10 : STRIPE_LINKS.SUPPORT_JACOB_10;
 
   return (
-    <section id="support" className="relative py-20 scroll-mt-16 overflow-hidden" style={{ background: '#111318' }}>
+    <section id="support" className="relative py-20 scroll-mt-16 overflow-hidden" style={{ background: '#1c2028' }}>
 
       {/* Section separator */}
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.4), transparent)' }} />
@@ -146,7 +146,7 @@ export default function ProfileSupport({ raised, goal, supporters, progressPct, 
             <div
               className="relative rounded-2xl overflow-hidden"
               style={{
-                background: '#161b24',
+                background: '#222838',
                 border: '1px solid rgba(245,158,11,0.18)',
                 boxShadow: '0 0 0 1px rgba(255,255,255,0.03), 0 24px 80px rgba(0,0,0,0.7), 0 0 40px rgba(245,158,11,0.06)',
               }}

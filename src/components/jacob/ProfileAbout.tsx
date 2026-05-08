@@ -9,7 +9,7 @@ const quickStats = [
 
 export default function ProfileAbout() {
   return (
-    <section className="relative py-20 overflow-hidden" style={{ background: '#12151c' }}>
+    <section className="relative py-20 overflow-hidden" style={{ background: '#1e2230' }}>
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(56,189,248,0.25), transparent)' }} />
 
       {/* Left ambient glow */}

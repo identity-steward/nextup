@@ -24,7 +24,7 @@ export default function ProfileHero({
   return (
     <section
       className="relative min-h-screen flex flex-col overflow-hidden"
-      style={{ background: '#0e1016' }}
+      style={{ background: '#181c24' }}
     >
       {/* Neon top edge */}
       <div

@@ -7,7 +7,7 @@ interface ProfileFooterCTAProps {
 
 export default function ProfileFooterCTA({ onSupportClick, onNavigate }: ProfileFooterCTAProps) {
   return (
-    <section className="relative py-28 overflow-hidden" style={{ background: '#0e1016' }}>
+    <section className="relative py-28 overflow-hidden" style={{ background: '#181c24' }}>
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.4), transparent)' }} />
 
       {/* Background image */}

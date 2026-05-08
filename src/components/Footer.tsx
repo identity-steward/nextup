@@ -19,12 +19,13 @@ export default function Footer({ onNavigate }: FooterProps) {
 
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <img src="/nextup-logo.png" alt="NextUp Logo" className="w-8 h-8" />
-              <span className="text-2xl font-bold text-white">NextUpMemphis</span>
+            <div className="flex items-center gap-3 mb-3">
+              <img src="/NextUp_Network_logo_design.png" alt="NextUp Network Logo" className="h-10 w-auto" />
             </div>
-            <p className="text-gray-400 leading-relaxed mb-1">Youth Athlete Network</p>
-            <p className="text-gray-400 leading-relaxed mb-1">Memphis, TN</p>
+            <p className="text-gold font-semibold text-sm leading-relaxed mb-2 italic">
+              "Turning Athlete Energy Into Visibility &amp; Opportunity."
+            </p>
+            <p className="text-gray-400 leading-relaxed mb-1">Youth Athlete Network &middot; Memphis, TN</p>
             <p className="text-gray-500 text-sm leading-relaxed mb-5">Founded by Kenneth Fouse</p>
             <div className="flex items-center gap-2 text-gray-400">
               <Mail className="w-4 h-4 text-gold flex-shrink-0" />

@@ -84,7 +84,7 @@ export default function ProfileHighlightGrid() {
   const FeaturedIcon = featured.icon;
 
   return (
-    <section className="relative py-20 overflow-hidden" style={{ background: '#12151c' }}>
+    <section className="relative py-20 overflow-hidden" style={{ background: '#1e2230' }}>
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)' }} />
 
       <div className="relative max-w-5xl mx-auto px-6 lg:px-8">
@@ -124,7 +124,7 @@ export default function ProfileHighlightGrid() {
                 style={{ filter: 'brightness(0.55) saturate(0.7)' }}
               />
               <div className={`absolute inset-0 bg-gradient-to-t ${fc.overlay} via-transparent to-transparent opacity-60`} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#12151c] via-[#12151c]/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1e2230] via-[#1e2230]/30 to-transparent" />
 
               {/* Play button overlay */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -143,7 +143,7 @@ export default function ProfileHighlightGrid() {
 
               {/* Stat badge */}
               <div className="absolute top-4 right-4">
-                <span className="inline-flex items-center bg-[#12151c]/80 backdrop-blur-sm border border-white/15 text-white text-xs font-black px-3 py-1.5 rounded-xl">
+                <span className="inline-flex items-center bg-[#1e2230]/80 backdrop-blur-sm border border-white/15 text-white text-xs font-black px-3 py-1.5 rounded-xl">
                   {featured.stat}
                 </span>
               </div>
@@ -175,8 +175,8 @@ export default function ProfileHighlightGrid() {
                       className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-600"
                       style={{ filter: 'brightness(0.45) saturate(0.6)' }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#12151c]/70 via-transparent to-transparent" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#12151c] via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#1e2230]/70 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1e2230] via-transparent to-transparent" />
 
                     {/* Type badge */}
                     <div className="absolute top-3 left-3">

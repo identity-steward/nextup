@@ -8,7 +8,7 @@ export default function ProfileDisclaimerStrip({ onRequestUpdate }: ProfileDiscl
   return (
     <div
       className="py-4 px-6"
-      style={{ background: '#111318', borderTop: '1px solid rgba(255,255,255,0.05)' }}
+      style={{ background: '#1c2028', borderTop: '1px solid rgba(255,255,255,0.05)' }}
     >
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-start gap-2.5">

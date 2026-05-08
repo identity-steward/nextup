@@ -86,7 +86,7 @@ const barWidths: Record<string, string> = {
 
 export default function ProfileAttributes() {
   return (
-    <section className="relative py-20 overflow-hidden" style={{ background: '#111318' }}>
+    <section className="relative py-20 overflow-hidden" style={{ background: '#1c2028' }}>
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent)' }} />
       <div
         className="absolute right-0 top-1/2 -translate-y-1/2 w-[500px] h-[600px] pointer-events-none"

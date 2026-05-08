@@ -2,7 +2,7 @@ import { Play, ExternalLink, Eye } from 'lucide-react';
 
 export default function ProfileHighlightVideo() {
   return (
-    <section id="highlights" className="relative py-24 scroll-mt-16 overflow-hidden" style={{ background: '#111318' }}>
+    <section id="highlights" className="relative py-24 scroll-mt-16 overflow-hidden" style={{ background: '#1c2028' }}>
 
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(56,189,248,0.4), transparent)' }} />
 

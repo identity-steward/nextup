@@ -14,12 +14,14 @@ interface UpdateRequest {
   reviewed_at: string | null;
   admin_notes: string | null;
   field_correction_notes: string | null;
-  bio: string | null;
-  grade: string | null;
-  school: string | null;
-  team: string | null;
-  position: string | null;
-  city_state: string | null;
+  field_bio: string | null;
+  field_class_year: string | null;
+  field_school: string | null;
+  field_team: string | null;
+  field_position: string | null;
+  field_city_state: string | null;
+  field_social_instagram: string | null;
+  field_social_twitter: string | null;
   instagram_handle: string | null;
   twitter_handle: string | null;
   highlight_video_url: string | null;
@@ -48,7 +50,7 @@ export function AdminProfileUpdatesPage({ onNavigate }: AdminProfileUpdatesPageP
     setLoading(true);
     let query = supabase
       .from('profile_update_requests')
-      .select('id,athlete_slug,submitted_by_name,submitted_by_role,submitted_by_email,status,created_at,reviewed_at,admin_notes,field_correction_notes,bio,grade,school,team,position,city_state,instagram_handle,twitter_handle,highlight_video_url')
+      .select('id,athlete_slug,submitted_by_name,submitted_by_role,submitted_by_email,status,created_at,reviewed_at,admin_notes,field_correction_notes,field_bio,field_class_year,field_school,field_team,field_position,field_city_state,field_social_instagram,field_social_twitter,instagram_handle,twitter_handle,highlight_video_url')
       .order('created_at', { ascending: false })
       .limit(100);
 
@@ -79,12 +81,14 @@ export function AdminProfileUpdatesPage({ onNavigate }: AdminProfileUpdatesPageP
     // If approved, apply changes to the athletes table
     if (action === 'approved') {
       const patch: Record<string, string | null> = {};
-      if (req.bio !== null) patch.bio = req.bio;
-      if (req.grade !== null) patch.grade = req.grade;
-      if (req.school !== null) patch.school = req.school;
-      if (req.team !== null) patch.team_name = req.team;
-      if (req.position !== null) patch.position = req.position;
-      if (req.city_state !== null) patch.city = req.city_state;
+      if (req.field_bio !== null) patch.bio = req.field_bio;
+      if (req.field_class_year !== null) patch.grade = req.field_class_year;
+      if (req.field_school !== null) patch.school = req.field_school;
+      if (req.field_team !== null) patch.team_name = req.field_team;
+      if (req.field_position !== null) patch.position = req.field_position;
+      if (req.field_city_state !== null) patch.city = req.field_city_state;
+      if (req.field_social_instagram !== null) patch.instagram_handle = req.field_social_instagram;
+      if (req.field_social_twitter !== null) patch.twitter_handle = req.field_social_twitter;
       if (req.instagram_handle !== null) patch.instagram_handle = req.instagram_handle;
       if (req.twitter_handle !== null) patch.twitter_handle = req.twitter_handle;
       if (req.highlight_video_url !== null) patch.highlight_video_url = req.highlight_video_url;
@@ -108,14 +112,16 @@ export function AdminProfileUpdatesPage({ onNavigate }: AdminProfileUpdatesPageP
   };
 
   const fieldLabels: Record<string, string> = {
-    bio: 'Bio',
-    grade: 'Grade / Class Year',
-    school: 'School',
-    team: 'Team',
-    position: 'Position',
-    city_state: 'City / State',
-    instagram_handle: 'Instagram',
-    twitter_handle: 'Twitter / X',
+    field_bio: 'Bio',
+    field_class_year: 'Grade / Class Year',
+    field_school: 'School',
+    field_team: 'Team',
+    field_position: 'Position',
+    field_city_state: 'City / State',
+    field_social_instagram: 'Instagram',
+    field_social_twitter: 'Twitter / X',
+    instagram_handle: 'Instagram (handle)',
+    twitter_handle: 'Twitter / X (handle)',
     highlight_video_url: 'Highlight Video URL',
     field_correction_notes: 'Notes from Submitter',
   };

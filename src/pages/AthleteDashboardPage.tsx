@@ -708,6 +708,3 @@ export default function AthleteDashboardPage({ onNavigate }: AthleteDashboardPro
     </div>
   );
 }
-
-
-export default AthleteDashboardPage

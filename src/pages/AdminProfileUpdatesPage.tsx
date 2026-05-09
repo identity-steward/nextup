@@ -22,8 +22,6 @@ interface UpdateRequest {
   field_city_state: string | null;
   field_social_instagram: string | null;
   field_social_twitter: string | null;
-  instagram_handle: string | null;
-  twitter_handle: string | null;
   highlight_video_url: string | null;
 }
 
@@ -50,7 +48,7 @@ export function AdminProfileUpdatesPage({ onNavigate }: AdminProfileUpdatesPageP
     setLoading(true);
     let query = supabase
       .from('profile_update_requests')
-      .select('id,athlete_slug,submitted_by_name,submitted_by_role,submitted_by_email,status,created_at,reviewed_at,admin_notes,field_correction_notes,field_bio,field_class_year,field_school,field_team,field_position,field_city_state,field_social_instagram,field_social_twitter,instagram_handle,twitter_handle,highlight_video_url')
+      .select('id,athlete_slug,submitted_by_name,submitted_by_role,submitted_by_email,status,created_at,reviewed_at,admin_notes,field_correction_notes,field_bio,field_class_year,field_school,field_team,field_position,field_city_state,field_social_instagram,field_social_twitter,highlight_video_url')
       .order('created_at', { ascending: false })
       .limit(100);
 
@@ -89,8 +87,6 @@ export function AdminProfileUpdatesPage({ onNavigate }: AdminProfileUpdatesPageP
       if (req.field_city_state !== null) patch.city = req.field_city_state;
       if (req.field_social_instagram !== null) patch.instagram_handle = req.field_social_instagram;
       if (req.field_social_twitter !== null) patch.twitter_handle = req.field_social_twitter;
-      if (req.instagram_handle !== null) patch.instagram_handle = req.instagram_handle;
-      if (req.twitter_handle !== null) patch.twitter_handle = req.twitter_handle;
       if (req.highlight_video_url !== null) patch.highlight_video_url = req.highlight_video_url;
 
       if (Object.keys(patch).length > 0) {
@@ -120,8 +116,6 @@ export function AdminProfileUpdatesPage({ onNavigate }: AdminProfileUpdatesPageP
     field_city_state: 'City / State',
     field_social_instagram: 'Instagram',
     field_social_twitter: 'Twitter / X',
-    instagram_handle: 'Instagram (handle)',
-    twitter_handle: 'Twitter / X (handle)',
     highlight_video_url: 'Highlight Video URL',
     field_correction_notes: 'Notes from Submitter',
   };

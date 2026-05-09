@@ -176,8 +176,6 @@ export default function AthleteDashboardPage({ onNavigate }: AthleteDashboardPro
       field_social_instagram: editForm.instagram_handle || null,
       field_social_twitter: editForm.twitter_handle || null,
       highlight_video_url: editForm.highlight_video_url || null,
-      instagram_handle: editForm.instagram_handle || null,
-      twitter_handle: editForm.twitter_handle || null,
       field_correction_notes: editForm.notes || null,
       status: 'pending',
     }]);
@@ -710,3 +708,6 @@ export default function AthleteDashboardPage({ onNavigate }: AthleteDashboardPro
     </div>
   );
 }
+
+
+export default AthleteDashboardPage

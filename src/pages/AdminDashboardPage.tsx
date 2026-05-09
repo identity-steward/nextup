@@ -15,7 +15,11 @@ interface Counts {
   supporterSignups: number;
 }
 
-export function AdminDashboardPage() {
+interface AdminDashboardPageProps {
+  onNavigate?: (page: string) => void;
+}
+
+export function AdminDashboardPage({ onNavigate }: AdminDashboardPageProps) {
   const [counts, setCounts] = useState<Counts>({
     athleteSignups: 0,
     parentIntakes: 0,
@@ -132,7 +136,7 @@ export function AdminDashboardPage() {
   ];
 
   return (
-    <DashboardLayout currentPage="Dashboard">
+    <DashboardLayout title="Dashboard" onNavigate={onNavigate}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
         <StatCard title="Athlete Signups" value={String(counts.athleteSignups)} icon={Users} color="blue" />
         <StatCard title="Parent Intakes" value={String(counts.parentIntakes)} icon={Heart} color="green" />

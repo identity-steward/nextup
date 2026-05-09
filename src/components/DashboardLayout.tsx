@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
-import { Menu, X, Home, Users, Video, School, CreditCard, Heart, Bell, Settings, LogOut, Zap } from 'lucide-react';
+import { Menu, X, Home, Users, Video, School, CreditCard, Heart, Bell, Settings, LogOut, Zap, CreditCard as Edit3, Camera } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+  title?: string;
   currentPage?: string;
+  onNavigate?: (page: string) => void;
 }
 
-export function DashboardLayout({ children, currentPage = 'Dashboard' }: DashboardLayoutProps) {
+export function DashboardLayout({ children, title, currentPage, onNavigate }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, signOut } = useAuth();
+
+  const pageTitle = title || currentPage || 'Dashboard';
 
   const navigation = [
-    { name: 'Dashboard', icon: Home, href: '/admin/dashboard' },
-    { name: 'Athlete Signups', icon: Users, href: '/admin/athletes' },
-    { name: 'Parent Intake', icon: Heart, href: '/admin/parents' },
-    { name: 'Creator Applications', icon: Video, href: '/admin/creators' },
-    { name: 'Team Inquiries', icon: School, href: '/admin/teams' },
-    { name: 'Media Pass Requests', icon: CreditCard, href: '/admin/media-passes' },
-    { name: 'Supporter Signups', icon: Heart, href: '/admin/supporters' },
-    { name: 'Agent Ops', icon: Zap, href: '/admin/agent-ops' },
+    { name: 'Dashboard', icon: Home, page: 'admin-dashboard' },
+    { name: 'Athlete Signups', icon: Users, page: 'admin-athletes' },
+    { name: 'Parent Intake', icon: Heart, page: 'admin-parent-intake' },
+    { name: 'Profile Updates', icon: Edit3, page: 'admin-profile-updates' },
+    { name: 'Media Review', icon: Camera, page: 'admin-media' },
+    { name: 'Creator Applications', icon: Video, page: 'admin-creators' },
+    { name: 'Team Inquiries', icon: School, page: 'admin-teams' },
+    { name: 'Media Pass Requests', icon: CreditCard, page: 'admin-media-passes' },
+    { name: 'Supporter Signups', icon: Heart, page: 'admin-supporters' },
+    { name: 'Agent Ops', icon: Zap, page: 'admin-agent-ops' },
   ];
 
   return (
@@ -57,13 +65,13 @@ export function DashboardLayout({ children, currentPage = 'Dashboard' }: Dashboa
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const isActive = currentPage === item.name;
+              const isActive = pageTitle === item.name;
               return (
-                <a
+                <button
                   key={item.name}
-                  href={item.href}
+                  onClick={() => { onNavigate?.(item.page); setSidebarOpen(false); }}
                   className={`
-                    flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors
+                    w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-left
                     ${isActive
                       ? 'bg-gradient-to-r from-[#c5a572] to-[#d4af37] text-[#1a1f3a] font-semibold'
                       : 'text-gray-300 hover:bg-gray-800 hover:text-white'
@@ -72,25 +80,26 @@ export function DashboardLayout({ children, currentPage = 'Dashboard' }: Dashboa
                 >
                   <Icon className="w-5 h-5" />
                   <span>{item.name}</span>
-                </a>
+                </button>
               );
             })}
           </nav>
 
           {/* Bottom section */}
           <div className="p-4 border-t border-gray-700 space-y-1">
-            <a
-              href="/admin/settings"
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+            <button
+              onClick={() => { onNavigate?.('home'); }}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
             >
               <Settings className="w-5 h-5" />
-              <span>Settings</span>
-            </a>
+              <span>Back to Site</span>
+            </button>
             <button
+              onClick={async () => { await signOut(); onNavigate?.('home'); }}
               className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
             >
               <LogOut className="w-5 h-5" />
-              <span>Logout</span>
+              <span>Sign Out</span>
             </button>
           </div>
         </div>
@@ -108,21 +117,19 @@ export function DashboardLayout({ children, currentPage = 'Dashboard' }: Dashboa
               >
                 <Menu className="w-6 h-6" />
               </button>
-              <h1 className="text-2xl font-bold text-[#1a1f3a]">{currentPage}</h1>
+              <h1 className="text-2xl font-bold text-[#1a1f3a]">{pageTitle}</h1>
             </div>
 
             <div className="flex items-center space-x-4">
-              <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                <Bell className="w-6 h-6" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
               <div className="flex items-center space-x-3 pl-4 border-l border-gray-200">
                 <div className="w-10 h-10 bg-gradient-to-r from-[#c5a572] to-[#d4af37] rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">AD</span>
+                  <span className="text-white font-semibold text-sm">
+                    {user?.email?.[0]?.toUpperCase() ?? 'A'}
+                  </span>
                 </div>
                 <div className="hidden md:block">
-                  <p className="text-sm font-semibold text-gray-900">Admin User</p>
-                  <p className="text-xs text-gray-500">admin@nextup.com</p>
+                  <p className="text-sm font-semibold text-gray-900">Admin</p>
+                  <p className="text-xs text-gray-500 truncate max-w-[160px]">{user?.email}</p>
                 </div>
               </div>
             </div>

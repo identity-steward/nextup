@@ -17,7 +17,11 @@ interface AthleteSignup {
   created_at: string;
 }
 
-export function AdminAthletesPage() {
+interface AdminAthletesPageProps {
+  onNavigate?: (page: string) => void;
+}
+
+export function AdminAthletesPage({ onNavigate }: AdminAthletesPageProps) {
   const [signups, setSignups] = useState<AthleteSignup[]>([]);
   const [filtered, setFiltered] = useState<AthleteSignup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,7 +102,7 @@ export function AdminAthletesPage() {
   ];
 
   return (
-    <DashboardLayout currentPage="Athlete Signups">
+    <DashboardLayout title="Athlete Signups" onNavigate={onNavigate}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard title="Total Signups" value={String(total)} icon={Users} color="blue" />
         <StatCard title="Approved" value={String(approved)} icon={CheckCircle} color="green" />

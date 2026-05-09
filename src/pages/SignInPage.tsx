@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { LogIn } from 'lucide-react';
+import { LogIn, UserPlus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface SignInPageProps {
@@ -17,13 +17,31 @@ export default function SignInPage({ onNavigate }: SignInPageProps) {
     setError('');
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError(error.message);
       setLoading(false);
-    } else {
+      return;
+    }
+
+    // Route by role
+    const appRole = data.user?.app_metadata?.role;
+    if (appRole === 'admin') {
       onNavigate?.('admin-dashboard');
+      return;
+    }
+
+    const { data: profileData } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .maybeSingle();
+
+    if (profileData?.role === 'admin') {
+      onNavigate?.('admin-dashboard');
+    } else {
+      onNavigate?.('athlete-dashboard');
     }
   };
 
@@ -83,15 +101,19 @@ export default function SignInPage({ onNavigate }: SignInPageProps) {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-            <p className="text-gray-600 text-sm">
-              Don't have an account?{' '}
+          <div className="mt-8 pt-6 border-t border-gray-200 space-y-3 text-center">
+            <p className="text-gray-500 text-sm">
+              Are you an athlete or parent?{' '}
               <button
-                onClick={() => onNavigate?.('athletes')}
-                className="text-gold font-semibold hover:text-gold-dark transition-colors"
+                onClick={() => onNavigate?.('create')}
+                className="text-gold font-semibold hover:text-gold-dark transition-colors inline-flex items-center gap-1"
               >
-                Get Started
+                <UserPlus className="w-3.5 h-3.5" />
+                Create a free profile
               </button>
+            </p>
+            <p className="text-gray-400 text-xs">
+              Once your profile is approved, we'll send your login credentials.
             </p>
           </div>
         </div>

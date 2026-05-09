@@ -26,6 +26,9 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminAthletesPage } from './pages/AdminAthletesPage';
 import { AdminParentIntakePage } from './pages/AdminParentIntakePage';
 import { AdminAgentOpsPage } from './pages/AdminAgentOpsPage';
+import { AdminProfileUpdatesPage } from './pages/AdminProfileUpdatesPage';
+import { AdminMediaPage } from './pages/AdminMediaPage';
+import AthleteDashboardPage from './pages/AthleteDashboardPage';
 import ThankYouPage from './pages/ThankYouPage';
 
 function AppContent() {
@@ -85,28 +88,46 @@ function AppContent() {
       return <HackathonDemoPage onNavigate={handleNavigate} />;
     case 'thank-you':
       return <ThankYouPage onNavigate={handleNavigate} />;
+    case 'athlete-dashboard':
+      return (
+        <ProtectedRoute onNavigate={handleNavigate}>
+          <AthleteDashboardPage onNavigate={handleNavigate} />
+        </ProtectedRoute>
+      );
     case 'admin-dashboard':
       return (
         <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
-          <AdminDashboardPage />
+          <AdminDashboardPage onNavigate={handleNavigate} />
         </ProtectedRoute>
       );
     case 'admin-athletes':
       return (
         <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
-          <AdminAthletesPage />
+          <AdminAthletesPage onNavigate={handleNavigate} />
         </ProtectedRoute>
       );
     case 'admin-parent-intake':
       return (
         <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
-          <AdminParentIntakePage />
+          <AdminParentIntakePage onNavigate={handleNavigate} />
         </ProtectedRoute>
       );
     case 'admin-agent-ops':
       return (
         <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
-          <AdminAgentOpsPage />
+          <AdminAgentOpsPage onNavigate={handleNavigate} />
+        </ProtectedRoute>
+      );
+    case 'admin-profile-updates':
+      return (
+        <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
+          <AdminProfileUpdatesPage onNavigate={handleNavigate} />
+        </ProtectedRoute>
+      );
+    case 'admin-media':
+      return (
+        <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
+          <AdminMediaPage onNavigate={handleNavigate} />
         </ProtectedRoute>
       );
     default:

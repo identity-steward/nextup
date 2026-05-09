@@ -1,5 +1,6 @@
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   onNavigate?: (page: string) => void;
@@ -8,6 +9,7 @@ interface HeaderProps {
 
 export default function Header({ onNavigate, currentPage = 'home' }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { session, isAdmin, signOut } = useAuth();
 
   const handleNavigation = (page: string) => {
     if (onNavigate) {
@@ -15,6 +17,9 @@ export default function Header({ onNavigate, currentPage = 'home' }: HeaderProps
       setIsMenuOpen(false);
     }
   };
+
+  const dashboardPage = isAdmin ? 'admin-dashboard' : 'athlete-dashboard';
+  const dashboardLabel = isAdmin ? 'Admin' : 'My Dashboard';
 
   const navItems = [
     { id: 'home', label: 'Home' },
@@ -54,18 +59,38 @@ export default function Header({ onNavigate, currentPage = 'home' }: HeaderProps
           </div>
 
           <div className="hidden lg:flex items-center gap-4">
-            <button
-              onClick={() => handleNavigation('signin')}
-              className="text-navy hover:text-gold font-medium transition-colors duration-200"
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => handleNavigation('athletes')}
-              className="btn-primary"
-            >
-              Get Started
-            </button>
+            {session ? (
+              <>
+                <button
+                  onClick={() => handleNavigation(dashboardPage)}
+                  className="inline-flex items-center gap-1.5 text-navy hover:text-gold font-medium transition-colors duration-200"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  {dashboardLabel}
+                </button>
+                <button
+                  onClick={async () => { await signOut(); handleNavigation('home'); }}
+                  className="text-gray-500 hover:text-navy font-medium transition-colors duration-200 text-sm"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleNavigation('signin')}
+                  className="text-navy hover:text-gold font-medium transition-colors duration-200"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => handleNavigation('athletes')}
+                  className="btn-primary"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
           </div>
 
           <button
@@ -97,18 +122,38 @@ export default function Header({ onNavigate, currentPage = 'home' }: HeaderProps
                 </button>
               ))}
               <div className="pt-4 border-t border-gray-200 flex flex-col gap-3">
-                <button
-                  onClick={() => handleNavigation('signin')}
-                  className="text-navy hover:text-gold font-medium transition-colors duration-200 text-left py-2"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => handleNavigation('athletes')}
-                  className="btn-primary"
-                >
-                  Get Started
-                </button>
+                {session ? (
+                  <>
+                    <button
+                      onClick={() => handleNavigation(dashboardPage)}
+                      className="inline-flex items-center gap-1.5 text-navy hover:text-gold font-medium transition-colors duration-200 text-left py-2"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      {dashboardLabel}
+                    </button>
+                    <button
+                      onClick={async () => { await signOut(); handleNavigation('home'); }}
+                      className="text-gray-500 hover:text-navy font-medium text-left py-2"
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleNavigation('signin')}
+                      className="text-navy hover:text-gold font-medium transition-colors duration-200 text-left py-2"
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      onClick={() => handleNavigation('athletes')}
+                      className="btn-primary"
+                    >
+                      Get Started
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -33,6 +33,14 @@ export interface Athlete {
   highlight_video_embed_url?: string;
   instagram_handle?: string;
   twitter_handle?: string;
+  height?: string;
+  jersey_number?: string;
+  class_year?: string;
+  gender?: string;
+  is_female: boolean;
+  profile_status: 'pending' | 'approved' | 'verified_event';
+  event_code_used?: string;
+  auth_user_id?: string;
   created_at: string;
   updated_at: string;
 }

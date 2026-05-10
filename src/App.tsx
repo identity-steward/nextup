@@ -22,6 +22,7 @@ import ParentIntakePage from './pages/ParentIntakePage';
 import { isSupabaseConfigured } from './lib/supabase';
 import JacobFousePage from './pages/JacobFousePage';
 import LiveFeedPage from './pages/LiveFeedPage';
+import ProfileSetupPage from './pages/ProfileSetupPage';
 
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminAthletesPage } from './pages/AdminAthletesPage';
@@ -73,6 +74,14 @@ function AppContent() {
           <Route path="/signin" element={<SignInPage />} />
 
           {/* Protected */}
+          <Route
+            path="/profile-setup"
+            element={
+              <ProtectedRoute>
+                <ProfileSetupPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={

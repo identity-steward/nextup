@@ -101,16 +101,33 @@ export default function ProfileSetupPage() {
     setSubmitting(true);
     setError('');
 
-    // Resolve event code → profile_status
+    // Resolve event code → profile_status + event_code_id
     const eventCode = (sessionStorage.getItem('signup_event_code') || '').trim();
+    const signupRole = sessionStorage.getItem('signup_role') || 'athlete';
     let profileStatus = 'pending';
+    let eventCodeId: string | null = null;
+
     if (eventCode) {
       const { data: resolvedStatus } = await supabase.rpc('validate_event_code', { p_code: eventCode });
       if (resolvedStatus) {
-        profileStatus = resolvedStatus;
+        // Map old statuses to new canonical 'active'
+        profileStatus = 'active';
         await supabase.rpc('increment_event_code_uses', { p_code: eventCode });
+        // Get event_code_id for FK
+        const { data: ecRow } = await supabase
+          .from('event_codes')
+          .select('id')
+          .eq('code', eventCode.toUpperCase())
+          .maybeSingle();
+        eventCodeId = ecRow?.id ?? null;
       }
     }
+
+    const sourceType = eventCode
+      ? 'event_code'
+      : signupRole === 'parent'
+        ? 'parent_referral'
+        : 'organic';
 
     const slug = slugify(form.firstName, form.lastName);
     const lastInitial = form.lastName.trim().charAt(0).toUpperCase();
@@ -119,6 +136,8 @@ export default function ProfileSetupPage() {
       .from('athletes')
       .insert([{
         auth_user_id: user.id,
+        created_by_user_id: user.id,
+        managed_by_parent_id: signupRole === 'parent' ? user.id : null,
         first_name: form.firstName.trim(),
         last_initial: lastInitial,
         sport: form.sport,
@@ -141,8 +160,10 @@ export default function ProfileSetupPage() {
         highlight_video_url: form.highlightUrl || null,
         slug,
         profile_status: profileStatus,
+        profile_tier: 'basic',
+        source_type: sourceType,
+        event_code_id: eventCodeId,
         event_code_used: eventCode || null,
-        is_active: profileStatus !== 'pending',
       }])
       .select('id, slug')
       .single();
@@ -158,6 +179,30 @@ export default function ProfileSetupPage() {
       .from('user_profiles')
       .update({ athlete_id: athleteData.id })
       .eq('id', user.id);
+
+    // Record signup source
+    await supabase.from('signup_sources').insert([{
+      user_id: user.id,
+      athlete_id: athleteData.id,
+      event_code_id: eventCodeId,
+      source_type: sourceType,
+      source_label: eventCode || signupRole,
+    }]);
+
+    // Create initial consent record (implied consent at signup)
+    await supabase.from('consents').insert([{
+      athlete_id: athleteData.id,
+      user_id: user.id,
+      consent_given_by: form.firstName.trim() + ' ' + form.lastName.trim(),
+      relationship_to_athlete: signupRole === 'parent' ? 'parent' : 'self',
+      consent_status: 'pending',
+      can_use_name_image_likeness: false,
+      can_use_voice: false,
+      can_use_on_social: false,
+      can_use_for_promo: false,
+      can_use_for_sponsor_package: false,
+      usage_scope: ['profile'],
+    }]);
 
     // Clear sessionStorage
     ['signup_event_code', 'signup_first_name', 'signup_last_name', 'signup_role'].forEach(k =>

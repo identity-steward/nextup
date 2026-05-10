@@ -3,7 +3,8 @@ import { DashboardLayout } from '../components/DashboardLayout';
 import { StatCard } from '../components/StatCard';
 import { DataTable, TableColumn } from '../components/DataTable';
 import { DashboardCard } from '../components/DashboardCard';
-import { Users, Video, School, CreditCard, Heart, TrendingUp } from 'lucide-react';
+import { Users, Video, School, CreditCard, Heart, TrendingUp, Camera, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 interface Counts {
@@ -13,6 +14,9 @@ interface Counts {
   teamInquiries: number;
   mediaPasses: number;
   supporterSignups: number;
+  pendingMedia: number;
+  pendingProfiles: number;
+  pendingConsents: number;
 }
 
 export function AdminDashboardPage() {
@@ -23,6 +27,9 @@ export function AdminDashboardPage() {
     teamInquiries: 0,
     mediaPasses: 0,
     supporterSignups: 0,
+    pendingMedia: 0,
+    pendingProfiles: 0,
+    pendingConsents: 0,
   });
   const [recentAthletes, setRecentAthletes] = useState<Record<string, unknown>[]>([]);
   const [recentIntakes, setRecentIntakes] = useState<Record<string, unknown>[]>([]);
@@ -36,6 +43,7 @@ export function AdminDashboardPage() {
       const [
         { count: aCount }, { count: piCount }, { count: caCount },
         { count: tiCount }, { count: mpCount }, { count: ssCount },
+        { count: pmCount }, { count: ppCount }, { count: pcCount },
         { data: athletes }, { data: intakes }, { data: creators },
         { data: inquiries }, { data: passes }, { data: supporters },
       ] = await Promise.all([
@@ -45,6 +53,9 @@ export function AdminDashboardPage() {
         supabase.from('team_inquiries').select('*', { count: 'exact', head: true }),
         supabase.from('media_pass_requests').select('*', { count: 'exact', head: true }),
         supabase.from('supporter_signups').select('*', { count: 'exact', head: true }),
+        supabase.from('media_uploads').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('athletes').select('*', { count: 'exact', head: true }).eq('profile_status', 'pending'),
+        supabase.from('consents').select('*', { count: 'exact', head: true }).eq('consent_status', 'pending'),
         supabase.from('athlete_signups').select('athlete_first_name,athlete_last_name,athlete_sport,athlete_school,status,created_at').order('created_at', { ascending: false }).limit(5),
         supabase.from('parent_intake').select('parent_first_name,parent_last_name,athlete_first_name,athlete_last_name,parent_email,status,created_at').order('created_at', { ascending: false }).limit(5),
         supabase.from('creator_applications').select('first_name,last_name,email,status,created_at').order('created_at', { ascending: false }).limit(5),
@@ -60,6 +71,9 @@ export function AdminDashboardPage() {
         teamInquiries: tiCount ?? 0,
         mediaPasses: mpCount ?? 0,
         supporterSignups: ssCount ?? 0,
+        pendingMedia: pmCount ?? 0,
+        pendingProfiles: ppCount ?? 0,
+        pendingConsents: pcCount ?? 0,
       });
       if (athletes) setRecentAthletes(athletes as Record<string, unknown>[]);
       if (intakes) setRecentIntakes(intakes as Record<string, unknown>[]);
@@ -133,6 +147,31 @@ export function AdminDashboardPage() {
 
   return (
     <DashboardLayout title="Dashboard">
+      {/* Pending action queues — top priority */}
+      {(counts.pendingMedia > 0 || counts.pendingProfiles > 0 || counts.pendingConsents > 0) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex flex-wrap gap-4 items-center">
+          <span className="text-amber-800 text-sm font-bold">Action Required:</span>
+          {counts.pendingProfiles > 0 && (
+            <Link to="/admin/live-athletes?filter=pending" className="inline-flex items-center gap-1.5 bg-white border border-amber-300 hover:border-amber-400 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+              <Users className="w-3.5 h-3.5" />
+              {counts.pendingProfiles} Pending Profile{counts.pendingProfiles !== 1 ? 's' : ''}
+            </Link>
+          )}
+          {counts.pendingMedia > 0 && (
+            <Link to="/admin/media" className="inline-flex items-center gap-1.5 bg-white border border-amber-300 hover:border-amber-400 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+              <Camera className="w-3.5 h-3.5" />
+              {counts.pendingMedia} Pending Media Upload{counts.pendingMedia !== 1 ? 's' : ''}
+            </Link>
+          )}
+          {counts.pendingConsents > 0 && (
+            <Link to="/admin/live-athletes" className="inline-flex items-center gap-1.5 bg-white border border-amber-300 hover:border-amber-400 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {counts.pendingConsents} Pending Consent{counts.pendingConsents !== 1 ? 's' : ''}
+            </Link>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
         <StatCard title="Athlete Signups" value={String(counts.athleteSignups)} icon={Users} color="blue" />
         <StatCard title="Parent Intakes" value={String(counts.parentIntakes)} icon={Heart} color="green" />

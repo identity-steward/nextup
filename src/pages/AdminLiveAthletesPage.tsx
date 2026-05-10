@@ -23,23 +23,33 @@ interface AthleteRow {
   profile_status: string;
   profile_tier: string;
   is_active: boolean;
+  source_type: string | null;
+  event_code_used: string | null;
   created_at: string;
   tags: VisibilityTag[];
+  consent_status?: string | null;
+  sab_code?: string | null;
 }
 
-const STATUS_OPTIONS = ['pending', 'approved', 'verified_event'] as const;
+const STATUS_OPTIONS = ['pending', 'active', 'hidden', 'rejected'] as const;
 const TIER_OPTIONS = ['basic', 'premium'] as const;
 
 const statusStyle: Record<string, string> = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
+  active: 'bg-green-50 text-green-700 border-green-200',
   approved: 'bg-green-50 text-green-700 border-green-200',
   verified_event: 'bg-sky-50 text-sky-700 border-sky-200',
+  hidden: 'bg-gray-100 text-gray-500 border-gray-200',
+  rejected: 'bg-red-50 text-red-700 border-red-200',
 };
 
 const statusIcon: Record<string, React.ReactNode> = {
   pending: <Clock className="w-3 h-3" />,
+  active: <CheckCircle className="w-3 h-3" />,
   approved: <CheckCircle className="w-3 h-3" />,
   verified_event: <Shield className="w-3 h-3" />,
+  hidden: <XCircle className="w-3 h-3" />,
+  rejected: <XCircle className="w-3 h-3" />,
 };
 
 export function AdminLiveAthletesPage() {
@@ -47,7 +57,7 @@ export function AdminLiveAthletesPage() {
   const [athletes, setAthletes] = useState<AthleteRow[]>([]);
   const [availableTags, setAvailableTags] = useState<VisibilityTag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'verified_event'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'active' | 'hidden' | 'rejected'>('all');
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -76,7 +86,7 @@ export function AdminLiveAthletesPage() {
 
     let query = supabase
       .from('athletes')
-      .select('id, first_name, last_initial, sport, grade, school, city, slug, profile_status, profile_tier, is_active, created_at')
+      .select('id, first_name, last_initial, sport, grade, school, city, slug, profile_status, profile_tier, is_active, source_type, event_code_used, created_at')
       .order('created_at', { ascending: false })
       .limit(200);
 
@@ -85,8 +95,24 @@ export function AdminLiveAthletesPage() {
     const { data: athleteData } = await query;
     if (!athleteData) { setAthletes([]); setLoading(false); return; }
 
-    // Load tags for all athletes
     const ids = athleteData.map(a => a.id);
+
+    // Load consent status per athlete
+    const { data: consentData } = await supabase
+      .from('consents')
+      .select('athlete_id, consent_status')
+      .in('athlete_id', ids);
+    const consentMap: Record<string, string> = {};
+    (consentData || []).forEach(c => { consentMap[c.athlete_id] = c.consent_status; });
+
+    // Load SAB codes per athlete (first one)
+    const { data: sabData } = await supabase
+      .from('sab_ids')
+      .select('athlete_id, sab_code')
+      .in('athlete_id', ids)
+      .order('created_at', { ascending: true });
+    const sabMap: Record<string, string> = {};
+    (sabData || []).forEach(s => { if (!sabMap[s.athlete_id]) sabMap[s.athlete_id] = s.sab_code; });
     const { data: tagData } = await supabase
       .from('athlete_tags')
       .select('athlete_id, visibility_tags(id, slug, label)')
@@ -101,6 +127,8 @@ export function AdminLiveAthletesPage() {
     const rows: AthleteRow[] = athleteData.map(a => ({
       ...a,
       tags: tagsMap[a.id] || [],
+      consent_status: consentMap[a.id] ?? null,
+      sab_code: sabMap[a.id] ?? null,
     }));
 
     setAthletes(rows);
@@ -139,9 +167,10 @@ export function AdminLiveAthletesPage() {
     const newStatus = pendingStatus[athlete.id] ?? athlete.profile_status;
     const newTier = pendingTier[athlete.id] ?? athlete.profile_tier;
     const newTagIds = pendingTags[athlete.id] ?? athlete.tags.map(t => t.id);
-    const isActive = newStatus === 'approved' || newStatus === 'verified_event';
+    // is_active is synced by DB trigger on profile_status change, but set it here for safety
+    const isActive = newStatus === 'active';
 
-    // Update athlete row
+    // Update athlete row (trigger will also sync is_active)
     await supabase
       .from('athletes')
       .update({ profile_status: newStatus, profile_tier: newTier, is_active: isActive })
@@ -173,7 +202,7 @@ export function AdminLiveAthletesPage() {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
-            {(['all', 'pending', 'approved', 'verified_event'] as const).map(f => (
+            {(['all', 'pending', 'active', 'hidden', 'rejected'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
@@ -181,7 +210,7 @@ export function AdminLiveAthletesPage() {
                   statusFilter === f ? 'bg-[#1a1f3a] text-white' : 'text-gray-500 hover:text-[#1a1f3a]'
                 }`}
               >
-                {f === 'verified_event' ? 'Event Verified' : f.charAt(0).toUpperCase() + f.slice(1)}
+                {f.charAt(0).toUpperCase() + f.slice(1)}
                 {f === 'pending' && pendingCount > 0 && (
                   <span className="ml-1.5 bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">{pendingCount}</span>
                 )}
@@ -231,6 +260,34 @@ export function AdminLiveAthletesPage() {
                     <p className="text-xs text-gray-400 mt-0.5">
                       {athlete.grade}{athlete.school ? ` · ${athlete.school}` : ''}{athlete.city ? ` · ${athlete.city}` : ''}
                     </p>
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                      {athlete.source_type && (
+                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                          {athlete.source_type.replace(/_/g, ' ')}
+                        </span>
+                      )}
+                      {athlete.event_code_used && (
+                        <span className="text-[10px] font-bold text-sky-600 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full">
+                          {athlete.event_code_used}
+                        </span>
+                      )}
+                      {athlete.consent_status && (
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                          athlete.consent_status === 'granted'
+                            ? 'text-green-700 bg-green-50 border-green-200'
+                            : athlete.consent_status === 'revoked'
+                              ? 'text-red-700 bg-red-50 border-red-200'
+                              : 'text-amber-700 bg-amber-50 border-amber-200'
+                        }`}>
+                          Consent: {athlete.consent_status}
+                        </span>
+                      )}
+                      {athlete.sab_code && (
+                        <span className="text-[10px] font-mono text-gray-400">
+                          {athlete.sab_code}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[10px] text-gray-300 mt-0.5">
                       Joined {new Date(athlete.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>

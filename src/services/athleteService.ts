@@ -6,7 +6,7 @@ export class AthleteService {
     const { data, error } = await supabase
       .from('athletes')
       .select('*')
-      .eq('is_active', true)
+      .eq('profile_status', 'active')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -22,7 +22,7 @@ export class AthleteService {
       .from('athletes')
       .select('*')
       .eq('is_featured', true)
-      .eq('is_active', true)
+      .eq('profile_status', 'active')
       .maybeSingle();
 
     if (error) {
@@ -38,7 +38,7 @@ export class AthleteService {
       .from('athletes')
       .select('*')
       .eq('slug', slug)
-      .eq('is_active', true)
+      .eq('profile_status', 'active')
       .maybeSingle();
 
     if (error) {
@@ -84,7 +84,7 @@ export class AthleteService {
     const { data, error } = await supabase
       .from('athletes')
       .select('*')
-      .eq('is_active', true)
+      .eq('profile_status', 'active')
       .eq('gender', 'female')
       .order('created_at', { ascending: false })
       .limit(limit);

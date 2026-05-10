@@ -144,6 +144,7 @@ export function AdminMediaPage() {
         status: action,
         admin_notes: adminNotes[id] || null,
         reviewed_at: new Date().toISOString(),
+        ...(action === 'approved' ? { approved_by: user?.id } : {}),
       })
       .eq('id', id);
 

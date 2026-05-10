@@ -215,20 +215,41 @@ export default function AthleteDashboardPage() {
 
     const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
 
-    const { error: dbError } = await supabase.from('media_uploads').insert([{
-      athlete_id: athlete.id,
-      uploader_id: user!.id,
-      media_type: uploadType,
-      bucket,
-      storage_path: path,
-      public_url: urlData.publicUrl,
-      file_name: uploadFile.name,
-      file_size_bytes: uploadFile.size,
-      caption: uploadCaption || null,
-      status: 'pending',
-    }]);
+    const { data: insertedMedia, error: dbError } = await supabase
+      .from('media_uploads')
+      .insert([{
+        athlete_id: athlete.id,
+        uploader_id: user!.id,
+        media_type: uploadType,
+        bucket,
+        storage_path: path,
+        public_url: urlData.publicUrl,
+        file_name: uploadFile.name,
+        file_size_bytes: uploadFile.size,
+        caption: uploadCaption || null,
+        status: 'pending',
+        source_type: profile?.role === 'parent' ? 'parent_upload' : 'athlete_upload',
+        consent_status: 'implied',
+        usage_scope: 'platform',
+      }])
+      .select('id')
+      .single();
 
-    if (dbError) {
+    // Generate SAB-ID for tracking
+    if (!dbError && insertedMedia?.id) {
+      await supabase.rpc('create_sab_id', {
+        p_athlete_id: athlete.id,
+        p_user_id: user!.id,
+        p_media_upload_id: insertedMedia.id,
+        p_source_type: profile?.role === 'parent' ? 'parent_upload' : 'player_upload',
+        p_consent_status: 'pending',
+        p_usage_scope: ['profile'],
+      });
+    }
+
+    const dbError2 = dbError;
+
+    if (dbError2) {
       setUploadError('File uploaded but failed to save record. Contact support.');
     } else {
       setUploadSuccess(true);

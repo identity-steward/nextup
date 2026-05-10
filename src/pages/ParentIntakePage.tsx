@@ -1,14 +1,8 @@
 import { useState } from 'react';
 import { UserPlus, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
-interface ParentIntakePageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function ParentIntakePage({ onNavigate }: ParentIntakePageProps) {
+export default function ParentIntakePage() {
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
@@ -110,17 +104,9 @@ export default function ParentIntakePage({ onNavigate }: ParentIntakePageProps) 
     }
   };
 
-  const handleNavigation = (page: string) => {
-    if (onNavigate) {
-      onNavigate(page);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-navy via-navy-light to-navy">
-      <Header onNavigate={handleNavigation} />
-
-      <main className="pt-32 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-navy via-navy-light to-navy pt-20">
+      <main className="pt-12 pb-24">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -420,7 +406,6 @@ export default function ParentIntakePage({ onNavigate }: ParentIntakePageProps) 
         </div>
       </main>
 
-      <Footer onNavigate={handleNavigation} />
     </div>
   );
 }

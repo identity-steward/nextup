@@ -2,11 +2,7 @@ import { UserPlus, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-interface JoinPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function JoinPage({ onNavigate }: JoinPageProps) {
+export default function JoinPage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',

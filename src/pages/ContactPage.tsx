@@ -1,12 +1,9 @@
 import { MessageSquare, Mail, Phone, User, CheckCircle, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-interface ContactPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function ContactPage({ onNavigate }: ContactPageProps) {
+export default function ContactPage() {
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -226,12 +223,9 @@ export default function ContactPage({ onNavigate }: ContactPageProps) {
             <p className="text-gray-600 mb-4">
               Or email us directly at <a href="mailto:info@NextUpMemphis.com" className="text-gold hover:underline font-semibold">info@NextUpMemphis.com</a>
             </p>
-            <button
-              onClick={() => onNavigate?.('athletes')}
-              className="btn-secondary px-8 py-3 inline-flex items-center gap-2"
-            >
+            <Link to="/athletes" className="btn-secondary px-8 py-3 inline-flex items-center gap-2">
               View Athletes
-            </button>
+            </Link>
           </div>
         </div>
       </section>

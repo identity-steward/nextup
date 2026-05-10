@@ -1,13 +1,10 @@
 import { Heart, Building2, Mail, User, CheckCircle, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { STRIPE_LINKS } from '../config/stripeLinks';
 
-interface SupportPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function SupportPage({ onNavigate }: SupportPageProps) {
+export default function SupportPage() {
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -159,12 +156,9 @@ export default function SupportPage({ onNavigate }: SupportPageProps) {
           </div>
 
           <div className="mt-12 text-center">
-            <button
-              onClick={() => onNavigate?.('athletes')}
-              className="btn-primary px-8 py-4 text-lg"
-            >
+            <Link to="/athletes" className="btn-primary px-8 py-4 text-lg inline-block">
               Choose an Athlete to Support
-            </button>
+            </Link>
           </div>
         </div>
       </section>

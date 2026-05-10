@@ -45,11 +45,7 @@ function PriorityBadge({ priority }: { priority: string }) {
   return <Badge label={priority} className={PRIORITY_COLORS[priority] ?? 'bg-gray-100 text-gray-600'} />;
 }
 
-interface AdminAgentOpsPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export function AdminAgentOpsPage({ onNavigate }: AdminAgentOpsPageProps) {
+export function AdminAgentOpsPage() {
   const [snapshot, setSnapshot] = useState<AdminFeedSnapshot | null>(null);
   const [scorecard, setScorecard] = useState<PlatformScorecard | null>(null);
   const [triggerLogs, setTriggerLogs] = useState<TriggerLogEntry[]>([]);
@@ -100,7 +96,7 @@ export function AdminAgentOpsPage({ onNavigate }: AdminAgentOpsPageProps) {
   ] as const;
 
   return (
-    <DashboardLayout title="Agent Ops" onNavigate={onNavigate}>
+    <DashboardLayout title="Agent Ops">
       <div className="space-y-8">
         <div className="flex items-start justify-between">
           <div>

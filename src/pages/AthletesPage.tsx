@@ -1,41 +1,50 @@
-import { useState, useEffect } from 'react';
-import { Users, MapPin, ArrowRight, UserPlus } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Users, MapPin, ArrowRight, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
 import type { Athlete } from '../types/athlete';
 
-interface AthletesPageProps {
-  onNavigate?: (page: string, slug?: string) => void;
-}
+const SPORTS = ['All Sports', 'Basketball', 'Football', 'Track & Field', 'Soccer', 'Baseball', 'Volleyball', 'Other'];
 
-export default function AthletesPage({ onNavigate }: AthletesPageProps) {
+export default function AthletesPage() {
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [sport, setSport] = useState('All Sports');
 
   useEffect(() => {
-    const loadAthletes = async () => {
-      const data = await AthleteService.getAllAthletes();
+    AthleteService.getAllAthletes().then(data => {
       setAthletes(data);
       setLoading(false);
-    };
-
-    loadAthletes();
+    });
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 pt-20">
-        <div className="text-navy text-xl">Loading athletes...</div>
-      </div>
-    );
-  }
+  const filtered = useMemo(() => {
+    return athletes.filter(a => {
+      const matchesSport = sport === 'All Sports' || a.sport?.toLowerCase().includes(sport.toLowerCase());
+      const q = search.toLowerCase();
+      const matchesSearch = !q || (
+        a.first_name?.toLowerCase().includes(q) ||
+        a.last_initial?.toLowerCase().includes(q) ||
+        a.school?.toLowerCase().includes(q) ||
+        a.sport?.toLowerCase().includes(q) ||
+        a.position?.toLowerCase().includes(q)
+      );
+      return matchesSport && matchesSearch;
+    });
+  }, [athletes, search, sport]);
+
+  const getProfilePath = (athlete: Athlete) =>
+    athlete.slug === 'jacob-f' ? '/athletes/jacob-fouse' : `/athletes/${athlete.slug}`;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
+      {/* Hero */}
       <section className="bg-navy text-white py-16">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-8 h-8 text-gold" />
-            <h1 className="text-4xl md:text-5xl font-bold">Meet the NextUp Memphis Athletes</h1>
+            <h1 className="text-4xl md:text-5xl font-bold">NextUp Memphis Athletes</h1>
           </div>
           <p className="text-xl text-gray-300 max-w-3xl">
             Explore the journeys, highlights, and stories of young athletes across the city.
@@ -43,15 +52,70 @@ export default function AthletesPage({ onNavigate }: AthletesPageProps) {
         </div>
       </section>
 
+      {/* Search & Filter */}
+      <section className="bg-white border-b border-gray-200 sticky top-20 z-30">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by name, sport, school..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-gold focus:outline-none text-sm"
+              />
+            </div>
+            <select
+              value={sport}
+              onChange={e => setSport(e.target.value)}
+              className="px-4 py-2.5 rounded-lg border border-gray-200 focus:border-gold focus:outline-none text-sm text-gray-700 bg-white"
+            >
+              {SPORTS.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          {(search || sport !== 'All Sports') && (
+            <p className="text-xs text-gray-400 mt-2">
+              {filtered.length} athlete{filtered.length !== 1 ? 's' : ''} found
+              {search && ` for "${search}"`}
+              {sport !== 'All Sports' && ` in ${sport}`}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Athlete Grid */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          {athletes.length === 0 ? (
+          {loading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+                  <div className="aspect-[4/5] bg-gray-200" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                    <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-gray-600 text-xl">No athletes found. Check back soon!</p>
+              <p className="text-gray-500 text-xl mb-4">
+                {athletes.length === 0 ? 'No athletes yet. Check back soon!' : 'No athletes match your search.'}
+              </p>
+              {(search || sport !== 'All Sports') && (
+                <button
+                  onClick={() => { setSearch(''); setSport('All Sports'); }}
+                  className="text-gold hover:underline font-medium text-sm"
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {athletes.map((athlete) => (
+              {filtered.map((athlete) => (
                 <div
                   key={athlete.id}
                   className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group"
@@ -64,28 +128,22 @@ export default function AthletesPage({ onNavigate }: AthletesPageProps) {
                     />
                   </div>
                   <div className="p-6">
-                    <div className="flex items-center gap-2 text-gray-600 text-sm mb-2">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                       <MapPin className="w-4 h-4" />
-                      <span>{athlete.city}</span>
+                      <span>{athlete.city || 'Memphis, TN'}</span>
                     </div>
                     <h3 className="text-2xl font-bold text-navy mb-1">
-                      {athlete.first_name} {athlete.last_initial}
+                      {athlete.first_name} {athlete.last_initial}.
                     </h3>
                     <p className="text-gray-600 mb-1">{athlete.position} • {athlete.grade}</p>
                     <p className="text-gold font-semibold text-sm mb-4">{athlete.descriptor}</p>
-                    <button
-                      onClick={() => {
-                        if (athlete.slug === 'jacob-f') {
-                          onNavigate?.('jacob-fouse');
-                        } else {
-                          onNavigate?.('athlete-profile', athlete.slug);
-                        }
-                      }}
+                    <Link
+                      to={getProfilePath(athlete)}
                       className="btn-primary w-full flex items-center justify-center gap-2"
                     >
                       View Profile
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -94,46 +152,20 @@ export default function AthletesPage({ onNavigate }: AthletesPageProps) {
         </div>
       </section>
 
-      <section className="py-16 bg-gradient-to-br from-navy via-navy-light to-navy text-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Get Featured on NextUp</h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Sign up to get your athlete profile, highlights, and exposure opportunities.
-            </p>
-          </div>
-
-          <div className="rounded-[28px] border border-white/10 bg-white p-2 sm:p-3 md:p-4 shadow-2xl">
-            <div className="overflow-hidden rounded-[22px] bg-slate-50">
-              <iframe
-                src="https://tally.so/embed/Ek0MxA?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
-                width="100%"
-                height="1100"
-                frameBorder="0"
-                marginHeight={0}
-                marginWidth={0}
-                title="Get Featured on NextUp"
-                className="block w-full"
-                style={{ minHeight: '1100px' }}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
+      {/* CTA Strip */}
       <section className="py-16 bg-navy text-white">
-        <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Need more information?</h2>
+        <div className="max-w-3xl mx-auto px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Want to be featured?</h2>
           <p className="text-xl text-gray-300 mb-8">
-            Learn about our pricing and what's included with your athlete's profile page.
+            Sign up to get your athlete profile, highlights, and exposure opportunities.
           </p>
-          <button
-            onClick={() => onNavigate?.('create')}
+          <Link
+            to="/signup"
             className="btn-primary text-lg px-10 py-4 inline-flex items-center gap-2"
           >
-            Learn More
+            Get Started
             <ArrowRight className="w-5 h-5" />
-          </button>
+          </Link>
         </div>
       </section>
     </div>

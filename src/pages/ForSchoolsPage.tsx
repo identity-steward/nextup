@@ -2,11 +2,7 @@ import { GraduationCap, CheckCircle, Shield, Users, Trophy, TrendingUp, Mail, Al
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-interface ForSchoolsPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function ForSchoolsPage({ onNavigate }: ForSchoolsPageProps) {
+export default function ForSchoolsPage() {
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',

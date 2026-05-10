@@ -18,11 +18,7 @@ interface ParentIntake {
   created_at: string;
 }
 
-interface AdminParentIntakePageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export function AdminParentIntakePage({ onNavigate }: AdminParentIntakePageProps) {
+export function AdminParentIntakePage() {
   const [intakes, setIntakes] = useState<ParentIntake[]>([]);
   const [filtered, setFiltered] = useState<ParentIntake[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +90,7 @@ export function AdminParentIntakePage({ onNavigate }: AdminParentIntakePageProps
   ];
 
   return (
-    <DashboardLayout title="Parent Intake" onNavigate={onNavigate}>
+    <DashboardLayout title="Parent Intake">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <StatCard title="Total Submissions" value={String(total)} icon={Heart} color="green" />
         <StatCard title="Reviewed" value={String(reviewed)} icon={CheckCircle} color="blue" />

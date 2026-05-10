@@ -1,11 +1,8 @@
 import { Handshake, Target, Users, TrendingUp, Heart, Building2, Mail, CheckCircle, UserPlus, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { STRIPE_LINKS } from '../config/stripeLinks';
 
-interface SponsorsPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function SponsorsPage({ onNavigate }: SponsorsPageProps) {
+export default function SponsorsPage() {
   const whyPartner = [
     {
       icon: Heart,
@@ -160,12 +157,9 @@ export default function SponsorsPage({ onNavigate }: SponsorsPageProps) {
                     Get Started
                   </a>
                 ) : (
-                  <button
-                    onClick={() => onNavigate?.('contact')}
-                    className="btn-primary w-full"
-                  >
+                  <Link to="/contact" className="btn-primary w-full block text-center">
                     Get Started
-                  </button>
+                  </Link>
                 )}
               </div>
             ))}
@@ -202,12 +196,9 @@ export default function SponsorsPage({ onNavigate }: SponsorsPageProps) {
             <p className="text-xl text-gray-600 mb-8">
               Let's discuss how your organization can support Memphis youth athletes.
             </p>
-            <button
-              onClick={() => onNavigate?.('contact')}
-              className="btn-primary text-lg px-10 py-4"
-            >
+            <Link to="/contact" className="btn-primary text-lg px-10 py-4 inline-block">
               Request Sponsorship Info
-            </button>
+            </Link>
             <p className="text-gray-600 mt-6">
               Or email us at <a href="mailto:info@NextUpMemphis.com" className="text-gold hover:underline font-semibold">info@NextUpMemphis.com</a>
             </p>
@@ -223,13 +214,13 @@ export default function SponsorsPage({ onNavigate }: SponsorsPageProps) {
               <p className="text-gray-400 text-sm mb-5 leading-relaxed">
                 Directly fund a Memphis youth athlete's training, travel, and development.
               </p>
-              <button
-                onClick={() => onNavigate?.('athletes')}
+              <Link
+                to="/athletes"
                 className="inline-flex items-center gap-2 bg-gold hover:bg-gold-dark text-navy font-black text-sm px-6 py-3 rounded-xl transition-all duration-200 uppercase tracking-wide"
               >
                 Browse Athletes
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
 
             <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 text-center">
@@ -240,13 +231,13 @@ export default function SponsorsPage({ onNavigate }: SponsorsPageProps) {
               <p className="text-gray-600 text-sm mb-5 leading-relaxed">
                 Know a Memphis youth athlete who deserves a platform? Submit their info.
               </p>
-              <button
-                onClick={() => onNavigate?.('parent-intake')}
+              <Link
+                to="/signup/parent"
                 className="inline-flex items-center gap-2 btn-secondary text-sm px-6 py-3 rounded-xl uppercase tracking-wide"
               >
                 Nominate Now
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>

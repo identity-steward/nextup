@@ -1,11 +1,8 @@
 import { ArrowRight, Heart, Star, Users, Flame } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
 import type { Athlete } from '../types/athlete';
-
-interface FeaturedAthletesPreviewProps {
-  onNavigate?: (page: string, slug?: string) => void;
-}
 
 const JACOB_STORY = 'Jacob is a Memphis 8th grader competing in AAU basketball this Spring. He needs support to cover uniform and travel for the MADE Hoops regional and upcoming tournaments.';
 const JACOB_GOAL_LABEL = 'AAU regional travel';
@@ -34,7 +31,7 @@ function ProgressBar({ raised, goal, goalLabel }: { raised: number; goal: number
   );
 }
 
-function JacobCard({ athlete, onNavigate }: { athlete: Athlete; onNavigate?: (page: string, slug?: string) => void }) {
+function JacobCard({ athlete }: { athlete: Athlete }) {
   const raised = athlete.season_amount_raised ?? 120;
   const goal = athlete.season_goal_amount ?? 750;
   const supporters = athlete.supporters_count ?? 12;
@@ -97,20 +94,20 @@ function JacobCard({ athlete, onNavigate }: { athlete: Athlete; onNavigate?: (pa
           <ProgressBar raised={raised} goal={goal} goalLabel={goalLabel} />
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => onNavigate?.('jacob-fouse')}
+            <Link
+              to="/athletes/jacob-fouse"
               className="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-black text-base py-4 rounded-xl transition-all duration-200 shadow-[0_0_28px_rgba(245,158,11,0.45)] hover:shadow-[0_0_44px_rgba(245,158,11,0.65)] uppercase tracking-wide"
             >
               <Heart className="w-5 h-5" fill="white" />
               Support Jacob
-            </button>
-            <button
-              onClick={() => onNavigate?.('jacob-fouse')}
+            </Link>
+            <Link
+              to="/athletes/jacob-fouse"
               className="flex items-center justify-center gap-2 bg-white/8 hover:bg-white/12 border border-white/15 hover:border-sky-500/40 text-gray-400 hover:text-white font-semibold text-sm px-6 py-4 rounded-xl transition-all duration-200"
             >
               View Profile
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -118,17 +115,15 @@ function JacobCard({ athlete, onNavigate }: { athlete: Athlete; onNavigate?: (pa
   );
 }
 
-export default function FeaturedAthletesPreview({ onNavigate }: FeaturedAthletesPreviewProps) {
+export default function FeaturedAthletesPreview() {
   const [jacob, setJacob] = useState<Athlete | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      const featured = await AthleteService.getFeaturedAthlete();
+    AthleteService.getFeaturedAthlete().then(featured => {
       setJacob(featured);
       setLoading(false);
-    };
-    load();
+    });
   }, []);
 
   return (
@@ -157,9 +152,7 @@ export default function FeaturedAthletesPreview({ onNavigate }: FeaturedAthletes
           <div className="rounded-2xl border border-white/5 bg-[#0a0e1a] h-64 animate-pulse" />
         )}
 
-        {!loading && jacob && (
-          <JacobCard athlete={jacob} onNavigate={onNavigate} />
-        )}
+        {!loading && jacob && <JacobCard athlete={jacob} />}
 
         {!loading && !jacob && (
           <div className="text-center py-20 text-gray-500">
@@ -168,13 +161,13 @@ export default function FeaturedAthletesPreview({ onNavigate }: FeaturedAthletes
         )}
 
         <div className="mt-10 text-center">
-          <button
-            onClick={() => onNavigate?.('athletes')}
+          <Link
+            to="/athletes"
             className="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 font-semibold transition-colors text-sm"
           >
             View All Athletes
             <ArrowRight className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
       </div>
     </section>

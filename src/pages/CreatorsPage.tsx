@@ -1,33 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Camera, Instagram, ArrowRight, Briefcase } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { CreatorService } from '../services/creatorService';
 import type { Creator } from '../types/creator';
 
-interface CreatorsPageProps {
-  onNavigate?: (page: string, slug?: string) => void;
-}
-
-export default function CreatorsPage({ onNavigate }: CreatorsPageProps) {
+export default function CreatorsPage() {
   const [creators, setCreators] = useState<Creator[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadCreators = async () => {
-      const data = await CreatorService.getAllCreators();
+    CreatorService.getAllCreators().then(data => {
       setCreators(data);
       setLoading(false);
-    };
-
-    loadCreators();
+    });
   }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 pt-20">
-        <div className="text-navy text-xl">Loading creators...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -40,19 +26,18 @@ export default function CreatorsPage({ onNavigate }: CreatorsPageProps) {
           <p className="text-xl text-gray-300 max-w-3xl mb-8">
             These digital creators capture the moments, highlights, and stories that power our athletes' journeys.
           </p>
-          <button
-            onClick={() => onNavigate?.('contact')}
-            className="btn-primary flex items-center gap-2"
-          >
+          <Link to="/contact" className="btn-primary inline-flex items-center gap-2">
             Become a Featured Creator
             <ArrowRight className="w-5 h-5" />
-          </button>
+          </Link>
         </div>
       </section>
 
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          {creators.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-20 text-navy text-xl">Loading creators...</div>
+          ) : creators.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-600 text-xl">No creators found. Check back soon!</p>
             </div>
@@ -84,13 +69,13 @@ export default function CreatorsPage({ onNavigate }: CreatorsPageProps) {
                         <span>{creator.instagram_handle}</span>
                       </div>
                     )}
-                    <button
-                      onClick={() => onNavigate?.('creator-profile', creator.slug)}
+                    <Link
+                      to={`/creators/${creator.slug}`}
                       className="btn-primary w-full flex items-center justify-center gap-2"
                     >
                       View Profile
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -107,13 +92,10 @@ export default function CreatorsPage({ onNavigate }: CreatorsPageProps) {
               Creators get exposure to families and schools, inbound highlight work, and opportunities
               to collaborate with sponsors and teams through NextUp Memphis.
             </p>
-            <button
-              onClick={() => onNavigate?.('contact')}
-              className="btn-primary inline-flex items-center gap-2"
-            >
+            <Link to="/contact" className="btn-primary inline-flex items-center gap-2">
               Apply to Be a Creator
               <ArrowRight className="w-5 h-5" />
-            </button>
+            </Link>
           </div>
         </div>
       </section>

@@ -31,11 +31,7 @@ function formatBytes(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-interface AdminMediaPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export function AdminMediaPage({ onNavigate }: AdminMediaPageProps) {
+export function AdminMediaPage() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('pending');
@@ -101,7 +97,7 @@ export function AdminMediaPage({ onNavigate }: AdminMediaPageProps) {
   const pendingCount = items.filter(i => i.status === 'pending').length;
 
   return (
-    <DashboardLayout title="Media Review" onNavigate={onNavigate}>
+    <DashboardLayout title="Media Review">
       <div className="space-y-6">
         {/* Filter + refresh */}
         <div className="flex items-center gap-3 flex-wrap">

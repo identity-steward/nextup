@@ -1,11 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { User, CreditCard as Edit3, Upload, Link2, Trophy, Star, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Instagram, Twitter, ExternalLink, Camera, Video, LogOut, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-
-interface AthleteDashboardProps {
-  onNavigate?: (page: string, slug?: string) => void;
-}
 
 interface Athlete {
   id: string;
@@ -53,7 +50,8 @@ const BUCKETS: Record<string, string> = {
   document: 'profile-assets',
 };
 
-export default function AthleteDashboardPage({ onNavigate }: AthleteDashboardProps) {
+export default function AthleteDashboardPage() {
+  const navigate = useNavigate();
   const { user, profile, isAdmin, signOut } = useAuth();
   const [athlete, setAthlete] = useState<Athlete | null>(null);
   const [updates, setUpdates] = useState<UpdateRequest[]>([]);
@@ -274,8 +272,8 @@ export default function AthleteDashboardPage({ onNavigate }: AthleteDashboardPro
           <p className="text-gray-500 text-sm leading-relaxed mb-6">
             Your account isn't linked to an athlete profile yet. Submit an application and our team will connect your account once approved.
           </p>
-          <button onClick={() => onNavigate?.('create')} className="btn-primary px-8 py-3">
-            Create Athlete Profile
+          <button onClick={() => navigate('/signup')} className="btn-primary px-8 py-3">
+            Get Started
           </button>
         </div>
       </div>
@@ -307,7 +305,7 @@ export default function AthleteDashboardPage({ onNavigate }: AthleteDashboardPro
           <div className="flex items-center gap-3">
             {athlete && (
               <button
-                onClick={() => onNavigate?.('athlete-profile', athlete.slug)}
+                onClick={() => navigate(`/athletes/${athlete.slug}`)}
                 className="hidden sm:inline-flex items-center gap-1.5 text-xs text-gray-300 hover:text-white border border-white/20 hover:border-white/40 px-3 py-2 rounded-lg transition-colors"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -316,7 +314,7 @@ export default function AthleteDashboardPage({ onNavigate }: AthleteDashboardPro
             )}
             {isAdmin && (
               <button
-                onClick={() => onNavigate?.('admin-dashboard')}
+                onClick={() => navigate('/admin')}
                 className="hidden sm:inline-flex items-center gap-1.5 text-xs text-gold hover:text-gold-dark border border-gold/30 hover:border-gold/60 px-3 py-2 rounded-lg transition-colors"
               >
                 <Star className="w-3.5 h-3.5" />
@@ -324,7 +322,7 @@ export default function AthleteDashboardPage({ onNavigate }: AthleteDashboardPro
               </button>
             )}
             <button
-              onClick={async () => { await signOut(); onNavigate?.('home'); }}
+              onClick={async () => { await signOut(); navigate('/'); }}
               className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white px-3 py-2 rounded-lg transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -442,7 +440,7 @@ export default function AthleteDashboardPage({ onNavigate }: AthleteDashboardPro
                 {[
                   { label: 'Submit Profile Update', icon: <Edit3 className="w-4 h-4" />, action: () => setTab('edit') },
                   { label: 'Upload Photo / Video', icon: <Upload className="w-4 h-4" />, action: () => setTab('media') },
-                  { label: 'View Public Profile', icon: <ExternalLink className="w-4 h-4" />, action: () => onNavigate?.('athlete-profile', athlete.slug) },
+                  { label: 'View Public Profile', icon: <ExternalLink className="w-4 h-4" />, action: () => navigate(`/athletes/${athlete.slug}`) },
                 ].map(a => (
                   <button key={a.label} onClick={a.action}
                     className="flex items-center gap-2 bg-white border border-gray-200 hover:border-gold/40 hover:shadow-sm px-4 py-3 rounded-xl text-sm font-semibold text-navy transition-all group">

@@ -28,6 +28,7 @@
 
 import { Trophy, MapPin, Calendar, ArrowRight, Radio } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 interface Event {
@@ -83,11 +84,7 @@ function formatDateRange(start: string | null, end: string | null): string {
   return `${s.toLocaleDateString('en-US', opts)} – ${e.toLocaleDateString('en-US', opts)}`;
 }
 
-interface EventsCTAProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function EventsCTA({ onNavigate }: EventsCTAProps) {
+export default function EventsCTA() {
   const [events, setEvents] = useState<Event[]>(STATIC_EVENTS);
 
   useEffect(() => {
@@ -124,13 +121,13 @@ export default function EventsCTA({ onNavigate }: EventsCTAProps) {
             <p className="text-gray-500 text-lg leading-relaxed mb-8">
               We capture athletes live at games and events, turning real moments into lasting opportunities. One game-changing play, one story told right — that's how careers begin.
             </p>
-            <button
-              onClick={() => onNavigate?.('create')}
+            <Link
+              to="/signup"
               className="btn-primary px-8 py-4 text-base font-bold inline-flex items-center gap-2 group"
             >
-              Create Free Profile
+              Get Started
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </button>
+            </Link>
           </div>
 
           {/* Right — events list */}
@@ -208,12 +205,12 @@ export default function EventsCTA({ onNavigate }: EventsCTAProps) {
 
             <p className="text-center text-gray-400 text-sm mt-6">
               Events added as they're confirmed.{' '}
-              <button
-                onClick={() => onNavigate?.('create')}
+              <Link
+                to="/signup"
                 className="text-gold hover:text-gold-dark font-semibold transition-colors"
               >
                 Register your athlete
-              </button>
+              </Link>
               {' '}to be notified.
             </p>
           </div>

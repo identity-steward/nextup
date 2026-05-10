@@ -1,37 +1,34 @@
 import { UserPlus, Users, Handshake, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-interface PlatformTilesProps {
-  onNavigate?: (page: string) => void;
-}
+const tiles = [
+  {
+    icon: UserPlus,
+    title: 'For Parents',
+    description: 'Create a support page for your athlete in minutes',
+    cta: 'Get Started',
+    path: '/signup',
+    gradient: 'from-blue-500 to-blue-600',
+  },
+  {
+    icon: Users,
+    title: 'Meet the Athletes',
+    description: 'Browse profiles and support Memphis youth athletes',
+    cta: 'View Profiles',
+    path: '/athletes',
+    gradient: 'from-gold to-gold-dark',
+  },
+  {
+    icon: Handshake,
+    title: 'Sponsors',
+    description: 'Partner with NextUp to support youth sports',
+    cta: 'Support Youth Sports',
+    path: '/sponsors',
+    gradient: 'from-navy to-navy-light',
+  },
+];
 
-export default function PlatformTiles({ onNavigate }: PlatformTilesProps) {
-  const tiles = [
-    {
-      icon: UserPlus,
-      title: 'For Parents',
-      description: 'Create a support page for your athlete in minutes',
-      cta: 'Create Athlete Page',
-      page: 'create',
-      gradient: 'from-blue-500 to-blue-600',
-    },
-    {
-      icon: Users,
-      title: 'Meet the Athletes',
-      description: 'Browse profiles and support Memphis youth athletes',
-      cta: 'View Profiles',
-      page: 'athletes',
-      gradient: 'from-gold to-gold-dark',
-    },
-    {
-      icon: Handshake,
-      title: 'Sponsors',
-      description: 'Partner with NextUp to support youth sports',
-      cta: 'Support Youth Sports',
-      page: 'sponsors',
-      gradient: 'from-navy to-navy-light',
-    },
-  ];
-
+export default function PlatformTiles() {
   return (
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -49,13 +46,13 @@ export default function PlatformTiles({ onNavigate }: PlatformTilesProps) {
                 <p className="text-gray-600 mb-6 leading-relaxed">
                   {tile.description}
                 </p>
-                <button
-                  onClick={() => onNavigate?.(tile.page)}
+                <Link
+                  to={tile.path}
                   className="flex items-center gap-2 text-navy font-semibold hover:text-gold transition-colors group"
                 >
                   {tile.cta}
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </Link>
               </div>
             </div>
           ))}

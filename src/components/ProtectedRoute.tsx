@@ -1,14 +1,15 @@
 import { ReactNode } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  onNavigate: (page: string) => void;
   requireAdmin?: boolean;
 }
 
-export default function ProtectedRoute({ children, onNavigate, requireAdmin = false }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const { session, user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -19,8 +20,7 @@ export default function ProtectedRoute({ children, onNavigate, requireAdmin = fa
   }
 
   if (!session) {
-    onNavigate('signin');
-    return null;
+    return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
   if (requireAdmin) {
@@ -36,12 +36,9 @@ export default function ProtectedRoute({ children, onNavigate, requireAdmin = fa
             </div>
             <h2 className="text-xl font-bold text-navy mb-2">Access Restricted</h2>
             <p className="text-gray-500 text-sm mb-6">You don't have permission to view this page. Admin access required.</p>
-            <button
-              onClick={() => onNavigate('home')}
-              className="btn-primary px-6 py-2.5 text-sm"
-            >
+            <a href="/" className="btn-primary px-6 py-2.5 text-sm inline-block">
               Back to Home
-            </button>
+            </a>
           </div>
         </div>
       );

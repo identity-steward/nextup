@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import AthletesPage from './pages/AthletesPage';
+import SignupPage from './pages/SignupPage';
 import JoinPage from './pages/JoinPage';
 import CreatorPage from './pages/CreatorPage';
-import CreateAthletePage from './pages/CreateAthletePage';
 import SponsorsPage from './pages/SponsorsPage';
 import AboutPage from './pages/AboutPage';
 import ForSchoolsPage from './pages/ForSchoolsPage';
@@ -21,6 +21,7 @@ import ContactPage from './pages/ContactPage';
 import ParentIntakePage from './pages/ParentIntakePage';
 import { isSupabaseConfigured } from './lib/supabase';
 import JacobFousePage from './pages/JacobFousePage';
+import LiveFeedPage from './pages/LiveFeedPage';
 
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminAthletesPage } from './pages/AdminAthletesPage';
@@ -32,132 +33,119 @@ import AthleteDashboardPage from './pages/AthleteDashboardPage';
 import ThankYouPage from './pages/ThankYouPage';
 
 function AppContent() {
-  const initialPage = (() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('page') || 'home';
-  })();
-
-  const [currentPage, setCurrentPage] = useState(initialPage);
-  const [pageSlug, setPageSlug] = useState<string>();
-
-  const handleNavigate = (page: string, slug?: string) => {
-    setCurrentPage(page);
-    setPageSlug(slug);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentPage]);
-
-  const renderPage = () => {
-  switch (currentPage) {
-    case 'home':
-      return <HomePage onNavigate={handleNavigate} />;
-    case 'athletes':
-      return <AthletesPage onNavigate={handleNavigate} />;
-    case 'athlete-profile':
-      return <AthleteProfilePage slug={pageSlug} onNavigate={handleNavigate} />;
-    case 'jacob-fouse':
-      return <JacobFousePage onNavigate={handleNavigate} />;
-    case 'join':
-      return <JoinPage onNavigate={handleNavigate} />;
-    case 'signin':
-      return <SignInPage onNavigate={handleNavigate} />;
-    case 'creator':
-      return <CreatorPage />;
-    case 'creators':
-      return <CreatorsPage onNavigate={handleNavigate} />;
-    case 'creator-profile':
-      return <CreatorProfilePage slug={pageSlug} onNavigate={handleNavigate} />;
-    case 'create':
-      return <CreateAthletePage onNavigate={handleNavigate} />;
-    case 'sponsors':
-      return <SponsorsPage onNavigate={handleNavigate} />;
-    case 'support':
-      return <SupportPage onNavigate={handleNavigate} />;
-    case 'contact':
-      return <ContactPage onNavigate={handleNavigate} />;
-    case 'parent-intake':
-      return <ParentIntakePage onNavigate={handleNavigate} />;
-    case 'about':
-      return <AboutPage />;
-    case 'schools':
-      return <ForSchoolsPage onNavigate={handleNavigate} />;
-    case 'demo':
-      return <HackathonDemoPage onNavigate={handleNavigate} />;
-    case 'thank-you':
-      return <ThankYouPage onNavigate={handleNavigate} />;
-    case 'athlete-dashboard':
-      return (
-        <ProtectedRoute onNavigate={handleNavigate}>
-          <AthleteDashboardPage onNavigate={handleNavigate} />
-        </ProtectedRoute>
-      );
-    case 'admin-dashboard':
-      return (
-        <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
-          <AdminDashboardPage onNavigate={handleNavigate} />
-        </ProtectedRoute>
-      );
-    case 'admin-athletes':
-      return (
-        <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
-          <AdminAthletesPage onNavigate={handleNavigate} />
-        </ProtectedRoute>
-      );
-    case 'admin-parent-intake':
-      return (
-        <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
-          <AdminParentIntakePage onNavigate={handleNavigate} />
-        </ProtectedRoute>
-      );
-    case 'admin-agent-ops':
-      return (
-        <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
-          <AdminAgentOpsPage onNavigate={handleNavigate} />
-        </ProtectedRoute>
-      );
-    case 'admin-profile-updates':
-      return (
-        <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
-          <AdminProfileUpdatesPage onNavigate={handleNavigate} />
-        </ProtectedRoute>
-      );
-    case 'admin-media':
-      return (
-        <ProtectedRoute onNavigate={handleNavigate} requireAdmin>
-          <AdminMediaPage onNavigate={handleNavigate} />
-        </ProtectedRoute>
-      );
-    default:
-      return <HomePage onNavigate={handleNavigate} />;
-  }
-};
-
   return (
     <div className="min-h-screen bg-white">
-      <Header onNavigate={handleNavigate} currentPage={currentPage} />
+      <Header />
       <main>
         {!isSupabaseConfigured && (
           <div className="bg-amber-50 border-b border-amber-200 text-amber-900 pt-24">
             <div className="max-w-7xl mx-auto px-6 lg:px-8 py-3 text-sm">
-              Running in local preview mode. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env` to enable sign-in and form submissions.
+              Running in local preview mode. Configure <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> in <code>.env</code> to enable sign-in and form submissions.
             </div>
           </div>
         )}
-        {renderPage()}
+        <Routes>
+          {/* Public */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/athletes" element={<AthletesPage />} />
+          <Route path="/athletes/jacob-fouse" element={<JacobFousePage />} />
+          <Route path="/athletes/:slug" element={<AthleteProfilePage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/signup/player" element={<JoinPage />} />
+          <Route path="/signup/parent" element={<ParentIntakePage />} />
+          <Route path="/live-feed" element={<LiveFeedPage />} />
+          <Route path="/creators" element={<CreatorsPage />} />
+          <Route path="/creators/:slug" element={<CreatorProfilePage />} />
+          <Route path="/sponsors" element={<SponsorsPage />} />
+          <Route path="/support" element={<SupportPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/schools" element={<ForSchoolsPage />} />
+          <Route path="/demo" element={<HackathonDemoPage />} />
+          <Route path="/thank-you" element={<ThankYouPage />} />
+          <Route path="/creator" element={<CreatorPage />} />
+
+          {/* Legacy redirects */}
+          <Route path="/join" element={<Navigate to="/signup/player" replace />} />
+          <Route path="/parent-intake" element={<Navigate to="/signup/parent" replace />} />
+
+          {/* Auth */}
+          <Route path="/signin" element={<SignInPage />} />
+
+          {/* Protected */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <AthleteDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/athletes"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminAthletesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/intake"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminParentIntakePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/agent-ops"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminAgentOpsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/profile-updates"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminProfileUpdatesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/media"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminMediaPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
-      <Footer onNavigate={handleNavigate} />
+      <Footer />
     </div>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

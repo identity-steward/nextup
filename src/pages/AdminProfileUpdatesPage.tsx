@@ -28,11 +28,7 @@ interface UpdateRequest {
 const STATUS_FILTERS = ['all', 'pending', 'approved', 'rejected'] as const;
 type StatusFilter = typeof STATUS_FILTERS[number];
 
-interface AdminProfileUpdatesPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export function AdminProfileUpdatesPage({ onNavigate }: AdminProfileUpdatesPageProps) {
+export function AdminProfileUpdatesPage() {
   const [requests, setRequests] = useState<UpdateRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('pending');
@@ -124,7 +120,7 @@ export function AdminProfileUpdatesPage({ onNavigate }: AdminProfileUpdatesPageP
     Object.entries(fieldLabels).filter(([key]) => req[key as keyof UpdateRequest] !== null);
 
   return (
-    <DashboardLayout title="Profile Update Requests" onNavigate={onNavigate}>
+    <DashboardLayout title="Profile Update Requests">
       <div className="space-y-6">
         {/* Filter + refresh */}
         <div className="flex items-center gap-3 flex-wrap">

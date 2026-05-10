@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
 import type { Athlete } from '../types/athlete';
 import AthleteProfileTemplate from '../components/AthleteProfileTemplate';
 
-interface AthleteProfilePageProps {
-  slug?: string;
-  onNavigate?: (page: string) => void;
-}
-
-export default function AthleteProfilePage({ slug, onNavigate }: AthleteProfilePageProps) {
+export default function AthleteProfilePage() {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [athlete, setAthlete] = useState<Athlete | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +17,6 @@ export default function AthleteProfilePage({ slug, onNavigate }: AthleteProfileP
         setLoading(false);
         return;
       }
-
       const data = await AthleteService.getAthleteBySlug(slug);
       setAthlete(data);
       setLoading(false);
@@ -42,7 +39,7 @@ export default function AthleteProfilePage({ slug, onNavigate }: AthleteProfileP
         <div className="text-center">
           <p className="text-navy text-xl mb-4">Athlete not found</p>
           <button
-            onClick={() => onNavigate?.('athletes')}
+            onClick={() => navigate('/athletes')}
             className="btn-primary inline-flex items-center gap-2"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -57,7 +54,7 @@ export default function AthleteProfilePage({ slug, onNavigate }: AthleteProfileP
     <div className="pt-20">
       <AthleteProfileTemplate
         athlete={athlete}
-        onBack={() => onNavigate?.('athletes')}
+        onBack={() => navigate('/athletes')}
       />
     </div>
   );

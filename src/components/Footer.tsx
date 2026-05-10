@@ -1,17 +1,13 @@
 import { Mail, Instagram, Youtube, Linkedin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-// Social links — update LinkedIn once final URL is confirmed
 const SOCIALS = {
   instagram: 'https://www.instagram.com/nextupmemphis?igsh=dTg4bHg0dnVnODBv&utm_source=qr',
   youtube: 'https://youtube.com/@nextupmemphis-ip?si=LLAr7-1L8l1hqo1A',
-  linkedin: 'https://www.linkedin.com/company/nextupmemphis', // placeholder — update when confirmed
+  linkedin: 'https://www.linkedin.com/company/nextupmemphis',
 };
 
-interface FooterProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function Footer({ onNavigate }: FooterProps) {
+export default function Footer() {
   return (
     <footer className="bg-navy text-gray-300 border-t-4 border-gold">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
@@ -40,24 +36,29 @@ export default function Footer({ onNavigate }: FooterProps) {
             <h4 className="text-white font-semibold mb-4 text-lg">Quick Links</h4>
             <ul className="space-y-3">
               <li>
-                <button onClick={() => onNavigate?.('athletes')} className="hover:text-gold transition-colors duration-200 text-left">
+                <Link to="/athletes" className="hover:text-gold transition-colors duration-200">
                   View Athletes
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => onNavigate?.('create')} className="hover:text-gold transition-colors duration-200 text-left">
-                  Create Athlete Page
-                </button>
+                <Link to="/signup" className="hover:text-gold transition-colors duration-200">
+                  Get Started
+                </Link>
               </li>
               <li>
-                <button onClick={() => onNavigate?.('sponsors')} className="hover:text-gold transition-colors duration-200 text-left">
+                <Link to="/sponsors" className="hover:text-gold transition-colors duration-200">
                   Sponsor
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => onNavigate?.('about')} className="hover:text-gold transition-colors duration-200 text-left">
+                <Link to="/about" className="hover:text-gold transition-colors duration-200">
                   About Us
-                </button>
+                </Link>
+              </li>
+              <li>
+                <Link to="/live-feed" className="hover:text-gold transition-colors duration-200">
+                  Live Feed
+                </Link>
               </li>
             </ul>
           </div>

@@ -1,10 +1,7 @@
 import { ArrowRight, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-interface HeroProps {
-  onNavigate?: (page: string, slug?: string) => void;
-}
-
-export default function Hero({ onNavigate }: HeroProps) {
+export default function Hero() {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-[#0a0e1a]">
       <div
@@ -46,21 +43,21 @@ export default function Hero({ onNavigate }: HeroProps) {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <button
-              onClick={() => onNavigate?.('jacob-fouse')}
+            <Link
+              to="/athletes/jacob-fouse"
               className="group flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-black text-base px-9 py-4 rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-[0_0_40px_rgba(245,158,11,0.55)] uppercase tracking-wide ring-2 ring-amber-400/30 ring-offset-2 ring-offset-transparent"
             >
               Support Jacob Now
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
 
-            <button
-              onClick={() => onNavigate?.('join')}
+            <Link
+              to="/signup"
               className="group flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 text-white font-bold text-base px-8 py-4 rounded-lg transition-all duration-200 uppercase tracking-wide"
             >
               <Users className="w-5 h-5" />
-              Start Athlete Profile
-            </button>
+              Get Started
+            </Link>
           </div>
         </div>
 

@@ -1,4 +1,5 @@
 import { Video, Camera, PenTool, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const roles = [
   { icon: Video, label: 'Videographer' },
@@ -6,11 +7,7 @@ const roles = [
   { icon: PenTool, label: 'Editor' },
 ];
 
-interface CreatorCTAProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function CreatorCTA({ onNavigate }: CreatorCTAProps) {
+export default function CreatorCTA() {
   return (
     <section className="py-24 bg-navy relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(212,175,55,0.12)_0%,_transparent_60%)] pointer-events-none" />
@@ -41,13 +38,13 @@ export default function CreatorCTA({ onNavigate }: CreatorCTAProps) {
                 </div>
               ))}
             </div>
-            <button
-              onClick={() => onNavigate?.('creator')}
+            <Link
+              to="/creator"
               className="btn-primary px-8 py-4 text-base font-bold inline-flex items-center gap-2 group"
             >
               Apply as Creator
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </button>
+            </Link>
           </div>
 
           <div className="hidden lg:block">

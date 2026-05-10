@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, Heart, Users } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
 import type { Athlete } from '../types/athlete';
 
-interface CheerForTheGirlsProps {
-  onNavigate?: (page: string, slug?: string) => void;
-}
 
 const PLACEHOLDERS: Partial<Athlete>[] = [
   {
@@ -61,25 +59,24 @@ const SPORT_ACCENT: Record<string, string> = {
 function GirlAthleteCard({
   athlete,
   isPlaceholder,
-  onNavigate,
 }: {
   athlete: Partial<Athlete>;
   isPlaceholder: boolean;
-  onNavigate?: (page: string, slug?: string) => void;
 }) {
+  const navigate = useNavigate();
   const accent = SPORT_ACCENT[athlete.sport ?? ''] ?? SPORT_ACCENT.default;
 
   const handleViewProfile = () => {
     if (!isPlaceholder && athlete.slug) {
-      onNavigate?.('athlete-profile', athlete.slug);
+      navigate(`/athletes/${athlete.slug}`);
     }
   };
 
   const handleCheer = () => {
     if (!isPlaceholder && athlete.slug) {
-      onNavigate?.('support', athlete.slug);
+      navigate('/signup');
     } else {
-      onNavigate?.('join');
+      navigate('/signup');
     }
   };
 
@@ -194,7 +191,7 @@ function GirlAthleteCard({
   );
 }
 
-export default function CheerForTheGirls({ onNavigate }: CheerForTheGirlsProps) {
+export default function CheerForTheGirls() {
   const [athletes, setAthletes] = useState<Partial<Athlete>[]>([]);
   const [loading, setLoading] = useState(true);
   const [usingPlaceholders, setUsingPlaceholders] = useState(false);
@@ -246,7 +243,6 @@ export default function CheerForTheGirls({ onNavigate }: CheerForTheGirlsProps) 
                 key={athlete.id}
                 athlete={athlete}
                 isPlaceholder={usingPlaceholders}
-                onNavigate={onNavigate}
               />
             ))}
           </div>
@@ -262,13 +258,13 @@ export default function CheerForTheGirls({ onNavigate }: CheerForTheGirlsProps) 
           <p className="text-white/60 text-sm font-semibold mb-4">
             Know a girls athlete who should be featured?
           </p>
-          <button
-            onClick={() => onNavigate?.('parent-intake')}
+          <Link
+            to="/signup/parent"
             className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-black text-sm py-3 px-7 rounded-xl transition-all duration-200 uppercase tracking-wide shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_32px_rgba(245,158,11,0.5)]"
           >
             <Heart className="w-4 h-4" fill="white" />
             Nominate an Athlete
-          </button>
+          </Link>
         </div>
       </div>
     </section>

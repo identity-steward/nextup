@@ -1,12 +1,10 @@
 import { useState, FormEvent } from 'react';
 import { LogIn, UserPlus } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-interface SignInPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function SignInPage({ onNavigate }: SignInPageProps) {
+export default function SignInPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -25,10 +23,9 @@ export default function SignInPage({ onNavigate }: SignInPageProps) {
       return;
     }
 
-    // Route by role
     const appRole = data.user?.app_metadata?.role;
     if (appRole === 'admin') {
-      onNavigate?.('admin-dashboard');
+      navigate('/admin');
       return;
     }
 
@@ -39,9 +36,9 @@ export default function SignInPage({ onNavigate }: SignInPageProps) {
       .maybeSingle();
 
     if (profileData?.role === 'admin') {
-      onNavigate?.('admin-dashboard');
+      navigate('/admin');
     } else {
-      onNavigate?.('athlete-dashboard');
+      navigate('/dashboard');
     }
   };
 
@@ -104,13 +101,13 @@ export default function SignInPage({ onNavigate }: SignInPageProps) {
           <div className="mt-8 pt-6 border-t border-gray-200 space-y-3 text-center">
             <p className="text-gray-500 text-sm">
               Are you an athlete or parent?{' '}
-              <button
-                onClick={() => onNavigate?.('create')}
+              <Link
+                to="/signup"
                 className="text-gold font-semibold hover:text-gold-dark transition-colors inline-flex items-center gap-1"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                Create a free profile
-              </button>
+                Get started free
+              </Link>
             </p>
             <p className="text-gray-400 text-xs">
               Once your profile is approved, we'll send your login credentials.

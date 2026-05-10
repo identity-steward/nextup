@@ -1,12 +1,12 @@
-import { Camera, ArrowRight, Instagram, ExternalLink } from 'lucide-react';
+import { Camera, ArrowRight, Instagram } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { Creator } from '../types/creator';
 
 interface FeaturedCreatorProps {
   creator: Creator;
-  onNavigate?: (page: string, slug?: string) => void;
 }
 
-export default function FeaturedCreator({ creator, onNavigate }: FeaturedCreatorProps) {
+export default function FeaturedCreator({ creator }: FeaturedCreatorProps) {
   return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -58,20 +58,20 @@ export default function FeaturedCreator({ creator, onNavigate }: FeaturedCreator
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => onNavigate?.('creator-profile', creator.slug)}
+              <Link
+                to={`/creators/${creator.slug}`}
                 className="btn-primary flex items-center gap-2 justify-center"
               >
                 View Full Profile
                 <ArrowRight className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => onNavigate?.('creators')}
+              </Link>
+              <Link
+                to="/creators"
                 className="btn-secondary flex items-center gap-2 justify-center"
               >
                 Meet All Creators
                 <Camera className="w-5 h-5" />
-              </button>
+              </Link>
             </div>
 
             {creator.instagram_handle && (

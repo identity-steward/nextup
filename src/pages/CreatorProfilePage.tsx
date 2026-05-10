@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { ArrowRight, Instagram, ExternalLink, Camera, Film, Sparkles, Check, MessageCircle } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { CreatorService } from '../services/creatorService';
 import type { Creator } from '../types/creator';
 
-interface CreatorProfilePageProps {
-  slug?: string;
-  onNavigate?: (page: string) => void;
-}
-
-export default function CreatorProfilePage({ slug, onNavigate }: CreatorProfilePageProps) {
+export default function CreatorProfilePage() {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [creator, setCreator] = useState<Creator | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +35,7 @@ export default function CreatorProfilePage({ slug, onNavigate }: CreatorProfileP
       <div className="min-h-screen flex items-center justify-center bg-gray-50 pt-20">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-navy mb-4">Creator not found</h2>
-          <button onClick={() => onNavigate?.('creators')} className="btn-primary">
+          <button onClick={() => navigate('/creators')} className="btn-primary">
             View All Creators
           </button>
         </div>
@@ -244,15 +242,15 @@ export default function CreatorProfilePage({ slug, onNavigate }: CreatorProfileP
             Want {creator.display_name} to cover your season?
           </h2>
           <p className="text-xl text-gray-300 mb-10">
-            Create an athlete page and start building your support team today.
+            Get started and build your athlete profile today.
           </p>
-          <button
-            onClick={() => onNavigate?.('create')}
+          <Link
+            to="/signup"
             className="btn-primary text-lg px-10 py-4 inline-flex items-center gap-2"
           >
-            Create Athlete Page
+            Get Started
             <ArrowRight className="w-5 h-5" />
-          </button>
+          </Link>
         </div>
       </section>
 

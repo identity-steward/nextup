@@ -1,15 +1,11 @@
 import { Heart, ArrowRight, BadgeCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-interface JacobHighlightReelProps {
-  onNavigate?: (page: string, slug?: string) => void;
-}
-
-export default function JacobHighlightReel({ onNavigate }: JacobHighlightReelProps) {
+export default function JacobHighlightReel() {
   return (
     <section className="py-14 bg-[#0a0e1a] border-t border-white/5">
       <div className="max-w-2xl mx-auto px-6 lg:px-8">
 
-        {/* Header */}
         <div className="flex items-center gap-3 mb-5">
           <div className="w-px h-8 bg-sky-500 flex-shrink-0" />
           <div>
@@ -22,11 +18,9 @@ export default function JacobHighlightReel({ onNavigate }: JacobHighlightReelPro
           Already getting recognition — now help him go further.
         </p>
 
-        {/* Video card */}
         <div className="relative mb-6">
           <div className="absolute -inset-2 bg-sky-500/5 rounded-3xl blur-xl pointer-events-none" />
           <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_4px_40px_rgba(0,0,0,0.6),0_0_0_1px_rgba(14,165,233,0.07)] bg-[#060910]">
-            {/* Media card header bar */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/8 bg-white/[0.02]">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
@@ -53,22 +47,21 @@ export default function JacobHighlightReel({ onNavigate }: JacobHighlightReelPro
           </div>
         </div>
 
-        {/* CTA row */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => onNavigate?.('jacob-fouse')}
+          <Link
+            to="/athletes/jacob-fouse"
             className="flex-1 inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-black text-sm px-8 py-3.5 rounded-xl transition-all duration-200 shadow-[0_0_24px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.6)] uppercase tracking-wide"
           >
             <Heart className="w-4 h-4" fill="white" />
             Support Jacob
-          </button>
-          <button
-            onClick={() => onNavigate?.('jacob-fouse')}
+          </Link>
+          <Link
+            to="/athletes/jacob-fouse"
             className="inline-flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 hover:border-white/20 text-white/70 hover:text-white font-semibold text-sm px-6 py-3.5 rounded-xl transition-all duration-200"
           >
             View Profile
             <ArrowRight className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
       </div>
     </section>

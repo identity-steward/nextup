@@ -13,17 +13,13 @@ import ProfileFooterCTA from '../components/jacob/ProfileFooterCTA';
 import ProfileDisclaimerStrip from '../components/jacob/ProfileDisclaimerStrip';
 import ProfileUpdateModal from '../components/jacob/ProfileUpdateModal';
 
-interface JacobFousePageProps {
-  onNavigate?: (page: string, slug?: string) => void;
-}
-
 const GOAL = 500;
 const RAISED = 120;
 const SUPPORTERS = 12;
 const STILL_NEEDED = GOAL - RAISED;
 const PROGRESS_PCT = Math.round((RAISED / GOAL) * 100);
 
-export default function JacobFousePage({ onNavigate }: JacobFousePageProps) {
+export default function JacobFousePage() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   const scrollToSupport = () => {
@@ -90,7 +86,7 @@ export default function JacobFousePage({ onNavigate }: JacobFousePageProps) {
       <ProfileDisclaimerStrip onRequestUpdate={() => setShowUpdateModal(true)} />
 
       {/* 12. Footer CTA */}
-      <ProfileFooterCTA onSupportClick={scrollToSupport} onNavigate={onNavigate} />
+      <ProfileFooterCTA onSupportClick={scrollToSupport} />
 
       {/* Profile update modal */}
       {showUpdateModal && (

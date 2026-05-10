@@ -12,11 +12,7 @@ import SupporterTier from '../components/SupporterTier';
 import FounderStory from '../components/FounderStory';
 import FAQ from '../components/FAQ';
 
-interface HomePageProps {
-  onNavigate?: (page: string, slug?: string) => void;
-}
-
-export default function HomePage({ onNavigate }: HomePageProps) {
+export default function HomePage() {
   const athletesRef = useRef<HTMLDivElement>(null);
 
   const scrollToAthletes = () => {
@@ -25,18 +21,18 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
   return (
     <>
-      <Hero onNavigate={onNavigate} />
-      <JacobHighlightReel onNavigate={onNavigate} />
+      <Hero />
+      <JacobHighlightReel />
       <div ref={athletesRef}>
-        <FeaturedAthletesPreview onNavigate={onNavigate} />
+        <FeaturedAthletesPreview />
       </div>
-      <CheerForTheGirls onNavigate={onNavigate} />
+      <CheerForTheGirls />
       <HowItWorks />
-      <SupporterTier onNavigate={onNavigate} />
+      <SupporterTier />
       <EventUrgencyBanner onScrollToAthletes={scrollToAthletes} />
-      <EventsCTA onNavigate={onNavigate} />
-      <JoinNextUp onNavigate={onNavigate} />
-      <CreatorCTA onNavigate={onNavigate} />
+      <EventsCTA />
+      <JoinNextUp />
+      <CreatorCTA />
       <FounderStory />
       <FAQ />
     </>

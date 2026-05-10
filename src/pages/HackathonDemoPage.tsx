@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Play, CheckCircle, TrendingUp, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import LiveStats from '../components/LiveStats';
 import { AthleteService } from '../services/athleteService';
 import type { Athlete } from '../types/athlete';
 
-interface HackathonDemoPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function HackathonDemoPage({ onNavigate }: HackathonDemoPageProps) {
+export default function HackathonDemoPage() {
   const [athlete, setAthlete] = useState<Athlete | null>(null);
 
   useEffect(() => {
@@ -114,24 +111,21 @@ export default function HackathonDemoPage({ onNavigate }: HackathonDemoPageProps
           </h2>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <button
-              onClick={() => onNavigate?.('home')}
-              className="btn-primary py-4 text-lg"
-            >
+            <Link to="/" className="btn-primary py-4 text-lg block">
               View Demo
-            </button>
-            <button
-              onClick={() => onNavigate?.('athletes')}
-              className="bg-white/10 hover:bg-white/20 text-white py-4 rounded-lg font-semibold text-lg transition-all duration-200 border-2 border-white/20 hover:border-white/40"
+            </Link>
+            <Link
+              to="/athletes"
+              className="bg-white/10 hover:bg-white/20 text-white py-4 rounded-lg font-semibold text-lg transition-all duration-200 border-2 border-white/20 hover:border-white/40 block"
             >
               Meet Athletes
-            </button>
-            <button
-              onClick={() => onNavigate?.('create')}
-              className="bg-white/10 hover:bg-white/20 text-white py-4 rounded-lg font-semibold text-lg transition-all duration-200 border-2 border-white/20 hover:border-white/40"
+            </Link>
+            <Link
+              to="/signup"
+              className="bg-white/10 hover:bg-white/20 text-white py-4 rounded-lg font-semibold text-lg transition-all duration-200 border-2 border-white/20 hover:border-white/40 block"
             >
-              Create Athlete Page
-            </button>
+              Get Started
+            </Link>
           </div>
         </div>
       </section>

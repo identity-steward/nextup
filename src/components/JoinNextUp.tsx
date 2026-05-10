@@ -1,31 +1,13 @@
 import { UserPlus, Video, Handshake, ArrowRight } from 'lucide-react';
-
-interface JoinNextUpProps {
-  onNavigate?: (page: string) => void;
-}
+import { Link } from 'react-router-dom';
 
 const paths = [
-  {
-    icon: UserPlus,
-    title: 'Athlete',
-    description: 'Create Profile',
-    action: 'join',
-  },
-  {
-    icon: Video,
-    title: 'Creator',
-    description: 'Join Media Team',
-    action: 'creator',
-  },
-  {
-    icon: Handshake,
-    title: 'Partner',
-    description: 'Connect Program',
-    action: 'sponsors',
-  },
+  { icon: UserPlus, title: 'Athlete', description: 'Create Profile', to: '/signup' },
+  { icon: Video, title: 'Creator', description: 'Join Media Team', to: '/creator' },
+  { icon: Handshake, title: 'Partner', description: 'Connect Program', to: '/sponsors' },
 ];
 
-export default function JoinNextUp({ onNavigate }: JoinNextUpProps) {
+export default function JoinNextUp() {
   return (
     <section className="py-24 bg-gradient-to-br from-navy via-navy-light to-navy">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -48,13 +30,13 @@ export default function JoinNextUp({ onNavigate }: JoinNextUpProps) {
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2">{path.title}</h3>
                 <p className="text-gray-300 mb-6">{path.description}</p>
-                <button
-                  onClick={() => onNavigate?.(path.action)}
+                <Link
+                  to={path.to}
                   className="btn-primary px-6 py-3 flex items-center gap-2"
                 >
                   Get Started
                   <ArrowRight className="w-4 h-4" />
-                </button>
+                </Link>
               </div>
             );
           })}

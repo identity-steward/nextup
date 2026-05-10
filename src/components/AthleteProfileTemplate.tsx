@@ -2,9 +2,23 @@ import { useState } from 'react';
 import { MapPin, Award, Heart, Share2, Copy, CheckCircle, Play, Users, Eye, Star, Zap, Shield, Trophy } from 'lucide-react';
 import type { Athlete } from '../types/athlete';
 
+interface ApprovedMedia {
+  id: string;
+  media_type: string;
+  public_url: string | null;
+  caption: string | null;
+  featured: boolean;
+}
+
+interface AthleteTag {
+  visibility_tags: { id: string; slug: string; label: string } | null;
+}
+
 interface AthleteProfileTemplateProps {
   athlete: Athlete;
   onBack?: () => void;
+  approvedMedia?: ApprovedMedia[];
+  athleteTags?: AthleteTag[];
 }
 
 const CHECK_ICON = (
@@ -90,7 +104,7 @@ function getVideoEmbedUrl(url: string) {
   return url;
 }
 
-export default function AthleteProfileTemplate({ athlete, onBack }: AthleteProfileTemplateProps) {
+export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia = [], athleteTags = [] }: AthleteProfileTemplateProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopyLink = () => {
@@ -200,9 +214,17 @@ export default function AthleteProfileTemplate({ athlete, onBack }: AthleteProfi
                 </div>
               )}
 
-              <h1 className="text-5xl font-black mb-2 leading-tight">
-                {athlete.first_name} {athlete.last_initial}
-              </h1>
+              <div className="flex items-center gap-3 flex-wrap mb-2">
+                <h1 className="text-5xl font-black leading-tight">
+                  {athlete.first_name} {athlete.last_initial}
+                </h1>
+                {athlete.profile_tier === 'premium' && (
+                  <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-400 to-yellow-300 text-black text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md">
+                    <Trophy className="w-3 h-3" />
+                    Premium
+                  </span>
+                )}
+              </div>
 
               <p className="text-xl text-gray-300 mb-1">
                 {athlete.position} &bull; {athlete.grade}
@@ -310,6 +332,59 @@ export default function AthleteProfileTemplate({ athlete, onBack }: AthleteProfi
               <h2 className="text-2xl font-bold text-navy">Goals</h2>
             </div>
             <p className="text-lg text-gray-700 leading-relaxed whitespace-pre-line">{athlete.goal}</p>
+          </div>
+        </section>
+      )}
+
+      {athleteTags.length > 0 && (
+        <section className="py-10 bg-white border-t border-gray-100">
+          <div className="max-w-4xl mx-auto px-6 lg:px-8">
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Character Tags</h2>
+            <div className="flex flex-wrap gap-2">
+              {athleteTags.map((tag, i) =>
+                tag.visibility_tags ? (
+                  <span
+                    key={tag.visibility_tags.id ?? i}
+                    className="inline-flex items-center bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-full"
+                  >
+                    {tag.visibility_tags.label}
+                  </span>
+                ) : null
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {approvedMedia.length > 0 && (
+        <section className="py-12 bg-gray-50 border-t border-gray-100">
+          <div className="max-w-4xl mx-auto px-6 lg:px-8">
+            <h2 className="text-2xl font-bold text-navy mb-6">Gallery</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {approvedMedia.map((item) => (
+                <div
+                  key={item.id}
+                  className={`relative aspect-[4/3] rounded-xl overflow-hidden group ${item.featured ? 'ring-2 ring-amber-400 ring-offset-2' : ''}`}
+                >
+                  {item.media_type === 'photo' && item.public_url ? (
+                    <img
+                      src={item.public_url}
+                      alt={item.caption ?? ''}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+                      <Play className="w-10 h-10 text-white/60" fill="currentColor" />
+                    </div>
+                  )}
+                  {item.caption && (
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                      <p className="text-white text-xs font-medium leading-snug line-clamp-2">{item.caption}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}

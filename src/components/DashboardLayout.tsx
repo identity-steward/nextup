@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, Home, Users, Video, School, CreditCard, Heart, Settings, LogOut, Zap, CreditCard as Edit3, Camera } from 'lucide-react';
+import { Menu, X, Home, Users, Video, School, CreditCard, Heart, Settings, LogOut, Zap, CreditCard as Edit3, Camera, Tag } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,6 +10,7 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: 'Dashboard', icon: Home, path: '/admin' },
+  { name: 'Athletes', icon: Tag, path: '/admin/live-athletes' },
   { name: 'Athlete Signups', icon: Users, path: '/admin/athletes' },
   { name: 'Parent Intake', icon: Heart, path: '/admin/intake' },
   { name: 'Profile Updates', icon: Edit3, path: '/admin/profile-updates' },

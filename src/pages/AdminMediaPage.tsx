@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { CheckCircle, XCircle, Clock, Camera, Video, RefreshCw, ExternalLink } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Camera, Video, RefreshCw, ExternalLink, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
+
+interface VisibilityTag {
+  id: string;
+  slug: string;
+  label: string;
+}
 
 interface MediaItem {
   id: string;
@@ -20,6 +27,7 @@ interface MediaItem {
   reviewed_at: string | null;
   athlete_slug?: string;
   athlete_name?: string;
+  tags?: { id: string; slug: string; label: string }[];
 }
 
 const STATUS_FILTERS = ['all', 'pending', 'approved', 'rejected'] as const;
@@ -32,16 +40,32 @@ function formatBytes(bytes: number | null): string {
 }
 
 export function AdminMediaPage() {
+  const { user } = useAuth();
+
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('pending');
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
   const [assignSlug, setAssignSlug] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState<string | null>(null);
+  const [availableTags, setAvailableTags] = useState<VisibilityTag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    loadTags();
+  }, []);
 
   useEffect(() => {
     load();
   }, [statusFilter]);
+
+  const loadTags = async () => {
+    const { data } = await supabase
+      .from('visibility_tags')
+      .select('id, slug, label')
+      .order('label', { ascending: true });
+    if (data) setAvailableTags(data as VisibilityTag[]);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -67,20 +91,53 @@ export function AdminMediaPage() {
 
     const athleteMap = Object.fromEntries((athleteData || []).map(a => [a.id, a]));
 
+    // Fetch tags for approved items
+    const approvedIds = mediaData.filter(m => m.status === 'approved').map(m => m.id);
+    let tagsMap: Record<string, { id: string; slug: string; label: string }[]> = {};
+
+    if (approvedIds.length > 0) {
+      const { data: mediaTagRows } = await supabase
+        .from('media_tags')
+        .select('media_upload_id, visibility_tags(id, slug, label)')
+        .in('media_upload_id', approvedIds);
+
+      if (mediaTagRows) {
+        for (const row of mediaTagRows as any[]) {
+          const mid = row.media_upload_id;
+          const tag = row.visibility_tags;
+          if (!tag) continue;
+          if (!tagsMap[mid]) tagsMap[mid] = [];
+          tagsMap[mid].push({ id: tag.id, slug: tag.slug, label: tag.label });
+        }
+      }
+    }
+
     const enriched: MediaItem[] = mediaData.map(m => ({
       ...m,
       athlete_slug: athleteMap[m.athlete_id]?.slug,
       athlete_name: athleteMap[m.athlete_id]
         ? `${athleteMap[m.athlete_id].first_name} ${athleteMap[m.athlete_id].last_initial}.`
         : m.athlete_id,
+      tags: tagsMap[m.id] ?? [],
     }));
 
     setItems(enriched);
     setLoading(false);
   };
 
+  const toggleTag = (itemId: string, tagId: string) => {
+    setSelectedTags(prev => {
+      const current = prev[itemId] ?? [];
+      const next = current.includes(tagId)
+        ? current.filter(t => t !== tagId)
+        : [...current, tagId];
+      return { ...prev, [itemId]: next };
+    });
+  };
+
   const review = async (id: string, action: 'approved' | 'rejected') => {
     setProcessing(id);
+
     await supabase
       .from('media_uploads')
       .update({
@@ -89,6 +146,22 @@ export function AdminMediaPage() {
         reviewed_at: new Date().toISOString(),
       })
       .eq('id', id);
+
+    if (action === 'approved') {
+      const tagIds = selectedTags[id] ?? [];
+      if (tagIds.length > 0 && user?.id) {
+        const rows = tagIds.map(tagId => ({
+          media_upload_id: id,
+          tag_id: tagId,
+          assigned_by: user.id,
+        }));
+        await supabase.from('media_tags').insert(rows);
+      }
+    }
+
+    // Clear local state for this item
+    setSelectedTags(prev => { const next = { ...prev }; delete next[id]; return next; });
+    setAdminNotes(prev => { const next = { ...prev }; delete next[id]; return next; });
 
     setProcessing(null);
     await load();
@@ -112,12 +185,17 @@ export function AdminMediaPage() {
               >
                 {f}
                 {f === 'pending' && pendingCount > 0 && (
-                  <span className="ml-1.5 bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">{pendingCount}</span>
+                  <span className="ml-1.5 bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                    {pendingCount}
+                  </span>
                 )}
               </button>
             ))}
           </div>
-          <button onClick={load} className="p-2 rounded-xl border border-gray-200 hover:border-gray-300 text-gray-500 hover:text-navy transition-colors">
+          <button
+            onClick={load}
+            className="p-2 rounded-xl border border-gray-200 hover:border-gray-300 text-gray-500 hover:text-navy transition-colors"
+          >
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
@@ -155,13 +233,25 @@ export function AdminMediaPage() {
                           {item.athlete_name} — {item.media_type}
                           {item.file_size_bytes ? ` · ${formatBytes(item.file_size_bytes)}` : ''}
                         </p>
-                        {item.caption && <p className="text-xs text-gray-500 mt-1 italic">"{item.caption}"</p>}
-                        <p className="text-xs text-gray-300 mt-1">{new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        {item.caption && (
+                          <p className="text-xs text-gray-500 mt-1 italic">"{item.caption}"</p>
+                        )}
+                        <p className="text-xs text-gray-300 mt-1">
+                          {new Date(item.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </p>
                       </div>
                       <div className="shrink-0 flex items-center gap-2">
                         {item.public_url && (
-                          <a href={item.public_url} target="_blank" rel="noopener noreferrer"
-                            className="p-1.5 rounded-lg border border-gray-200 hover:border-gray-300 text-gray-400 hover:text-navy transition-colors">
+                          <a
+                            href={item.public_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg border border-gray-200 hover:border-gray-300 text-gray-400 hover:text-navy transition-colors"
+                          >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                         )}
@@ -183,7 +273,22 @@ export function AdminMediaPage() {
                       </div>
                     </div>
 
-                    {/* Review actions */}
+                    {/* Read-only tags for approved items */}
+                    {item.status === 'approved' && item.tags && item.tags.length > 0 && (
+                      <div className="mt-3 flex items-center gap-1.5 flex-wrap">
+                        <Tag className="w-3 h-3 text-gray-400 shrink-0" />
+                        {item.tags.map(tag => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full bg-navy/5 text-navy border border-navy/15"
+                          >
+                            {tag.label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Review actions for pending items */}
                     {item.status === 'pending' && (
                       <div className="mt-4 space-y-3">
                         <textarea
@@ -193,6 +298,36 @@ export function AdminMediaPage() {
                           className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 focus:border-gold focus:outline-none text-sm text-navy transition-colors"
                           placeholder="Admin notes (optional)..."
                         />
+
+                        {/* Tag selector */}
+                        {availableTags.length > 0 && (
+                          <div className="space-y-1.5">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                              <Tag className="w-3 h-3" />
+                              Visibility Tags
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {availableTags.map(tag => {
+                                const active = (selectedTags[item.id] ?? []).includes(tag.id);
+                                return (
+                                  <button
+                                    key={tag.id}
+                                    type="button"
+                                    onClick={() => toggleTag(item.id, tag.id)}
+                                    className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all ${
+                                      active
+                                        ? 'bg-navy text-white border-navy'
+                                        : 'bg-white text-gray-500 border-gray-200 hover:border-navy/40 hover:text-navy'
+                                    }`}
+                                  >
+                                    {tag.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
                         <div className="flex gap-2">
                           <button
                             onClick={() => review(item.id, 'approved')}

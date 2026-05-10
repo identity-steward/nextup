@@ -30,6 +30,7 @@ import { AdminParentIntakePage } from './pages/AdminParentIntakePage';
 import { AdminAgentOpsPage } from './pages/AdminAgentOpsPage';
 import { AdminProfileUpdatesPage } from './pages/AdminProfileUpdatesPage';
 import { AdminMediaPage } from './pages/AdminMediaPage';
+import { AdminLiveAthletesPage } from './pages/AdminLiveAthletesPage';
 import AthleteDashboardPage from './pages/AthleteDashboardPage';
 import ThankYouPage from './pages/ThankYouPage';
 
@@ -135,6 +136,14 @@ function AppContent() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminMediaPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/live-athletes"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLiveAthletesPage />
               </ProtectedRoute>
             }
           />

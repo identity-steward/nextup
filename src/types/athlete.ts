@@ -39,6 +39,7 @@ export interface Athlete {
   gender?: string;
   is_female: boolean;
   profile_status: 'pending' | 'approved' | 'verified_event';
+  profile_tier?: 'basic' | 'premium';
   event_code_used?: string;
   auth_user_id?: string;
   created_at: string;

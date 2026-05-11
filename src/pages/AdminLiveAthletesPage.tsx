@@ -273,7 +273,7 @@ export function AdminLiveAthletesPage() {
                       )}
                       {athlete.consent_status && (
                         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                          athlete.consent_status === 'granted'
+                          athlete.consent_status === 'accepted'
                             ? 'text-green-700 bg-green-50 border-green-200'
                             : athlete.consent_status === 'revoked'
                               ? 'text-red-700 bg-red-50 border-red-200'

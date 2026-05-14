@@ -38,7 +38,7 @@ export interface Athlete {
   class_year?: string;
   gender?: string;
   is_female: boolean;
-  profile_status: 'pending' | 'approved' | 'verified_event';
+  profile_status: 'pending' | 'active' | 'approved' | 'verified_event' | 'hidden' | 'rejected';
   profile_tier?: 'basic' | 'premium';
   event_code_used?: string;
   auth_user_id?: string;

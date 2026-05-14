@@ -38,6 +38,7 @@ export default function ProfileSetupPage() {
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [createdSlug, setCreatedSlug] = useState('');
+  const [isAutoApproved, setIsAutoApproved] = useState(false);
 
   const [form, setForm] = useState({
     firstName: '',
@@ -174,11 +175,17 @@ export default function ProfileSetupPage() {
       return;
     }
 
-    // Link athlete to user_profile
-    await supabase
+    // Link athlete to user_profile — critical: without this the dashboard cannot find the athlete
+    const { error: linkError } = await supabase
       .from('user_profiles')
       .update({ athlete_id: athleteData.id })
       .eq('id', user.id);
+
+    if (linkError) {
+      // Profile was created but linking failed — still navigate to dashboard
+      // where the auth_user_id fallback lookup will find the athlete
+      console.error('Failed to link athlete_id to user_profile:', linkError.message);
+    }
 
     // Record signup source
     await supabase.from('signup_sources').insert([{
@@ -204,6 +211,8 @@ export default function ProfileSetupPage() {
       usage_scope: ['profile'],
     }]);
 
+    const wasAutoApproved = profileStatus === 'active';
+
     // Clear sessionStorage
     ['signup_event_code', 'signup_first_name', 'signup_last_name', 'signup_role'].forEach(k =>
       sessionStorage.removeItem(k)
@@ -211,6 +220,7 @@ export default function ProfileSetupPage() {
 
     await refreshProfile();
     setCreatedSlug(athleteData.slug);
+    setIsAutoApproved(wasAutoApproved);
     setDone(true);
     setSubmitting(false);
   };
@@ -227,7 +237,7 @@ export default function ProfileSetupPage() {
           </div>
           <h2 className="text-3xl font-black text-gray-900 mb-3">Profile Created!</h2>
           <p className="text-gray-500 text-base leading-relaxed mb-8">
-            {sessionStorage.getItem('signup_event_code')
+            {isAutoApproved
               ? 'Your profile is verified and live.'
               : 'Your profile is under review and will be visible once approved by our team (usually within 48 hours).'}
           </p>
@@ -498,7 +508,7 @@ export default function ProfileSetupPage() {
 
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-4">
                 <p className="text-amber-800 text-xs font-semibold">
-                  {sessionStorage.getItem('signup_event_code')
+                  {(sessionStorage.getItem('signup_event_code') || '').trim()
                     ? 'Your profile will be published instantly with your event code.'
                     : 'Your profile will be reviewed by our team and published within 48 hours.'}
                 </p>

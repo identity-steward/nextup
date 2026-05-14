@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Clock } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
 import type { Athlete } from '../types/athlete';
 import AthleteProfileTemplate from '../components/AthleteProfileTemplate';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 interface ApprovedMedia {
   id: string;
@@ -22,10 +23,12 @@ interface AthleteTag {
 export default function AthleteProfilePage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [athlete, setAthlete] = useState<Athlete | null>(null);
   const [approvedMedia, setApprovedMedia] = useState<ApprovedMedia[]>([]);
   const [athleteTags, setAthleteTags] = useState<AthleteTag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isPendingOwnerView, setIsPendingOwnerView] = useState(false);
 
   useEffect(() => {
     const loadAthlete = async () => {
@@ -33,7 +36,26 @@ export default function AthleteProfilePage() {
         setLoading(false);
         return;
       }
-      const data = await AthleteService.getAthleteBySlug(slug);
+
+      // Try public lookup first (active athletes only)
+      let data = await AthleteService.getAthleteBySlug(slug);
+
+      // If not found publicly and user is logged in, try owner fallback
+      // (RLS allows athletes to view their own record regardless of status)
+      if (!data && user) {
+        const owned = await AthleteService.getAthleteBySlugAsOwner(slug);
+        if (owned) {
+          // Verify the viewer actually owns this profile
+          const isOwner =
+            owned.auth_user_id === user.id ||
+            profile?.athlete_id === owned.id;
+          if (isOwner && owned.profile_status !== 'active') {
+            data = owned;
+            setIsPendingOwnerView(true);
+          }
+        }
+      }
+
       setAthlete(data);
 
       if (data) {
@@ -89,6 +111,20 @@ export default function AthleteProfilePage() {
 
   return (
     <div className="pt-20">
+      {isPendingOwnerView && (
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center gap-3">
+          <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+          <p className="text-amber-800 text-sm font-medium">
+            This is a preview of your profile. It is not yet visible to the public — pending admin approval.
+          </p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="ml-auto text-xs font-bold text-amber-700 hover:text-amber-900 underline whitespace-nowrap"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      )}
       <AthleteProfileTemplate
         athlete={athlete}
         onBack={() => navigate('/athletes')}

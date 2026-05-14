@@ -305,15 +305,15 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
         </div>
       </section>
 
-      {(athlete.bio || athlete.strength || athlete.goal) && (
+      {(athlete.bio?.trim() || athlete.strength?.trim() || athlete.goal?.trim()) && (
         <section className="py-16 bg-white">
           <div className="max-w-4xl mx-auto px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-navy mb-8">About {athlete.first_name}</h2>
             <div className="space-y-6">
-              {athlete.bio && (
+              {athlete.bio?.trim() && (
                 <p className="text-lg text-gray-700 leading-relaxed whitespace-pre-line">{athlete.bio}</p>
               )}
-              {athlete.strength && (
+              {athlete.strength?.trim() && (
                 <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
                   <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-1">Biggest Strength</p>
                   <p className="text-gray-800 text-base">{athlete.strength}</p>
@@ -324,7 +324,7 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
         </section>
       )}
 
-      {athlete.goal && (
+      {athlete.goal?.trim() && (
         <section className="py-10 bg-gray-50 border-t border-gray-100">
           <div className="max-w-4xl mx-auto px-6 lg:px-8">
             <div className="flex items-center gap-3 mb-5">

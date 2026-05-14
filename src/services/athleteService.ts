@@ -49,6 +49,24 @@ export class AthleteService {
     return data;
   }
 
+  // Fetches any athlete by slug regardless of profile_status — only works if the
+  // caller is the owner (RLS: athletes can view own profile via auth_user_id).
+  // Used so a pending athlete can preview their own profile page.
+  static async getAthleteBySlugAsOwner(slug: string): Promise<Athlete | null> {
+    const { data, error } = await supabase
+      .from('athletes')
+      .select('*')
+      .eq('slug', slug)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching own athlete by slug:', error);
+      return null;
+    }
+
+    return data;
+  }
+
   static async createAthlete(athleteData: AthleteInput): Promise<Athlete | null> {
     const { data, error } = await supabase
       .from('athletes')

@@ -21,7 +21,7 @@ interface Athlete {
   highlight_video_url: string | null;
   image_url: string | null;
   is_active: boolean;
-  profile_status: 'pending' | 'approved' | 'verified_event';
+  profile_status: 'pending' | 'active' | 'approved' | 'verified_event' | 'hidden' | 'rejected';
   height: string | null;
   jersey_number: string | null;
   class_year: string | null;
@@ -345,16 +345,10 @@ export default function AthleteDashboardPage() {
 
         {/* Status strip */}
         <div className="border-t border-white/10 px-6 lg:px-8 py-2 max-w-6xl mx-auto flex items-center gap-3">
-          {athlete?.profile_status === 'verified_event' && (
+          {(athlete?.profile_status === 'active' || athlete?.profile_status === 'approved' || athlete?.profile_status === 'verified_event') && (
             <span className="text-xs font-semibold inline-flex items-center gap-1.5 text-green-400">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              Verified Event Profile — Live
-            </span>
-          )}
-          {athlete?.profile_status === 'approved' && (
-            <span className="text-xs font-semibold inline-flex items-center gap-1.5 text-green-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              Profile Approved — Live
+              {athlete.profile_status === 'verified_event' ? 'Verified Event Profile — Live' : 'Profile Approved — Live'}
             </span>
           )}
           {athlete?.profile_status === 'pending' && (
@@ -363,10 +357,10 @@ export default function AthleteDashboardPage() {
               Profile Pending Admin Approval
             </span>
           )}
-          {!athlete?.profile_status && (
-            <span className={`text-xs font-semibold inline-flex items-center gap-1.5 ${athlete?.is_active ? 'text-green-400' : 'text-amber-400'}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${athlete?.is_active ? 'bg-green-400' : 'bg-amber-400'} animate-pulse`} />
-              Profile is {athlete?.is_active ? 'Live' : 'Pending Approval'}
+          {(athlete?.profile_status === 'hidden' || athlete?.profile_status === 'rejected') && (
+            <span className="text-xs font-semibold inline-flex items-center gap-1.5 text-red-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+              Profile {athlete.profile_status === 'hidden' ? 'Hidden' : 'Not Approved'} — Contact Support
             </span>
           )}
         </div>
@@ -403,7 +397,7 @@ export default function AthleteDashboardPage() {
             {/* Profile card */}
             <div className="md:col-span-1">
               <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-                <div className="w-20 h-20 rounded-2xl bg-navy/10 overflow-hidden mb-4">
+                <div className="w-20 h-20 rounded-2xl bg-navy/10 overflow-hidden mb-2">
                   {athlete.image_url ? (
                     <img src={athlete.image_url} alt={athlete.first_name} className="w-full h-full object-cover" />
                   ) : (
@@ -412,6 +406,21 @@ export default function AthleteDashboardPage() {
                     </div>
                   )}
                 </div>
+                {!athlete.image_url && (() => {
+                  const pendingPhoto = media.find(m => m.media_type === 'photo' && m.status === 'pending');
+                  const rejectedPhoto = media.find(m => m.media_type === 'photo' && m.status === 'rejected');
+                  if (pendingPhoto) {
+                    return <p className="text-xs text-amber-600 font-medium mb-3">Photo pending review</p>;
+                  }
+                  if (rejectedPhoto) {
+                    return <p className="text-xs text-red-500 font-medium mb-3">Photo not approved — try another</p>;
+                  }
+                  return (
+                    <button onClick={() => setTab('media')} className="text-xs text-gold font-semibold hover:underline mb-3 block">
+                      + Upload profile photo
+                    </button>
+                  );
+                })()}
                 <h2 className="text-lg font-bold text-navy">{athlete.first_name} {athlete.last_initial}.</h2>
                 <p className="text-gold font-semibold text-sm">{athlete.sport}</p>
                 {athlete.position && <p className="text-gray-500 text-xs mt-1">{athlete.position}</p>}

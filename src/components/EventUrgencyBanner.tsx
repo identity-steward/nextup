@@ -13,14 +13,18 @@ export default function EventUrgencyBanner({ onScrollToAthletes }: EventUrgencyB
         className="w-full flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5 py-4 px-6 text-center group"
       >
         <span className="flex items-center gap-2.5 font-black text-white text-base md:text-lg uppercase tracking-wide drop-shadow">
-          <span className="w-2 h-2 rounded-full bg-white flex-shrink-0" />
-          Memphis Youth Athletes Need Your Support
+          <span className="w-2 h-2 rounded-full bg-white animate-pulse flex-shrink-0" />
+          LIVE NOW: NXTPro Session 7 – Memphis, TN
+          <span className="hidden sm:inline bg-white/25 text-white font-bold text-xs px-2.5 py-0.5 rounded-full border border-white/30 normal-case tracking-normal">
+            Today
+          </span>
         </span>
         <span className="hidden sm:block w-px h-5 bg-white/30" />
         <span className="flex items-center gap-2 bg-white text-orange-600 font-black text-sm px-5 py-2 rounded-full group-hover:bg-amber-50 transition-colors shadow-lg uppercase tracking-wide">
           Support Athletes Now
           <span className="group-hover:translate-x-0.5 transition-transform inline-block">&#x2192;</span>
         </span>
+        <span className="sm:hidden text-xs text-amber-100 font-semibold mt-0.5">(Today)</span>
       </button>
     </div>
   );

@@ -24,7 +24,7 @@ export default function ProfileMidCTA({ raised, goal, progressPct, onSupportClic
 
           {/* Left — Text */}
           <div className="flex-1 text-center md:text-left">
-            <p className="text-amber-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Memphis Regional Tournament</p>
+            <p className="text-amber-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">April 18–19 Tournament</p>
             <h3 className="text-2xl md:text-3xl font-black text-white leading-tight mb-2">
               Help Jacob Compete
             </h3>

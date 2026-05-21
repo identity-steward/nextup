@@ -28,7 +28,7 @@ export default function ProfileFooterCTA({ onSupportClick }: ProfileFooterCTAPro
 
         <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-2 mb-8">
           <Clock className="w-3.5 h-3.5 text-amber-400" />
-          <span className="text-amber-300 text-[11px] font-black uppercase tracking-[0.18em]">Memphis Regional Tournament</span>
+          <span className="text-amber-300 text-[11px] font-black uppercase tracking-[0.18em]">April 18–19 Tournament</span>
         </div>
 
         <h2 className="text-5xl md:text-6xl font-black text-white leading-[0.9] tracking-tight mb-6">

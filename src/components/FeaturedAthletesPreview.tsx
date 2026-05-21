@@ -1,4 +1,4 @@
-import { ArrowRight, Heart, Star, Users } from 'lucide-react';
+import { ArrowRight, Heart, Star, Users, Flame } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
@@ -61,6 +61,10 @@ function JacobCard({ athlete }: { athlete: Athlete }) {
             <span className="flex items-center gap-1.5 bg-sky-500 text-white text-xs font-black uppercase tracking-wide px-3 py-1.5 rounded-full shadow-lg">
               <Star className="w-3.5 h-3.5" fill="white" />
               Featured Athlete
+            </span>
+            <span className="flex items-center gap-1.5 bg-red-500/90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full">
+              <Flame className="w-3.5 h-3.5" />
+              Competing April 18–19
             </span>
           </div>
         </div>
@@ -127,8 +131,8 @@ export default function FeaturedAthletesPreview() {
       <div className="max-w-5xl mx-auto px-6 lg:px-8">
         <div className="mb-10 text-center">
           <div className="inline-flex items-center gap-2 bg-sky-500/15 border border-sky-500/30 text-sky-400 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-5">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-            Memphis Athletes
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+            Live — Memphis Events
           </div>
           <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-3">
             Support Memphis Athletes<br />Right Now

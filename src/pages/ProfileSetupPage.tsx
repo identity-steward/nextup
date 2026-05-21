@@ -175,16 +175,32 @@ export default function ProfileSetupPage() {
       return;
     }
 
-    // Link athlete to user_profile — critical: without this the dashboard cannot find the athlete
+    // Link athlete to user_profile — critical: without this the dashboard uses the slower
+    // auth_user_id fallback. upsert handles both the "row exists" and "row missing" cases.
+    const linkPayload = {
+      id: user.id,
+      athlete_id: athleteData.id,
+      role: signupRole === 'parent' ? 'parent' : 'athlete',
+    };
     const { error: linkError } = await supabase
       .from('user_profiles')
-      .update({ athlete_id: athleteData.id })
-      .eq('id', user.id);
+      .upsert(linkPayload, { onConflict: 'id' });
 
     if (linkError) {
-      // Profile was created but linking failed — still navigate to dashboard
-      // where the auth_user_id fallback lookup will find the athlete
-      console.error('Failed to link athlete_id to user_profile:', linkError.message);
+      // Upsert failed — attempt a plain update as a fallback before giving up.
+      const { error: retryError } = await supabase
+        .from('user_profiles')
+        .update({ athlete_id: athleteData.id })
+        .eq('id', user.id);
+
+      if (retryError) {
+        // Both attempts failed. The athlete record is intact and the auth_user_id
+        // fallback in AthleteDashboardPage will still find the athlete, but log
+        // both errors so the broken link can be repaired manually if needed.
+        console.error('user_profiles upsert failed:', linkError.message);
+        console.error('user_profiles update retry failed:', retryError.message);
+        console.error('athlete_id not linked for user:', user.id, '— athlete id:', athleteData.id);
+      }
     }
 
     // Record signup source

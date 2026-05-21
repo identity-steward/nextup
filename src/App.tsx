@@ -20,7 +20,6 @@ import SupportPage from './pages/SupportPage';
 import ContactPage from './pages/ContactPage';
 import ParentIntakePage from './pages/ParentIntakePage';
 import { isSupabaseConfigured } from './lib/supabase';
-import JacobFousePage from './pages/JacobFousePage';
 import LiveFeedPage from './pages/LiveFeedPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
 
@@ -50,7 +49,6 @@ function AppContent() {
           {/* Public */}
           <Route path="/" element={<HomePage />} />
           <Route path="/athletes" element={<AthletesPage />} />
-          <Route path="/athletes/jacob-fouse" element={<JacobFousePage />} />
           <Route path="/athletes/:slug" element={<AthleteProfilePage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signup/player" element={<JoinPage />} />

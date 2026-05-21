@@ -69,7 +69,7 @@ export default function ProfileSupport({ raised, goal, supporters, progressPct, 
               />
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-4 h-4 text-rose-400" />
-                <p className="text-rose-300 text-xs font-black uppercase tracking-[0.14em]">Competing April 18–19</p>
+                <p className="text-rose-300 text-xs font-black uppercase tracking-[0.14em]">Upcoming Tournament</p>
               </div>
               <p className="text-white font-bold text-base">Memphis AAU Spring Invitational</p>
               <p className="text-white/40 text-sm mt-1">Travel fees due before tournament day</p>

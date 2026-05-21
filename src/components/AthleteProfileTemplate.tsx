@@ -123,7 +123,7 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
     <div className="min-h-screen bg-gray-50">
 
       {athlete.highlight_video_embed_url && (
-        <section className="bg-[#0a0e1a] pt-8 pb-0">
+        <section className="bg-[#0d1120] pt-8 pb-0">
           <div className="max-w-5xl mx-auto px-6 lg:px-8">
             {onBack && (
               <button
@@ -419,7 +419,7 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
         </section>
       )}
 
-      <section className="py-20 bg-[#0a0e1a]">
+      <section className="py-20 bg-[#0d1120]">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-14">
             <div className="inline-flex items-center gap-2 bg-sky-500/15 border border-sky-500/30 text-sky-400 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-5">

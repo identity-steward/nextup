@@ -169,7 +169,7 @@ export default function ProfileHero({
                 <div className="flex items-center gap-2 mb-3">
                   <Trophy className="w-3.5 h-3.5 text-amber-400/80" />
                   <p className="text-amber-300/80 text-[10.5px] font-black uppercase tracking-[0.12em]">
-                    April 18–19 · Memphis Regional Tournament
+                    Memphis Regional Tournament
                   </p>
                 </div>
                 <p className="text-[11px] text-white/35 leading-relaxed mb-3">
@@ -198,7 +198,7 @@ export default function ProfileHero({
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-2.5 h-2.5 text-amber-400/50" />
                   <p className="text-[9.5px] text-amber-300/45">
-                    ${stillNeeded} still needed &nbsp;&bull;&nbsp; Tournament in 4 days
+                    ${stillNeeded} still needed to reach the goal
                   </p>
                 </div>
               </div>
@@ -265,7 +265,7 @@ export default function ProfileHero({
                   supporters={supporters}
                   progressPct={progressPct}
                   eventLabel="Memphis Regional Tournament"
-                  eventDate="April 18–19, 2025"
+                  eventDate="Memphis Regional Tournament"
                   verified={true}
                   tags={['Guard', 'AAU', 'In Season']}
                   recentNote="24 pts, 9 ast, 4 stl — last game vs. Southaven Elite (Apr 6)"

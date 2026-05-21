@@ -34,8 +34,7 @@ export default function AthletesPage() {
     });
   }, [athletes, search, sport]);
 
-  const getProfilePath = (athlete: Athlete) =>
-    athlete.slug === 'jacob-f' ? '/athletes/jacob-fouse' : `/athletes/${athlete.slug}`;
+  const getProfilePath = (athlete: Athlete) => `/athletes/${athlete.slug}`;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">

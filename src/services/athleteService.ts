@@ -115,6 +115,25 @@ export class AthleteService {
     return data || [];
   }
 
+  static async checkSpotlightEligibility(athleteId: string): Promise<boolean> {
+    const { data: athlete } = await supabase
+      .from('athletes')
+      .select('profile_status')
+      .eq('id', athleteId)
+      .maybeSingle();
+
+    if (athlete?.profile_status !== 'active') return false;
+
+    const { data: approvedMedia } = await supabase
+      .from('media_uploads')
+      .select('id')
+      .eq('athlete_id', athleteId)
+      .eq('status', 'approved')
+      .limit(1);
+
+    return (approvedMedia?.length ?? 0) > 0;
+  }
+
   static async incrementStats(id: string, field: 'supporters_count' | 'views_count' | 'followers_count'): Promise<void> {
     const { error } = await supabase.rpc('increment_athlete_stat', {
       athlete_id: id,

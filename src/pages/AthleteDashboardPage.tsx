@@ -3,6 +3,7 @@ import { User, CreditCard as Edit3, Upload, Link2, Trophy, Star, Clock, CheckCir
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { AthleteService } from '../services/athleteService';
 
 interface Athlete {
   id: string;
@@ -63,6 +64,7 @@ export default function AthleteDashboardPage() {
   const [tab, setTab] = useState<Tab>('overview');
   const [loading, setLoading] = useState(true);
   const [noProfile, setNoProfile] = useState(false);
+  const [spotlightEligible, setSpotlightEligible] = useState<boolean | null>(null);
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -152,6 +154,9 @@ export default function AthleteDashboardPage() {
       .eq('athlete_id', athleteData.id)
       .order('created_at', { ascending: false });
     setMedia((med || []) as MediaUpload[]);
+
+    const eligible = await AthleteService.checkSpotlightEligibility(athleteData.id);
+    setSpotlightEligible(eligible);
 
     setLoading(false);
   };
@@ -455,6 +460,21 @@ export default function AthleteDashboardPage() {
 
             {/* Right side */}
             <div className="md:col-span-2 space-y-4">
+              {/* Spotlight eligibility badge */}
+              {spotlightEligible !== null && athlete.profile_status === 'active' && (
+                <div className={`flex items-center gap-3 px-5 py-3 rounded-xl border text-sm font-semibold ${
+                  spotlightEligible
+                    ? 'bg-green-50 border-green-200 text-green-800'
+                    : 'bg-gray-50 border-gray-200 text-gray-500'
+                }`}>
+                  <Star className={`w-4 h-4 shrink-0 ${spotlightEligible ? 'text-green-600' : 'text-gray-400'}`} />
+                  {spotlightEligible ? 'Spotlight Eligible' : 'Not Yet Spotlight Eligible'}
+                  {!spotlightEligible && (
+                    <span className="ml-auto text-xs font-normal text-gray-400">Upload and get approved media to qualify</span>
+                  )}
+                </div>
+              )}
+
               {/* Bio */}
               <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
                 <h3 className="font-bold text-navy mb-2">Bio</h3>

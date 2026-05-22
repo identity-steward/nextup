@@ -541,63 +541,59 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
         </div>
       </section>
 
-      <section className="py-12 bg-gray-50 border-t border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-navy mb-6">Latest Highlights</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <a
-              href="https://www.instagram.com/reel/DV4BcPgEdOk/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow block group border border-gray-100"
-            >
-              <div className="aspect-video bg-gradient-to-br from-pink-600 via-rose-500 to-orange-400 relative flex items-center justify-center">
-                <div className="absolute inset-0 bg-black/20" />
-                <div className="relative z-10 text-center text-white">
-                  <Play className="w-12 h-12 mb-1 mx-auto group-hover:scale-110 transition-transform" />
-                  <p className="text-xs font-semibold">View on Instagram</p>
-                </div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-navy mb-1">Featured on NXTPro</h3>
-                <p className="text-gray-500 text-sm">Highlight clip gaining traction (20+ shares)</p>
-              </div>
-            </a>
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-              <div className="aspect-video bg-gray-900">
-                <iframe
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title="Game Highlights"
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-navy mb-1">Game Highlights</h3>
-                <p className="text-gray-500 text-sm">Recent in-game performance</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-              <div className="aspect-video bg-gray-900">
-                <iframe
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title="Skill Development"
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-navy mb-1">Skill Development</h3>
-                <p className="text-gray-500 text-sm">Training and workout clips</p>
-              </div>
+      {approvedMedia.filter(m => m.media_type === 'video' || m.media_type === 'highlight').length > 0 && (
+        <section className="py-12 bg-gray-50 border-t border-gray-200">
+          <div className="max-w-4xl mx-auto px-6 lg:px-8">
+            <h2 className="text-2xl font-bold text-navy mb-6">Latest Highlights</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {approvedMedia
+                .filter(m => m.media_type === 'video' || m.media_type === 'highlight')
+                .map(item => {
+                  const isEmbedUrl =
+                    item.public_url &&
+                    (item.public_url.includes('youtube.com') ||
+                      item.public_url.includes('youtu.be') ||
+                      item.public_url.includes('vimeo.com') ||
+                      item.public_url.includes('instagram.com'));
+                  return (
+                    <div
+                      key={item.id}
+                      className={`bg-white rounded-xl shadow-sm overflow-hidden border ${item.featured ? 'border-amber-300 ring-1 ring-amber-300' : 'border-gray-100'}`}
+                    >
+                      <div className="aspect-video bg-gray-900">
+                        {item.public_url && isEmbedUrl ? (
+                          <iframe
+                            src={getVideoEmbedUrl(item.public_url)}
+                            className="w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title={item.caption ?? 'Highlight video'}
+                          />
+                        ) : item.public_url ? (
+                          <video
+                            src={item.public_url}
+                            controls
+                            className="w-full h-full object-cover"
+                            title={item.caption ?? 'Highlight video'}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Play className="w-12 h-12 text-white/40" fill="currentColor" />
+                          </div>
+                        )}
+                      </div>
+                      {item.caption && (
+                        <div className="p-4">
+                          <p className="text-gray-700 text-sm font-medium leading-snug">{item.caption}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }

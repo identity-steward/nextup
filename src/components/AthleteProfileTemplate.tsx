@@ -413,25 +413,79 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
         </section>
       )}
 
-      {approvedMedia.length > 0 && (
+      {approvedMedia.filter(m => m.media_type === 'video' || m.media_type === 'highlight').length > 0 && (
+        <section className="py-12 bg-gray-50 border-t border-gray-200">
+          <div className="max-w-4xl mx-auto px-6 lg:px-8">
+            <h2 className="text-2xl font-bold text-navy mb-6">Latest Highlights</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {approvedMedia
+                .filter(m => m.media_type === 'video' || m.media_type === 'highlight')
+                .map(item => {
+                  const isEmbedUrl =
+                    item.public_url &&
+                    (item.public_url.includes('youtube.com') ||
+                      item.public_url.includes('youtu.be') ||
+                      item.public_url.includes('vimeo.com') ||
+                      item.public_url.includes('instagram.com'));
+                  return (
+                    <div
+                      key={item.id}
+                      className={`bg-white rounded-xl shadow-sm overflow-hidden border ${item.featured ? 'border-amber-300 ring-1 ring-amber-300' : 'border-gray-100'}`}
+                    >
+                      <div className="aspect-video bg-gray-900">
+                        {item.public_url && isEmbedUrl ? (
+                          <iframe
+                            src={getVideoEmbedUrl(item.public_url)}
+                            className="w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title={item.caption ?? 'Highlight video'}
+                          />
+                        ) : item.public_url ? (
+                          <video
+                            src={item.public_url}
+                            controls
+                            className="w-full h-full object-cover"
+                            title={item.caption ?? 'Highlight video'}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Play className="w-12 h-12 text-white/40" fill="currentColor" />
+                          </div>
+                        )}
+                      </div>
+                      {item.caption && (
+                        <div className="p-4">
+                          <p className="text-gray-700 text-sm font-medium leading-snug">{item.caption}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {approvedMedia.filter(m => m.media_type === 'photo').length > 0 && (
         <section className="py-12 bg-gray-50 border-t border-gray-100">
           <div className="max-w-4xl mx-auto px-6 lg:px-8">
             <h2 className="text-2xl font-bold text-navy mb-6">Gallery</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {approvedMedia.map((item) => (
+              {approvedMedia.filter(m => m.media_type === 'photo').map((item) => (
                 <div
                   key={item.id}
                   className={`relative aspect-[4/3] rounded-xl overflow-hidden group ${item.featured ? 'ring-2 ring-amber-400 ring-offset-2' : ''}`}
                 >
-                  {item.media_type === 'photo' && item.public_url ? (
+                  {item.public_url ? (
                     <img
                       src={item.public_url}
                       alt={item.caption ?? ''}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-900 flex items-center justify-center">
-                      <Play className="w-10 h-10 text-white/60" fill="currentColor" />
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                      <Award className="w-8 h-8 text-gray-300" />
                     </div>
                   )}
                   {item.caption && (
@@ -598,59 +652,6 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
         </div>
       </section>
 
-      {approvedMedia.filter(m => m.media_type === 'video' || m.media_type === 'highlight').length > 0 && (
-        <section className="py-12 bg-gray-50 border-t border-gray-200">
-          <div className="max-w-4xl mx-auto px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-navy mb-6">Latest Highlights</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {approvedMedia
-                .filter(m => m.media_type === 'video' || m.media_type === 'highlight')
-                .map(item => {
-                  const isEmbedUrl =
-                    item.public_url &&
-                    (item.public_url.includes('youtube.com') ||
-                      item.public_url.includes('youtu.be') ||
-                      item.public_url.includes('vimeo.com') ||
-                      item.public_url.includes('instagram.com'));
-                  return (
-                    <div
-                      key={item.id}
-                      className={`bg-white rounded-xl shadow-sm overflow-hidden border ${item.featured ? 'border-amber-300 ring-1 ring-amber-300' : 'border-gray-100'}`}
-                    >
-                      <div className="aspect-video bg-gray-900">
-                        {item.public_url && isEmbedUrl ? (
-                          <iframe
-                            src={getVideoEmbedUrl(item.public_url)}
-                            className="w-full h-full"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            title={item.caption ?? 'Highlight video'}
-                          />
-                        ) : item.public_url ? (
-                          <video
-                            src={item.public_url}
-                            controls
-                            className="w-full h-full object-cover"
-                            title={item.caption ?? 'Highlight video'}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Play className="w-12 h-12 text-white/40" fill="currentColor" />
-                          </div>
-                        )}
-                      </div>
-                      {item.caption && (
-                        <div className="p-4">
-                          <p className="text-gray-700 text-sm font-medium leading-snug">{item.caption}</p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        </section>
-      )}
     </div>
   );
 }

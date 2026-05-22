@@ -1,10 +1,11 @@
 import { useState, FormEvent } from 'react';
 import { LogIn, UserPlus } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export default function SignInPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,6 +30,11 @@ export default function SignInPage() {
       return;
     }
 
+    const params = new URLSearchParams(location.search);
+    const nextParam = params.get('next');
+    const fromState = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+    const safeNext = (nextParam ?? fromState ?? '').startsWith('/') ? (nextParam ?? fromState ?? '') : '';
+
     const { data: profileData } = await supabase
       .from('user_profiles')
       .select('role')
@@ -37,6 +43,8 @@ export default function SignInPage() {
 
     if (profileData?.role === 'admin') {
       navigate('/admin');
+    } else if (safeNext) {
+      navigate(safeNext);
     } else if (profileData?.role === 'parent') {
       navigate('/parent-dashboard');
     } else {

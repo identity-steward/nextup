@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, ArrowRight, AlertCircle, Eye, EyeOff, Tag, CheckCircle } from 'lucide-react';
+import { Users, ArrowRight, AlertCircle, Eye, EyeOff, Tag, CheckCircle, Info, LogIn, KeyRound } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
@@ -20,6 +20,7 @@ export default function ParentIntakePage() {
   const [submitting, setSubmitting] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [existingUser, setExistingUser] = useState(false);
   const [codeStatus, setCodeStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
   const [codeChecking, setCodeChecking] = useState(false);
 
@@ -38,6 +39,7 @@ export default function ParentIntakePage() {
     e.preventDefault();
     setShowError(false);
     setErrorMessage('');
+    setExistingUser(false);
 
     if (!formData.parentFirstName.trim() || !formData.parentLastName.trim()) {
       setShowError(true); setErrorMessage('Your first and last name are required.'); return;
@@ -67,8 +69,16 @@ export default function ParentIntakePage() {
     });
 
     if (authError || !authData.user) {
-      setShowError(true);
-      setErrorMessage(authError?.message || 'Signup failed. Please try again.');
+      const msg = authError?.message || '';
+      if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('user already exists')) {
+        sessionStorage.setItem('signup_first_name', formData.athleteFirstName.trim());
+        sessionStorage.setItem('signup_last_name', formData.athleteLastName.trim());
+        sessionStorage.setItem('signup_role', 'parent');
+        setExistingUser(true);
+      } else {
+        setShowError(true);
+        setErrorMessage(msg || 'Signup failed. Please try again.');
+      }
       setSubmitting(false);
       return;
     }
@@ -102,6 +112,41 @@ export default function ParentIntakePage() {
 
       <section className="py-12">
         <div className="max-w-lg mx-auto px-6">
+          {existingUser && (
+            <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-5 mb-6">
+              <div className="flex items-start gap-3 mb-4">
+                <Info className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-amber-900 font-bold text-sm">This email is already registered.</p>
+                  <p className="text-amber-800 text-sm mt-1">
+                    Sign in with your existing account to continue linking{' '}
+                    <span className="font-semibold">{formData.athleteFirstName || 'your athlete'}</span> to your parent dashboard.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate('/signin?next=/signup/parent/match-check')}
+                  className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In to Continue
+                </button>
+                <Link
+                  to="/forgot-password"
+                  className="flex-1 bg-white border-2 border-amber-300 hover:border-amber-400 text-amber-800 font-bold py-2.5 px-4 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  Forgot your password?
+                </Link>
+              </div>
+              <p className="text-amber-700 text-xs mt-3">
+                Using a different email? Update the email field above and try again.
+              </p>
+            </div>
+          )}
+
           {showError && (
             <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Users, MapPin, ArrowRight, Search } from 'lucide-react';
+import { Users, MapPin, ArrowRight, Search, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
 import type { Athlete } from '../types/athlete';
@@ -118,14 +118,26 @@ export default function AthletesPage() {
               {filtered.map((athlete) => (
                 <div
                   key={athlete.id}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group"
+                  className={`bg-white rounded-xl overflow-hidden hover:shadow-2xl transition-all duration-300 group ${
+                    athlete.profile_tier === 'premium'
+                      ? 'shadow-lg shadow-amber-100 ring-1 ring-amber-300/50'
+                      : 'shadow-lg'
+                  }`}
                 >
-                  <div className="aspect-[4/5] overflow-hidden bg-gray-200">
+                  <div className="relative aspect-[4/5] overflow-hidden bg-gray-200">
                     <img
                       src={athlete.image_url || 'https://images.pexels.com/photos/2834914/pexels-photo-2834914.jpeg?auto=compress&cs=tinysrgb&w=800'}
                       alt={`${athlete.first_name} ${athlete.last_initial}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                        athlete.profile_tier === 'premium' ? 'ring-2 ring-inset ring-amber-400/40' : ''
+                      }`}
                     />
+                    {athlete.profile_tier === 'premium' && (
+                      <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-gradient-to-r from-amber-400 to-yellow-300 text-black text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
+                        <Trophy className="w-3 h-3" />
+                        Premium
+                      </div>
+                    )}
                   </div>
                   <div className="p-6">
                     <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">

@@ -182,7 +182,7 @@ export function AdminDashboardPage() {
       </div>
 
       <div className="space-y-8">
-        <DataTable title="Recent Athlete Signups" columns={athleteColumns} data={recentAthletes} onRowAction={(row) => console.log('View athlete:', row)} />
+        <DataTable title="Recent Parent Intake Submissions" columns={athleteColumns} data={recentAthletes} onRowAction={(row) => console.log('View athlete:', row)} />
         <DataTable title="Recent Parent Intake Forms" columns={intakeColumns} data={recentIntakes} onRowAction={(row) => console.log('View intake:', row)} />
         <DataTable title="Recent Creator Applications" columns={creatorColumns} data={recentCreators} onRowAction={(row) => console.log('View creator:', row)} />
         <DataTable title="Recent Team Inquiries" columns={teamColumns} data={recentTeamInquiries} onRowAction={(row) => console.log('View team inquiry:', row)} />
@@ -198,8 +198,8 @@ export function AdminDashboardPage() {
         >
           <div className="space-y-3">
             <button className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
-              <p className="font-semibold text-gray-900">Approve Pending Athletes</p>
-              <p className="text-sm text-gray-600 mt-1">{counts.athleteSignups} total signups to review</p>
+              <p className="font-semibold text-gray-900">Review Parent Intake Submissions</p>
+              <p className="text-sm text-gray-600 mt-1">{counts.athleteSignups} intake submissions to review</p>
             </button>
             <button className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
               <p className="font-semibold text-gray-900">Review Creator Applications</p>

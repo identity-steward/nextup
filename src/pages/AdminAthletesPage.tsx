@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { StatCard } from '../components/StatCard';
 import { DataTable, TableColumn } from '../components/DataTable';
-import { Users, CheckCircle, Clock, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, CheckCircle, Clock, XCircle, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface AthleteSignup {
@@ -128,7 +128,14 @@ export function AdminAthletesPage() {
   ];
 
   return (
-    <DashboardLayout title="Athlete Signups">
+    <DashboardLayout title="Parent Intake Queue">
+      <div className="flex items-start gap-3 bg-sky-50 border border-sky-200 rounded-xl px-5 py-3.5 mb-6 text-sm text-sky-800">
+        <Info className="w-4 h-4 shrink-0 mt-0.5 text-sky-500" />
+        <p>
+          Approving an intake submission does <span className="font-bold">not</span> make an athlete publicly visible.
+          Public athlete visibility is managed in <span className="font-bold">Live Athletes</span>.
+        </p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard title="Total Signups" value={String(total)} icon={Users} color="blue" />
         <StatCard title="Approved" value={String(approved)} icon={CheckCircle} color="green" />
@@ -205,7 +212,7 @@ export function AdminAthletesPage() {
             return (
               <div className="mt-4 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                 <h3 className="font-bold text-navy text-base mb-4">
-                  Review: {req.athlete_first_name} {req.athlete_last_name}
+                  Review Intake: {req.athlete_first_name} {req.athlete_last_name}
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                   {[

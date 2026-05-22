@@ -56,8 +56,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/live-feed" className="hover:text-gold transition-colors duration-200">
-                  Live Feed
+                <Link to="/spotlight" className="hover:text-gold transition-colors duration-200">
+                  Spotlight
                 </Link>
               </li>
             </ul>

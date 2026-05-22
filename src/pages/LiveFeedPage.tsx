@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Radio, Camera, Video, Star, ArrowRight, Tag, Zap } from 'lucide-react';
+import { Zap, Camera, Video, Star, ArrowRight, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface VisibilityTag {
@@ -258,11 +258,11 @@ export default function LiveFeedPage() {
       <section className="bg-[#080f19] py-16 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 bg-amber-400/10 text-amber-400 px-4 py-2 rounded-full text-sm font-semibold mb-6 border border-amber-400/20">
-            <Radio className="w-4 h-4 animate-pulse" />
-            Live Feed
+            <Zap className="w-4 h-4" />
+            Spotlight
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            NextUp Live Feed
+            NextUp Spotlight
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
             Approved photos and highlights from Memphis athletes. Real moments, real visibility.
@@ -367,7 +367,7 @@ export default function LiveFeedPage() {
               Get Your Athlete Featured
             </h2>
             <p className="text-gray-400 mb-8 leading-relaxed">
-              Submit media for your athlete and get approved content featured on the NextUp Live Feed.
+              Submit media for your athlete and get approved content featured on the NextUp Spotlight.
             </p>
             <Link
               to="/signup"

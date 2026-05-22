@@ -1,4 +1,4 @@
-import { Menu, X, LayoutDashboard, Radio } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -19,7 +19,7 @@ export default function Header() {
     { path: '/', label: 'Home' },
     { path: '/athletes', label: 'Athletes' },
     { path: '/creators', label: 'Creators' },
-    { path: '/live-feed', label: 'Live Feed' },
+    { path: '/spotlight', label: 'Spotlight' },
     { path: '/sponsors', label: 'Sponsors' },
     { path: '/about', label: 'About' },
   ];
@@ -51,8 +51,8 @@ export default function Header() {
                     : 'text-gray-700 hover:text-gold'
                 }`}
               >
-                {item.path === '/live-feed' && (
-                  <Radio className="w-3.5 h-3.5 text-red-500" />
+                {item.path === '/spotlight' && (
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
                 )}
                 {item.label}
               </Link>

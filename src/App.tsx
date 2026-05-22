@@ -21,7 +21,7 @@ import ContactPage from './pages/ContactPage';
 import ParentIntakePage from './pages/ParentIntakePage';
 import { isSupabaseConfigured } from './lib/supabase';
 import JacobFousePage from './pages/JacobFousePage';
-import LiveFeedPage from './pages/LiveFeedPage';
+import SpotlightPage from './pages/LiveFeedPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
 
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
@@ -55,7 +55,8 @@ function AppContent() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signup/player" element={<JoinPage />} />
           <Route path="/signup/parent" element={<ParentIntakePage />} />
-          <Route path="/live-feed" element={<LiveFeedPage />} />
+          <Route path="/spotlight" element={<SpotlightPage />} />
+          <Route path="/live-feed" element={<Navigate to="/spotlight" replace />} />
           <Route path="/creators" element={<CreatorsPage />} />
           <Route path="/creators/:slug" element={<CreatorProfilePage />} />
           <Route path="/sponsors" element={<SponsorsPage />} />

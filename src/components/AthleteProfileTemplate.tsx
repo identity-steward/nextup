@@ -113,8 +113,10 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const progressPercentage = athlete.season_goal_amount > 0
-    ? Math.round((athlete.season_amount_raised / athlete.season_goal_amount) * 100)
+  const seasonGoal = athlete.season_goal_amount ?? 0;
+  const seasonRaised = athlete.season_amount_raised ?? 0;
+  const progressPercentage = seasonGoal > 0
+    ? Math.round((seasonRaised / seasonGoal) * 100)
     : 0;
 
   const supportLink = athlete.stripe_payment_link || undefined;
@@ -165,17 +167,17 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
             <div className="flex items-center justify-center gap-10 py-6 border-t border-white/5 mt-4">
               <div className="flex items-center gap-2 text-gray-400">
                 <Eye className="w-4 h-4 text-sky-400" />
-                <span className="font-bold text-white">{athlete.views_count.toLocaleString()}</span>
+                <span className="font-bold text-white">{(athlete.views_count ?? 0).toLocaleString()}</span>
                 <span className="text-sm">Views</span>
               </div>
               <div className="flex items-center gap-2 text-gray-400">
                 <Users className="w-4 h-4 text-sky-400" />
-                <span className="font-bold text-white">{athlete.supporters_count}</span>
+                <span className="font-bold text-white">{athlete.supporters_count ?? 0}</span>
                 <span className="text-sm">Supporters</span>
               </div>
               <div className="flex items-center gap-2 text-gray-400">
                 <Heart className="w-4 h-4 text-sky-400" />
-                <span className="font-bold text-white">{athlete.followers_count}</span>
+                <span className="font-bold text-white">{athlete.followers_count ?? 0}</span>
                 <span className="text-sm">Followers</span>
               </div>
             </div>
@@ -289,7 +291,7 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
                     <p className="font-bold text-sm">{athlete.gpa}</p>
                   </div>
                 )}
-                {athlete.years_playing > 0 && (
+                {(athlete.years_playing ?? 0) > 0 && (
                   <div className="bg-white/10 rounded-xl px-4 py-3">
                     <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">Experience</p>
                     <p className="font-bold text-sm">{athlete.years_playing} yrs</p>
@@ -297,16 +299,16 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
                 )}
                 <div className="bg-white/10 rounded-xl px-4 py-3">
                   <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">Supporters</p>
-                  <p className="font-bold text-sm">{athlete.supporters_count}</p>
+                  <p className="font-bold text-sm">{athlete.supporters_count ?? 0}</p>
                 </div>
                 <div className="bg-white/10 rounded-xl px-4 py-3">
                   <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">Profile Views</p>
-                  <p className="font-bold text-sm">{athlete.views_count.toLocaleString()}</p>
+                  <p className="font-bold text-sm">{(athlete.views_count ?? 0).toLocaleString()}</p>
                 </div>
-                {athlete.monthly_funding > 0 && (
+                {(athlete.monthly_funding ?? 0) > 0 && (
                   <div className="bg-white/10 rounded-xl px-4 py-3">
                     <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">Monthly Support</p>
-                    <p className="font-bold text-sm">${athlete.monthly_funding}</p>
+                    <p className="font-bold text-sm">${athlete.monthly_funding ?? 0}</p>
                   </div>
                 )}
               </div>
@@ -444,7 +446,7 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
         </section>
       )}
 
-      {athlete.season_goal_amount > 0 && (
+      {seasonGoal > 0 && (
         <section className="py-12 bg-white border-t border-gray-100">
           <div className="max-w-4xl mx-auto px-6 lg:px-8">
             <h2 className="text-2xl font-bold text-navy mb-6">Season Funding Goal</h2>
@@ -452,14 +454,14 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <p className="text-gray-500 text-sm mb-1">Season Goal</p>
-                  <p className="text-2xl font-black text-navy">${athlete.season_goal_amount.toLocaleString()}</p>
+                  <p className="text-2xl font-black text-navy">${seasonGoal.toLocaleString()}</p>
                   {athlete.next_goal_description && (
                     <p className="text-gray-500 text-sm mt-1">{athlete.next_goal_description}</p>
                   )}
                 </div>
                 <div className="text-right">
                   <p className="text-gray-500 text-sm mb-1">Raised</p>
-                  <p className="text-3xl font-black text-sky-500">${athlete.season_amount_raised.toLocaleString()}</p>
+                  <p className="text-3xl font-black text-sky-500">${seasonRaised.toLocaleString()}</p>
                 </div>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden mb-2">

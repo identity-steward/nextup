@@ -10,11 +10,6 @@ const SPORTS = [
   'Wrestling', 'Cross Country', 'Golf', 'Lacrosse', 'Other',
 ];
 
-const GRADES = [
-  '5th Grade', '6th Grade', '7th Grade', '8th Grade',
-  '9th Grade', '10th Grade', '11th Grade', '12th Grade',
-];
-
 const CURRENT_YEAR = new Date().getFullYear();
 const CLASS_YEARS = Array.from({ length: 10 }, (_, i) => String(CURRENT_YEAR + i));
 
@@ -85,7 +80,7 @@ export default function ProfileSetupPage() {
       if (!form.firstName.trim()) return 'First name is required.';
       if (!form.lastName.trim()) return 'Last name is required.';
       if (!form.sport) return 'Please select a sport.';
-      if (!form.grade) return 'Please select a grade.';
+      if (!form.grade.trim()) return 'Athlete level is required.';
     }
     return '';
   };
@@ -344,14 +339,17 @@ export default function ProfileSetupPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">Grade *</label>
-                  <select value={form.grade} onChange={e => set('grade', e.target.value)} className={selectCls}>
-                    <option value="">Select grade</option>
-                    {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
-                  </select>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">Athlete Level *</label>
+                  <input
+                    type="text"
+                    value={form.grade}
+                    onChange={e => set('grade', e.target.value)}
+                    className={inputCls}
+                    placeholder="e.g. 8th Grade, HS Junior, College Freshman"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">Class Year</label>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">Graduation / Class Year</label>
                   <select value={form.classYear} onChange={e => set('classYear', e.target.value)} className={selectCls}>
                     <option value="">Select year</option>
                     {CLASS_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
@@ -497,7 +495,7 @@ export default function ProfileSetupPage() {
               {[
                 { label: 'Name', value: `${form.firstName} ${form.lastName}` },
                 { label: 'Sport', value: form.sport },
-                { label: 'Grade', value: form.grade },
+                { label: 'Athlete Level', value: form.grade },
                 { label: 'Class Year', value: form.classYear },
                 { label: 'Position', value: form.position },
                 { label: 'Height', value: form.height },

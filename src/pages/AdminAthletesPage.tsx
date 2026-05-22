@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { StatCard } from '../components/StatCard';
 import { DataTable, TableColumn } from '../components/DataTable';
-import { Users, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Users, CheckCircle, Clock, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface AthleteSignup {
@@ -25,18 +25,32 @@ export function AdminAthletesPage() {
   const [sportFilter, setSportFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [gradeFilter, setGradeFilter] = useState('');
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [processing, setProcessing] = useState<string | null>(null);
+
+  const load = async () => {
+    const { data, error } = await supabase
+      .from('athlete_signups')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && data) setSignups(data);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    async function load() {
-      const { data, error } = await supabase
-        .from('athlete_signups')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!error && data) setSignups(data);
-      setLoading(false);
-    }
     load();
   }, []);
+
+  const review = async (id: string, action: 'approved' | 'rejected') => {
+    setProcessing(id);
+    await supabase
+      .from('athlete_signups')
+      .update({ status: action, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    setExpanded(null);
+    setProcessing(null);
+    await load();
+  };
 
   useEffect(() => {
     let result = signups;
@@ -70,7 +84,7 @@ export function AdminAthletesPage() {
       render: (_v, row) => `${(row as AthleteSignup).athlete_first_name} ${(row as AthleteSignup).athlete_last_name}`,
     },
     { key: 'athlete_sport', label: 'Sport' },
-    { key: 'athlete_grade', label: 'Grade' },
+    { key: 'athlete_grade', label: 'Level' },
     {
       key: 'athlete_school',
       label: 'School',
@@ -94,6 +108,22 @@ export function AdminAthletesPage() {
           {value.charAt(0).toUpperCase() + value.slice(1)}
         </span>
       ),
+    },
+    {
+      key: 'id',
+      label: 'Actions',
+      render: (_v, row) => {
+        const r = row as AthleteSignup;
+        const isOpen = expanded === r.id;
+        return (
+          <button
+            onClick={(e) => { e.stopPropagation(); setExpanded(isOpen ? null : r.id); }}
+            className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-navy transition-colors px-2 py-1 rounded-lg hover:bg-gray-100"
+          >
+            Review {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        );
+      },
     },
   ];
 
@@ -163,11 +193,70 @@ export function AdminAthletesPage() {
           <div className="w-8 h-8 border-4 border-[#c5a572] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <DataTable
-          columns={columns}
-          data={filtered}
-          onRowAction={(row) => console.log('View athlete signup:', row)}
-        />
+        <>
+          <DataTable
+            columns={columns}
+            data={filtered}
+            onRowAction={() => {}}
+          />
+          {expanded && (() => {
+            const req = signups.find(s => s.id === expanded);
+            if (!req) return null;
+            return (
+              <div className="mt-4 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                <h3 className="font-bold text-navy text-base mb-4">
+                  Review: {req.athlete_first_name} {req.athlete_last_name}
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                  {[
+                    { label: 'Sport', value: req.athlete_sport },
+                    { label: 'Level', value: req.athlete_grade || '—' },
+                    { label: 'School', value: req.athlete_school || '—' },
+                    { label: 'Parent Email', value: req.parent_email },
+                    { label: 'Submitted', value: new Date(req.created_at).toLocaleDateString() },
+                    { label: 'Status', value: req.status },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="bg-gray-50 rounded-xl px-4 py-3">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+                      <p className="text-sm text-navy font-medium">{value}</p>
+                    </div>
+                  ))}
+                </div>
+                {req.status === 'pending' && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => review(req.id, 'approved')}
+                      disabled={processing === req.id}
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50 text-sm"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      {processing === req.id ? 'Saving...' : 'Approve'}
+                    </button>
+                    <button
+                      onClick={() => review(req.id, 'rejected')}
+                      disabled={processing === req.id}
+                      className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50 text-sm"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Reject
+                    </button>
+                    <button
+                      onClick={() => setExpanded(null)}
+                      className="px-5 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:text-navy transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                {req.status !== 'pending' && (
+                  <p className="text-sm text-gray-500">
+                    This signup has already been <span className="font-semibold">{req.status}</span>.
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+        </>
       )}
     </DashboardLayout>
   );

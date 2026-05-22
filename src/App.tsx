@@ -16,6 +16,8 @@ import HackathonDemoPage from './pages/HackathonDemoPage';
 import CreatorsPage from './pages/CreatorsPage';
 import CreatorProfilePage from './pages/CreatorProfilePage';
 import SignInPage from './pages/SignInPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import AthleteProfilePage from './pages/AthleteProfilePage';
 import SupportPage from './pages/SupportPage';
 import ContactPage from './pages/ContactPage';
@@ -76,6 +78,8 @@ function AppContent() {
 
           {/* Auth */}
           <Route path="/signin" element={<SignInPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Protected */}
           <Route

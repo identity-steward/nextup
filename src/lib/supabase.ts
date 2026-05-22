@@ -59,6 +59,8 @@ const createMockSupabaseClient = (): SupabaseClient => {
         data: { user: null, session: null },
         error: missingConfigError,
       }),
+      resetPasswordForEmail: async () => ({ data: {}, error: missingConfigError }),
+      updateUser: async () => ({ data: { user: null }, error: missingConfigError }),
       signOut: async () => ({ error: null }),
     },
     from: queryBuilder,

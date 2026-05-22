@@ -70,6 +70,7 @@ export default function AthleteDashboardPage() {
   const [editForm, setEditForm] = useState({
     bio: '',
     grade: '',
+    class_year: '',
     school: '',
     team_name: '',
     position: '',
@@ -130,6 +131,7 @@ export default function AthleteDashboardPage() {
     setEditForm({
       bio: athleteData.bio || '',
       grade: athleteData.grade || '',
+      class_year: athleteData.class_year || '',
       school: athleteData.school || '',
       team_name: athleteData.team_name || '',
       position: athleteData.position || '',
@@ -179,7 +181,8 @@ export default function AthleteDashboardPage() {
       submitted_by_email: user?.email || '',
       submitted_by_user_id: user?.id,
       field_bio: editForm.bio || null,
-      field_class_year: editForm.grade || null,
+      field_grade: editForm.grade || null,
+      field_class_year: editForm.class_year || null,
       field_school: editForm.school || null,
       field_team: editForm.team_name || null,
       field_position: editForm.position || null,
@@ -437,7 +440,7 @@ export default function AthleteDashboardPage() {
                 {athlete.position && <p className="text-gray-500 text-xs mt-1">{athlete.position}</p>}
 
                 <div className="mt-4 space-y-2 text-sm">
-                  {athlete.grade && <div className="flex justify-between"><span className="text-gray-400">Grade</span><span className="text-navy font-medium">{athlete.grade}</span></div>}
+                  {athlete.grade && <div className="flex justify-between"><span className="text-gray-400">Athlete Level</span><span className="text-navy font-medium">{athlete.grade}</span></div>}
                   {athlete.school && <div className="flex justify-between"><span className="text-gray-400">School</span><span className="text-navy font-medium">{athlete.school}</span></div>}
                   {athlete.team_name && <div className="flex justify-between"><span className="text-gray-400">Team</span><span className="text-navy font-medium">{athlete.team_name}</span></div>}
                   {athlete.city && <div className="flex justify-between"><span className="text-gray-400">City</span><span className="text-navy font-medium">{athlete.city}</span></div>}
@@ -567,8 +570,12 @@ export default function AthleteDashboardPage() {
                 <p className="text-xs font-black text-gold uppercase tracking-widest mb-4">Basic Info</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className={labelCls}>Grade / Class Year</label>
-                    <input type="text" value={editForm.grade} onChange={e => setEditForm(p => ({ ...p, grade: e.target.value }))} className={inputCls} placeholder="e.g. 10th Grade / Class of 2027" />
+                    <label className={labelCls}>Athlete Level</label>
+                    <input type="text" value={editForm.grade} onChange={e => setEditForm(p => ({ ...p, grade: e.target.value }))} className={inputCls} placeholder="e.g. 8th Grade, High School Sophomore, College Freshman" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Graduation / Class Year</label>
+                    <input type="text" value={editForm.class_year} onChange={e => setEditForm(p => ({ ...p, class_year: e.target.value }))} className={inputCls} placeholder="e.g. Class of 2027" />
                   </div>
                   <div>
                     <label className={labelCls}>Position</label>

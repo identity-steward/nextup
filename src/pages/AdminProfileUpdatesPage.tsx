@@ -15,6 +15,7 @@ interface UpdateRequest {
   admin_notes: string | null;
   field_correction_notes: string | null;
   field_bio: string | null;
+  field_grade: string | null;
   field_class_year: string | null;
   field_school: string | null;
   field_team: string | null;
@@ -46,7 +47,7 @@ export function AdminProfileUpdatesPage() {
     setLoading(true);
     let query = supabase
       .from('profile_update_requests')
-      .select('id,athlete_slug,submitted_by_name,submitted_by_role,submitted_by_email,status,created_at,reviewed_at,admin_notes,field_correction_notes,field_bio,field_class_year,field_school,field_team,field_position,field_city_state,field_height,field_jersey_number,field_social_instagram,field_social_twitter,highlight_video_url')
+      .select('id,athlete_slug,submitted_by_name,submitted_by_role,submitted_by_email,status,created_at,reviewed_at,admin_notes,field_correction_notes,field_bio,field_grade,field_class_year,field_school,field_team,field_position,field_city_state,field_height,field_jersey_number,field_social_instagram,field_social_twitter,highlight_video_url')
       .order('created_at', { ascending: false })
       .limit(100);
 
@@ -78,7 +79,8 @@ export function AdminProfileUpdatesPage() {
     if (action === 'approved') {
       const patch: Record<string, string | null> = {};
       if (req.field_bio !== null) patch.bio = req.field_bio;
-      if (req.field_class_year !== null) patch.grade = req.field_class_year;
+      if (req.field_grade !== null) patch.grade = req.field_grade;
+      if (req.field_class_year !== null) patch.class_year = req.field_class_year;
       if (req.field_school !== null) patch.school = req.field_school;
       if (req.field_team !== null) patch.team_name = req.field_team;
       if (req.field_position !== null) patch.position = req.field_position;
@@ -109,7 +111,8 @@ export function AdminProfileUpdatesPage() {
 
   const fieldLabels: Record<string, string> = {
     field_bio: 'Bio',
-    field_class_year: 'Grade / Class Year',
+    field_grade: 'Athlete Level',
+    field_class_year: 'Graduation / Class Year',
     field_school: 'School',
     field_team: 'Team',
     field_position: 'Position',

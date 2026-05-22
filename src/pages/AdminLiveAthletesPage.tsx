@@ -176,6 +176,15 @@ export function AdminLiveAthletesPage() {
       .update({ profile_status: newStatus, profile_tier: newTier, is_active: isActive })
       .eq('id', athlete.id);
 
+    // When activating, clear placeholder pending consent rows
+    if (newStatus === 'active') {
+      await supabase
+        .from('consents')
+        .update({ consent_status: 'accepted' })
+        .eq('athlete_id', athlete.id)
+        .eq('consent_status', 'pending');
+    }
+
     // Sync tags: delete all then reinsert
     await supabase.from('athlete_tags').delete().eq('athlete_id', athlete.id);
     if (newTagIds.length > 0) {

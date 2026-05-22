@@ -187,7 +187,7 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
           )}
 
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-700">
+            <div className={`aspect-[3/4] rounded-2xl overflow-hidden bg-gray-700 ${athlete.profile_tier === 'premium' ? 'ring-2 ring-amber-400/70 ring-offset-4 ring-offset-navy' : ''}`}>
               <img
                 src={athlete.image_url || 'https://images.pexels.com/photos/2834914/pexels-photo-2834914.jpeg?auto=compress&cs=tinysrgb&w=800'}
                 alt={`${athlete.first_name} ${athlete.last_initial}`}
@@ -231,17 +231,38 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
               </p>
 
               {athlete.descriptor && (
-                <p className="text-sky-400 font-semibold text-base mb-4">{athlete.descriptor}</p>
+                athlete.profile_tier === 'premium' ? (
+                  <div className="border-l-2 border-amber-400 pl-3 mb-4">
+                    <p className="text-sky-300 font-bold text-lg leading-snug">{athlete.descriptor}</p>
+                  </div>
+                ) : (
+                  <p className="text-sky-400 font-semibold text-base mb-4">{athlete.descriptor}</p>
+                )
               )}
 
               {(athlete.team_name || athlete.competition_status || athlete.social_proof) && (
-                <div className="mb-5 space-y-1 text-gray-300 text-sm">
-                  {athlete.team_name && (
-                    <p>{athlete.team_name}{athlete.team_circuit && ` — ${athlete.team_circuit}`}</p>
-                  )}
-                  {athlete.competition_status && <p>{athlete.competition_status}</p>}
-                  {athlete.social_proof && <p className="text-sky-300">{athlete.social_proof}</p>}
-                </div>
+                athlete.profile_tier === 'premium' ? (
+                  <div className="mb-5 bg-white/5 rounded-xl p-4 border border-amber-400/20 space-y-1.5">
+                    <div className="w-8 h-0.5 bg-amber-400/60 rounded-full mb-3" />
+                    {athlete.team_name && (
+                      <p className="text-gray-200 text-sm font-medium">{athlete.team_name}{athlete.team_circuit && ` — ${athlete.team_circuit}`}</p>
+                    )}
+                    {athlete.competition_status && (
+                      <p className="text-gray-300 text-sm">{athlete.competition_status}</p>
+                    )}
+                    {athlete.social_proof && (
+                      <p className="text-amber-300 text-sm font-semibold">{athlete.social_proof}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mb-5 space-y-1 text-gray-300 text-sm">
+                    {athlete.team_name && (
+                      <p>{athlete.team_name}{athlete.team_circuit && ` — ${athlete.team_circuit}`}</p>
+                    )}
+                    {athlete.competition_status && <p>{athlete.competition_status}</p>}
+                    {athlete.social_proof && <p className="text-sky-300">{athlete.social_proof}</p>}
+                  </div>
+                )
               )}
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">

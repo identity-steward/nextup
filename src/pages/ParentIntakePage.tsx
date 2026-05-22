@@ -80,7 +80,7 @@ export default function ParentIntakePage() {
     sessionStorage.setItem('signup_last_name', formData.athleteLastName.trim());
     sessionStorage.setItem('signup_role', 'parent');
 
-    navigate('/profile-setup');
+    navigate('/signup/parent/match-check');
   };
 
   const inputCls = 'w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-sky-500 focus:outline-none transition-colors text-sm text-gray-900';

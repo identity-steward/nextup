@@ -36,6 +36,7 @@ import { AdminMediaPage } from './pages/AdminMediaPage';
 import { AdminLiveAthletesPage } from './pages/AdminLiveAthletesPage';
 import AthleteDashboardPage from './pages/AthleteDashboardPage';
 import ParentDashboardPage from './pages/ParentDashboardPage';
+import ParentAthleteMatchPage from './pages/ParentAthleteMatchPage';
 import ThankYouPage from './pages/ThankYouPage';
 
 function AppContent() {
@@ -104,6 +105,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <ParentDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/signup/parent/match-check"
+            element={
+              <ProtectedRoute>
+                <ParentAthleteMatchPage />
               </ProtectedRoute>
             }
           />

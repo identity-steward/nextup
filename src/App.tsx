@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import { ScrollToTop } from './components/ScrollToTop';
 import { AuthProvider } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import AthletesPage from './pages/AthletesPage';
@@ -37,6 +38,7 @@ import ThankYouPage from './pages/ThankYouPage';
 function AppContent() {
   return (
     <div className="min-h-screen bg-white">
+      <ScrollToTop />
       <Header />
       <main>
         {!isSupabaseConfigured && (

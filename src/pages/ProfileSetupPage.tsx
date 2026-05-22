@@ -3,15 +3,7 @@ import { CheckCircle, AlertCircle, ChevronRight, ChevronLeft, User, MapPin, Trop
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-
-const SPORTS = [
-  'Basketball', 'Football', 'Soccer', 'Track & Field', 'Baseball',
-  'Softball', 'Volleyball', 'Cheerleading', 'Tennis', 'Swimming',
-  'Wrestling', 'Cross Country', 'Golf', 'Lacrosse', 'Other',
-];
-
-const CURRENT_YEAR = new Date().getFullYear();
-const CLASS_YEARS = Array.from({ length: 10 }, (_, i) => String(CURRENT_YEAR + i));
+import { SPORTS, CLASS_YEARS } from '../lib/constants';
 
 type Step = 'basics' | 'details' | 'bio' | 'links' | 'review';
 const STEPS: Step[] = ['basics', 'details', 'bio', 'links', 'review'];

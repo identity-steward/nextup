@@ -3,8 +3,9 @@ import { Users, MapPin, ArrowRight, Search, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
 import type { Athlete } from '../types/athlete';
+import { SPORTS as SPORTS_LIST } from '../lib/constants';
 
-const SPORTS = ['All Sports', 'Basketball', 'Football', 'Track & Field', 'Soccer', 'Baseball', 'Volleyball', 'Other'];
+const SPORTS = ['All Sports', ...SPORTS_LIST];
 
 export default function AthletesPage() {
   const [athletes, setAthletes] = useState<Athlete[]>([]);

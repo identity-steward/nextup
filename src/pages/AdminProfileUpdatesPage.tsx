@@ -20,6 +20,8 @@ interface UpdateRequest {
   field_team: string | null;
   field_position: string | null;
   field_city_state: string | null;
+  field_height: string | null;
+  field_jersey_number: string | null;
   field_social_instagram: string | null;
   field_social_twitter: string | null;
   highlight_video_url: string | null;
@@ -44,7 +46,7 @@ export function AdminProfileUpdatesPage() {
     setLoading(true);
     let query = supabase
       .from('profile_update_requests')
-      .select('id,athlete_slug,submitted_by_name,submitted_by_role,submitted_by_email,status,created_at,reviewed_at,admin_notes,field_correction_notes,field_bio,field_class_year,field_school,field_team,field_position,field_city_state,field_social_instagram,field_social_twitter,highlight_video_url')
+      .select('id,athlete_slug,submitted_by_name,submitted_by_role,submitted_by_email,status,created_at,reviewed_at,admin_notes,field_correction_notes,field_bio,field_class_year,field_school,field_team,field_position,field_city_state,field_height,field_jersey_number,field_social_instagram,field_social_twitter,highlight_video_url')
       .order('created_at', { ascending: false })
       .limit(100);
 
@@ -81,6 +83,8 @@ export function AdminProfileUpdatesPage() {
       if (req.field_team !== null) patch.team_name = req.field_team;
       if (req.field_position !== null) patch.position = req.field_position;
       if (req.field_city_state !== null) patch.city = req.field_city_state;
+      if (req.field_height !== null) patch.height = req.field_height;
+      if (req.field_jersey_number !== null) patch.jersey_number = req.field_jersey_number;
       if (req.field_social_instagram !== null) patch.instagram_handle = req.field_social_instagram;
       if (req.field_social_twitter !== null) patch.twitter_handle = req.field_social_twitter;
       if (req.highlight_video_url !== null) patch.highlight_video_url = req.highlight_video_url;
@@ -110,6 +114,8 @@ export function AdminProfileUpdatesPage() {
     field_team: 'Team',
     field_position: 'Position',
     field_city_state: 'City / State',
+    field_height: 'Height',
+    field_jersey_number: 'Jersey Number',
     field_social_instagram: 'Instagram',
     field_social_twitter: 'Twitter / X',
     highlight_video_url: 'Highlight Video URL',

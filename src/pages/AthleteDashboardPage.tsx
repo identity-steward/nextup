@@ -74,6 +74,8 @@ export default function AthleteDashboardPage() {
     team_name: '',
     position: '',
     city: '',
+    height: '',
+    jersey_number: '',
     instagram_handle: '',
     twitter_handle: '',
     highlight_video_url: '',
@@ -132,6 +134,8 @@ export default function AthleteDashboardPage() {
       team_name: athleteData.team_name || '',
       position: athleteData.position || '',
       city: athleteData.city || '',
+      height: athleteData.height || '',
+      jersey_number: athleteData.jersey_number || '',
       instagram_handle: athleteData.instagram_handle || '',
       twitter_handle: athleteData.twitter_handle || '',
       highlight_video_url: athleteData.highlight_video_url || '',
@@ -180,6 +184,8 @@ export default function AthleteDashboardPage() {
       field_team: editForm.team_name || null,
       field_position: editForm.position || null,
       field_city_state: editForm.city || null,
+      field_height: editForm.height || null,
+      field_jersey_number: editForm.jersey_number || null,
       field_social_instagram: editForm.instagram_handle || null,
       field_social_twitter: editForm.twitter_handle || null,
       highlight_video_url: editForm.highlight_video_url || null,
@@ -579,6 +585,14 @@ export default function AthleteDashboardPage() {
                   <div>
                     <label className={labelCls}>City / State</label>
                     <input type="text" value={editForm.city} onChange={e => setEditForm(p => ({ ...p, city: e.target.value }))} className={inputCls} placeholder="Memphis, TN" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Height</label>
+                    <input type="text" value={editForm.height} onChange={e => setEditForm(p => ({ ...p, height: e.target.value }))} className={inputCls} placeholder={`e.g. 6'1"`} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Jersey Number</label>
+                    <input type="text" value={editForm.jersey_number} onChange={e => setEditForm(p => ({ ...p, jersey_number: e.target.value }))} className={inputCls} placeholder="e.g. 23" />
                   </div>
                 </div>
               </div>

@@ -35,6 +35,7 @@ import { AdminProfileUpdatesPage } from './pages/AdminProfileUpdatesPage';
 import { AdminMediaPage } from './pages/AdminMediaPage';
 import { AdminLiveAthletesPage } from './pages/AdminLiveAthletesPage';
 import AthleteDashboardPage from './pages/AthleteDashboardPage';
+import ParentDashboardPage from './pages/ParentDashboardPage';
 import ThankYouPage from './pages/ThankYouPage';
 
 function AppContent() {
@@ -95,6 +96,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <AthleteDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/parent-dashboard"
+            element={
+              <ProtectedRoute>
+                <ParentDashboardPage />
               </ProtectedRoute>
             }
           />

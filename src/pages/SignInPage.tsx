@@ -37,6 +37,8 @@ export default function SignInPage() {
 
     if (profileData?.role === 'admin') {
       navigate('/admin');
+    } else if (profileData?.role === 'parent') {
+      navigate('/parent-dashboard');
     } else {
       navigate('/dashboard');
     }

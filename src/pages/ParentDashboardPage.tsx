@@ -1,9 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import {
-  Users, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight,
-  Upload, Camera, Video, LogOut, ExternalLink, ShieldCheck, ShieldAlert,
-  X, Sparkles, Star,
-} from 'lucide-react';
+import { Users, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Upload, Camera, Video, LogOut, ExternalLink, ShieldCheck, ShieldAlert, X, Sparkles, Star, Link2, Instagram, Twitter, File as FileEdit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -15,9 +11,17 @@ interface Athlete {
   last_initial: string;
   sport: string;
   grade: string;
+  class_year: string | null;
   school: string | null;
   team_name: string | null;
+  position: string | null;
+  bio: string | null;
   city: string | null;
+  height: string | null;
+  jersey_number: string | null;
+  instagram_handle: string | null;
+  twitter_handle: string | null;
+  highlight_video_url: string | null;
   image_url: string | null;
   profile_status: 'pending' | 'active' | 'approved' | 'verified_event' | 'hidden' | 'rejected';
   profile_tier: string;
@@ -37,6 +41,7 @@ interface UpdateRequest {
   status: string;
   created_at: string;
   admin_notes: string | null;
+  field_correction_notes: string | null;
 }
 
 interface MediaUpload {
@@ -105,6 +110,27 @@ export default function ParentDashboardPage() {
 
   const consentCardRef = useRef<HTMLDivElement>(null);
 
+  // Profile update form
+  const [editForm, setEditForm] = useState({
+    grade: '',
+    class_year: '',
+    bio: '',
+    school: '',
+    team_name: '',
+    position: '',
+    city: '',
+    height: '',
+    jersey_number: '',
+    instagram_handle: '',
+    twitter_handle: '',
+    highlight_video_url: '',
+    notes: '',
+  });
+  const [editExpanded, setEditExpanded] = useState(false);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editSuccess, setEditSuccess] = useState(false);
+  const [editError, setEditError] = useState('');
+
   // Media upload
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadType, setUploadType] = useState<'photo' | 'video' | 'highlight'>('photo');
@@ -127,14 +153,14 @@ export default function ParentDashboardPage() {
     if (profile?.athlete_id) {
       const { data } = await supabase
         .from('athletes')
-        .select('id, slug, first_name, last_initial, sport, grade, school, team_name, city, image_url, profile_status, profile_tier')
+        .select('id, slug, first_name, last_initial, sport, grade, class_year, school, team_name, position, bio, city, height, jersey_number, instagram_handle, twitter_handle, highlight_video_url, image_url, profile_status, profile_tier')
         .eq('id', profile.athlete_id)
         .maybeSingle();
       athleteData = data as Athlete | null;
     } else {
       const { data } = await supabase
         .from('athletes')
-        .select('id, slug, first_name, last_initial, sport, grade, school, team_name, city, image_url, profile_status, profile_tier')
+        .select('id, slug, first_name, last_initial, sport, grade, class_year, school, team_name, position, bio, city, height, jersey_number, instagram_handle, twitter_handle, highlight_video_url, image_url, profile_status, profile_tier')
         .eq('managed_by_parent_id', user!.id)
         .maybeSingle();
       athleteData = data as Athlete | null;
@@ -147,6 +173,21 @@ export default function ParentDashboardPage() {
     }
 
     setAthlete(athleteData);
+    setEditForm({
+      grade: athleteData.grade || '',
+      class_year: athleteData.class_year || '',
+      bio: athleteData.bio || '',
+      school: athleteData.school || '',
+      team_name: athleteData.team_name || '',
+      position: athleteData.position || '',
+      city: athleteData.city || '',
+      height: athleteData.height || '',
+      jersey_number: athleteData.jersey_number || '',
+      instagram_handle: athleteData.instagram_handle || '',
+      twitter_handle: athleteData.twitter_handle || '',
+      highlight_video_url: athleteData.highlight_video_url || '',
+      notes: '',
+    });
 
     const [consentRes, updatesRes, mediaRes] = await Promise.all([
       supabase
@@ -156,7 +197,7 @@ export default function ParentDashboardPage() {
         .maybeSingle(),
       supabase
         .from('profile_update_requests')
-        .select('id, status, created_at, admin_notes')
+        .select('id, status, created_at, admin_notes, field_correction_notes')
         .eq('athlete_slug', athleteData.slug)
         .order('created_at', { ascending: false })
         .limit(20),
@@ -219,6 +260,48 @@ export default function ParentDashboardPage() {
       await loadData();
     }
     setConsentSaving(false);
+  };
+
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!athlete || !user) return;
+    setEditSubmitting(true);
+    setEditError('');
+    setEditSuccess(false);
+
+    const nullIfEmpty = (v: string) => v.trim() || null;
+
+    const { error } = await supabase.from('profile_update_requests').insert([{
+      athlete_slug: athlete.slug,
+      submitted_by_name: profile?.display_name || user.email || '',
+      submitted_by_role: 'parent',
+      submitted_by_email: user.email || '',
+      submitted_by_user_id: user.id,
+      field_grade: nullIfEmpty(editForm.grade),
+      field_class_year: nullIfEmpty(editForm.class_year),
+      field_bio: nullIfEmpty(editForm.bio),
+      field_school: nullIfEmpty(editForm.school),
+      field_team: nullIfEmpty(editForm.team_name),
+      field_position: nullIfEmpty(editForm.position),
+      field_city_state: nullIfEmpty(editForm.city),
+      field_height: nullIfEmpty(editForm.height),
+      field_jersey_number: nullIfEmpty(editForm.jersey_number),
+      field_social_instagram: nullIfEmpty(editForm.instagram_handle),
+      field_social_twitter: nullIfEmpty(editForm.twitter_handle),
+      highlight_video_url: nullIfEmpty(editForm.highlight_video_url),
+      field_correction_notes: nullIfEmpty(editForm.notes),
+      status: 'pending',
+    }]);
+
+    if (error) {
+      setEditError('Submission failed. Please try again.');
+    } else {
+      setEditSuccess(true);
+      setEditExpanded(false);
+      setEditForm(prev => ({ ...prev, notes: '' }));
+      await loadData();
+    }
+    setEditSubmitting(false);
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -341,7 +424,7 @@ export default function ParentDashboardPage() {
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <Users className="w-4 h-4" /> },
     { id: 'media', label: 'Media', icon: <Camera className="w-4 h-4" /> },
-    { id: 'updates', label: 'Submissions', icon: <Clock className="w-4 h-4" /> },
+    { id: 'updates', label: 'Updates', icon: <FileEdit className="w-4 h-4" /> },
     { id: 'support', label: 'Support', icon: <ChevronRight className="w-4 h-4" /> },
   ];
 
@@ -683,10 +766,11 @@ export default function ParentDashboardPage() {
               </div>
 
               {/* Quick actions */}
-              <div className="grid sm:grid-cols-3 gap-3">
+              <div className="grid sm:grid-cols-2 gap-3">
                 {[
+                  { label: 'Submit Profile Update', icon: <FileEdit className="w-4 h-4" />, action: () => { setTab('updates'); setEditExpanded(true); } },
                   { label: 'Upload Photo / Video', icon: <Upload className="w-4 h-4" />, action: () => setTab('media') },
-                  { label: 'View Submissions', icon: <Clock className="w-4 h-4" />, action: () => setTab('updates') },
+                  { label: 'View Update History', icon: <Clock className="w-4 h-4" />, action: () => setTab('updates') },
                   { label: 'View Public Profile', icon: <ExternalLink className="w-4 h-4" />, action: () => navigate(`/athletes/${a.slug}`) },
                 ].map(action => (
                   <button key={action.label} onClick={action.action}
@@ -753,10 +837,10 @@ export default function ParentDashboardPage() {
                 </div>
               )}
 
-              {/* Recent submissions */}
+              {/* Recent updates */}
               {updates.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-                  <h3 className="font-bold text-navy mb-3">Recent Submissions</h3>
+                  <h3 className="font-bold text-navy mb-3">Recent Updates</h3>
                   <div className="space-y-2">
                     {updates.slice(0, 3).map(u => (
                       <div key={u.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
@@ -766,7 +850,7 @@ export default function ParentDashboardPage() {
                     ))}
                   </div>
                   <button onClick={() => setTab('updates')} className="text-gold text-xs font-semibold mt-2 hover:underline">
-                    View all submissions →
+                    View all updates →
                   </button>
                 </div>
               )}
@@ -855,26 +939,157 @@ export default function ParentDashboardPage() {
           </div>
         )}
 
-        {/* ---- UPDATES / SUBMISSIONS ---- */}
+        {/* ---- UPDATES ---- */}
         {tab === 'updates' && (
-          <div className="max-w-2xl">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <p className="text-amber-800 text-sm">
-                Profile update submissions are reviewed by the NextUp team. To request a change, contact{' '}
-                <a href="/contact" className="font-semibold underline">our support team</a> or check back when the full update form is available.
-              </p>
+          <div className="max-w-2xl space-y-6">
+
+            {/* Submit form */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              <button
+                onClick={() => { setEditExpanded(e => !e); setEditSuccess(false); setEditError(''); }}
+                className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-gold/10 rounded-xl flex items-center justify-center">
+                    <FileEdit className="w-4 h-4 text-gold" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-navy text-sm">Submit Profile Update</p>
+                    <p className="text-xs text-gray-400">Request changes to {a.first_name}'s profile info</p>
+                  </div>
+                </div>
+                <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${editExpanded ? 'rotate-90' : ''}`} />
+              </button>
+
+              {editExpanded && (
+                <div className="border-t border-gray-100 px-6 pb-6 pt-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 flex items-start gap-3">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-amber-800 text-sm">
+                      Updates are reviewed by the NextUp team before going live. Changes typically post within 24–48 hours.
+                    </p>
+                  </div>
+
+                  {editSuccess && (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-5 flex items-start gap-3">
+                      <CheckCircle className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
+                      <p className="text-green-800 text-sm font-semibold">Update submitted! We'll review it shortly.</p>
+                    </div>
+                  )}
+
+                  {editError && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-5">
+                      <p className="text-red-700 text-sm">{editError}</p>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleUpdateSubmit} className="space-y-6">
+                    <div>
+                      <p className="text-xs font-black text-gold uppercase tracking-widest mb-4">Basic Info</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className={labelCls}>Athlete Level</label>
+                          <input type="text" value={editForm.grade} onChange={e => setEditForm(p => ({ ...p, grade: e.target.value }))} className={inputCls} placeholder="e.g. 8th Grade, High School Sophomore" />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Graduation / Class Year</label>
+                          <input type="text" value={editForm.class_year} onChange={e => setEditForm(p => ({ ...p, class_year: e.target.value }))} className={inputCls} placeholder="e.g. Class of 2027" />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Position</label>
+                          <input type="text" value={editForm.position} onChange={e => setEditForm(p => ({ ...p, position: e.target.value }))} className={inputCls} placeholder="e.g. Point Guard" />
+                        </div>
+                        <div>
+                          <label className={labelCls}>School</label>
+                          <input type="text" value={editForm.school} onChange={e => setEditForm(p => ({ ...p, school: e.target.value }))} className={inputCls} placeholder="School name" />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Team / Club</label>
+                          <input type="text" value={editForm.team_name} onChange={e => setEditForm(p => ({ ...p, team_name: e.target.value }))} className={inputCls} placeholder="e.g. Mid-South 13U AAU" />
+                        </div>
+                        <div>
+                          <label className={labelCls}>City / State</label>
+                          <input type="text" value={editForm.city} onChange={e => setEditForm(p => ({ ...p, city: e.target.value }))} className={inputCls} placeholder="Memphis, TN" />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Height</label>
+                          <input type="text" value={editForm.height} onChange={e => setEditForm(p => ({ ...p, height: e.target.value }))} className={inputCls} placeholder={`e.g. 6'1"`} />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Jersey Number</label>
+                          <input type="text" value={editForm.jersey_number} onChange={e => setEditForm(p => ({ ...p, jersey_number: e.target.value }))} className={inputCls} placeholder="e.g. 23" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-gray-100" />
+
+                    <div>
+                      <p className="text-xs font-black text-navy uppercase tracking-widest mb-4">Bio</p>
+                      <textarea
+                        rows={4}
+                        value={editForm.bio}
+                        onChange={e => setEditForm(p => ({ ...p, bio: e.target.value }))}
+                        className={inputCls}
+                        placeholder={`Tell ${a.first_name}'s story — background, goals, and what drives them.`}
+                      />
+                    </div>
+
+                    <div className="h-px bg-gray-100" />
+
+                    <div>
+                      <p className="text-xs font-black text-navy uppercase tracking-widest mb-4">Social &amp; Highlights</p>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <Instagram className="w-5 h-5 text-gray-400 shrink-0" />
+                          <input type="text" value={editForm.instagram_handle} onChange={e => setEditForm(p => ({ ...p, instagram_handle: e.target.value }))} className={inputCls} placeholder="Instagram handle (without @)" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Twitter className="w-5 h-5 text-gray-400 shrink-0" />
+                          <input type="text" value={editForm.twitter_handle} onChange={e => setEditForm(p => ({ ...p, twitter_handle: e.target.value }))} className={inputCls} placeholder="Twitter / X handle (without @)" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Link2 className="w-5 h-5 text-gray-400 shrink-0" />
+                          <input type="url" value={editForm.highlight_video_url} onChange={e => setEditForm(p => ({ ...p, highlight_video_url: e.target.value }))} className={inputCls} placeholder="Highlight video URL (YouTube, Hudl, etc.)" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-gray-100" />
+
+                    <div>
+                      <label className={labelCls}>Notes for the Admin Team</label>
+                      <textarea
+                        rows={2}
+                        value={editForm.notes}
+                        onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))}
+                        className={inputCls}
+                        placeholder="Anything else you'd like us to know about these changes"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={editSubmitting}
+                      className="w-full btn-primary py-3.5 text-base font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {editSubmitting ? 'Submitting...' : 'Submit for Review'}
+                    </button>
+                  </form>
+                </div>
+              )}
             </div>
 
+            {/* Update history */}
             {updates.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center shadow-sm">
                 <Clock className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No submissions on record yet.</p>
+                <p className="text-gray-500 text-sm">No updates submitted yet.</p>
               </div>
             ) : (
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100">
-                  <h3 className="font-bold text-navy">Profile Update History</h3>
+                  <h3 className="font-bold text-navy">Update History</h3>
                 </div>
                 <div className="divide-y divide-gray-50">
                   {updates.map(u => (
@@ -883,6 +1098,9 @@ export default function ParentDashboardPage() {
                         <p className="text-sm text-gray-600">{new Date(u.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                         {statusBadge(u.status)}
                       </div>
+                      {u.field_correction_notes && (
+                        <p className="text-xs text-gray-500 mt-1">Your notes: {u.field_correction_notes}</p>
+                      )}
                       {u.admin_notes && (
                         <div className="mt-2 bg-gray-50 rounded-lg px-3 py-2">
                           <p className="text-xs font-semibold text-navy mb-0.5">Admin Response</p>

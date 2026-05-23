@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Users, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Upload, Camera, Video, LogOut, ExternalLink, ShieldCheck, ShieldAlert, X, Sparkles, Star, Link2, Instagram, Twitter, File as FileEdit } from 'lucide-react';
+import { Users, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Upload, Camera, Video, LogOut, ExternalLink, ShieldCheck, ShieldAlert, X, Sparkles, Star, Link2, Instagram, Twitter, File as FileEdit, Copy, Check, TrendingUp, BadgeCheck, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -96,6 +96,9 @@ export default function ParentDashboardPage() {
 
   // Welcome banner
   const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  // Share / clipboard
+  const [shareCopied, setShareCopied] = useState(false);
 
   // Consent editor
   const [consentEditing, setConsentEditing] = useState(false);
@@ -1116,39 +1119,172 @@ export default function ParentDashboardPage() {
         )}
 
         {/* ---- SUPPORT / UPGRADE ---- */}
-        {tab === 'support' && (
-          <div className="max-w-2xl space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm text-center">
-              <div className="w-16 h-16 bg-gold/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Star className="w-8 h-8 text-gold" />
-              </div>
-              <h2 className="text-xl font-bold text-navy mb-2">Support {a.first_name}'s Journey</h2>
-              <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                Unlock a verified profile, premium media, and increased visibility for your athlete on the NextUp Network.
-              </p>
-              <a
-                href="/support"
-                className="btn-primary px-8 py-3 inline-block text-sm font-bold"
-              >
-                View Support Options
-              </a>
-            </div>
+        {tab === 'support' && (() => {
+          const isPremium = a.profile_tier === 'premium';
+          const profileUrl = `${window.location.origin}/athletes/${a.slug}`;
+          const copyProfileLink = () => {
+            navigator.clipboard.writeText(profileUrl);
+            setShareCopied(true);
+            setTimeout(() => setShareCopied(false), 2000);
+          };
 
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-              <h3 className="font-bold text-navy mb-3 text-sm">Need Help?</h3>
-              <p className="text-gray-500 text-sm mb-4">
-                Have questions about {a.first_name}'s profile, consent settings, or media approvals?
-              </p>
-              <a
-                href="/contact"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-gold hover:text-gold-dark transition-colors"
-              >
-                Contact Support
-                <ChevronRight className="w-4 h-4" />
-              </a>
+          return (
+            <div className="max-w-2xl space-y-4">
+
+              {/* Card 1 — Free Profile / Premium Active */}
+              {!isPremium ? (
+                <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                      <Users className="w-5 h-5 text-navy/50" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-navy text-sm">Your Free Profile</p>
+                      <p className="text-xs text-gray-400">What's included with {a.first_name}'s current plan</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2.5">
+                    {[
+                      'Public athlete profile on the NextUp Network',
+                      'Profile update submissions reviewed by our team',
+                      'Photo and video media uploads',
+                      'Participation visibility settings and consent controls',
+                    ].map(benefit => (
+                      <div key={benefit} className="flex items-start gap-2.5">
+                        <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-600">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border-2 border-amber-300 p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gold/20 rounded-xl flex items-center justify-center">
+                      <BadgeCheck className="w-5 h-5 text-gold" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-navy text-sm">Premium Active</p>
+                        <span className="bg-gold text-navy text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide">Premium</span>
+                      </div>
+                      <p className="text-xs text-gray-400">{a.first_name}'s enhanced visibility is live</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2.5 mb-5">
+                    {[
+                      'Priority placement in athlete discovery',
+                      'Verified profile badge displayed publicly',
+                      'Enhanced media presentation on profile',
+                      'Included in sponsor and brand package visibility',
+                    ].map(benefit => (
+                      <div key={benefit} className="flex items-start gap-2.5">
+                        <Star className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-600">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <a
+                    href={profileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-navy hover:text-gold transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    View {a.first_name}'s Live Profile
+                  </a>
+                </div>
+              )}
+
+              {/* Card 2 — Upgrade Visibility (non-premium only) */}
+              {!isPremium && (
+                <div className="bg-white rounded-2xl border-2 border-gold/40 p-6 shadow-md">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gold/15 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-gold" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-navy text-sm">Boost {a.first_name}'s Visibility on NextUp</p>
+                      <p className="text-xs text-gray-400">Upgrade to premium for enhanced reach and recognition</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2.5 mb-5">
+                    {[
+                      { label: 'Priority placement in athlete discovery and search' },
+                      { label: 'Verified badge displayed on the public profile' },
+                      { label: 'Enhanced media presentation and highlight formatting' },
+                      { label: 'Included in sponsor and brand package visibility' },
+                    ].map(item => (
+                      <div key={item.label} className="flex items-start gap-2.5">
+                        <BadgeCheck className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-600">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <a
+                    href="/support"
+                    className="btn-primary w-full flex items-center justify-center gap-2 py-3 text-sm font-bold"
+                  >
+                    <TrendingUp className="w-4 h-4" />
+                    Upgrade {a.first_name}'s Visibility
+                  </a>
+                </div>
+              )}
+
+              {/* Card 3 — Build the Support Team */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                    <Heart className="w-5 h-5 text-red-400" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-navy text-sm">Build {a.first_name}'s Support Team</p>
+                    <p className="text-xs text-gray-400">Invite family, coaches, and community to get behind the journey</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 leading-relaxed mb-5">
+                  Share {a.first_name}'s profile with the people who matter. Family, coaches, and community members can join the support team and contribute directly to training, travel, and development through NextUp's supporter tiers.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={copyProfileLink}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl border-2 text-sm font-bold transition-all duration-200 ${
+                      shareCopied
+                        ? 'border-green-300 bg-green-50 text-green-700'
+                        : 'border-gray-200 hover:border-gold/50 text-navy hover:bg-gray-50'
+                    }`}
+                  >
+                    {shareCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {shareCopied ? 'Copied!' : 'Copy Profile Link'}
+                  </button>
+                  <a
+                    href="/support"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl border-2 border-navy/20 hover:border-navy text-navy text-sm font-bold transition-colors"
+                  >
+                    <Heart className="w-4 h-4" />
+                    View Support Options
+                  </a>
+                </div>
+              </div>
+
+              {/* Card 4 — Need Help */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+                <h3 className="font-bold text-navy mb-3 text-sm">Need Help?</h3>
+                <p className="text-gray-500 text-sm mb-4">
+                  Have questions about {a.first_name}'s profile, consent settings, or media approvals?
+                </p>
+                <a
+                  href="/contact"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-gold hover:text-gold-dark transition-colors"
+                >
+                  Contact Support
+                  <ChevronRight className="w-4 h-4" />
+                </a>
+              </div>
+
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

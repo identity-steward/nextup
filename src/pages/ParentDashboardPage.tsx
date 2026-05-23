@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Users, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Upload, Camera, Video, LogOut, ExternalLink, ShieldCheck, ShieldAlert } from 'lucide-react';
+import {
+  Users, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight,
+  Upload, Camera, Video, LogOut, ExternalLink, ShieldCheck, ShieldAlert,
+  X, Sparkles, Star,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -16,13 +20,16 @@ interface Athlete {
   city: string | null;
   image_url: string | null;
   profile_status: 'pending' | 'active' | 'approved' | 'verified_event' | 'hidden' | 'rejected';
+  profile_tier: string;
 }
 
 interface ConsentRecord {
   id: string;
   consent_status: string;
   can_use_name_image_likeness: boolean;
+  can_use_voice: boolean;
   can_use_on_social: boolean;
+  can_use_for_sponsor_package: boolean;
 }
 
 interface UpdateRequest {
@@ -49,6 +56,28 @@ const BUCKETS: Record<string, string> = {
   highlight: 'athlete-videos',
 };
 
+const LIVE_STATUSES = new Set(['active', 'approved', 'verified_event']);
+
+function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 transition-colors duration-200 focus:outline-none ${
+        checked ? 'bg-navy border-navy' : 'bg-gray-200 border-gray-200'
+      }`}
+      role="switch"
+      aria-checked={checked}
+    >
+      <span
+        className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 mt-0.5 ${
+          checked ? 'translate-x-5' : 'translate-x-0.5'
+        }`}
+      />
+    </button>
+  );
+}
+
 export default function ParentDashboardPage() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
@@ -60,6 +89,23 @@ export default function ParentDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [noProfile, setNoProfile] = useState(false);
 
+  // Welcome banner
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  // Consent editor
+  const [consentEditing, setConsentEditing] = useState(false);
+  const [consentSaving, setConsentSaving] = useState(false);
+  const [consentSaveError, setConsentSaveError] = useState('');
+  const [consentPrefs, setConsentPrefs] = useState({
+    can_use_name_image_likeness: false,
+    can_use_voice: false,
+    can_use_on_social: false,
+    can_use_for_sponsor_package: false,
+  });
+
+  const consentCardRef = useRef<HTMLDivElement>(null);
+
+  // Media upload
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadType, setUploadType] = useState<'photo' | 'video' | 'highlight'>('photo');
   const [uploadCaption, setUploadCaption] = useState('');
@@ -81,14 +127,14 @@ export default function ParentDashboardPage() {
     if (profile?.athlete_id) {
       const { data } = await supabase
         .from('athletes')
-        .select('id, slug, first_name, last_initial, sport, grade, school, team_name, city, image_url, profile_status')
+        .select('id, slug, first_name, last_initial, sport, grade, school, team_name, city, image_url, profile_status, profile_tier')
         .eq('id', profile.athlete_id)
         .maybeSingle();
       athleteData = data as Athlete | null;
     } else {
       const { data } = await supabase
         .from('athletes')
-        .select('id, slug, first_name, last_initial, sport, grade, school, team_name, city, image_url, profile_status')
+        .select('id, slug, first_name, last_initial, sport, grade, school, team_name, city, image_url, profile_status, profile_tier')
         .eq('managed_by_parent_id', user!.id)
         .maybeSingle();
       athleteData = data as Athlete | null;
@@ -105,7 +151,7 @@ export default function ParentDashboardPage() {
     const [consentRes, updatesRes, mediaRes] = await Promise.all([
       supabase
         .from('consents')
-        .select('id, consent_status, can_use_name_image_likeness, can_use_on_social')
+        .select('id, consent_status, can_use_name_image_likeness, can_use_voice, can_use_on_social, can_use_for_sponsor_package')
         .eq('athlete_id', athleteData.id)
         .maybeSingle(),
       supabase
@@ -121,10 +167,58 @@ export default function ParentDashboardPage() {
         .order('created_at', { ascending: false }),
     ]);
 
-    setConsent(consentRes.data as ConsentRecord | null);
+    const c = consentRes.data as ConsentRecord | null;
+    setConsent(c);
+    if (c) {
+      setConsentPrefs({
+        can_use_name_image_likeness: c.can_use_name_image_likeness,
+        can_use_voice: c.can_use_voice,
+        can_use_on_social: c.can_use_on_social,
+        can_use_for_sponsor_package: c.can_use_for_sponsor_package,
+      });
+    }
     setUpdates((updatesRes.data || []) as UpdateRequest[]);
     setMedia((mediaRes.data || []) as MediaUpload[]);
     setLoading(false);
+  };
+
+  const handleSaveConsent = async () => {
+    if (!athlete || !user) return;
+    setConsentSaving(true);
+    setConsentSaveError('');
+
+    const payload = {
+      ...consentPrefs,
+      consent_status: 'granted',
+      can_use_for_promo: consentPrefs.can_use_on_social,
+      usage_scope: ['profile', 'platform'],
+    };
+
+    let error;
+    if (consent?.id) {
+      ({ error } = await supabase
+        .from('consents')
+        .update(payload)
+        .eq('id', consent.id));
+    } else {
+      ({ error } = await supabase
+        .from('consents')
+        .insert([{
+          athlete_id: athlete.id,
+          user_id: user.id,
+          consent_given_by: user.email ?? '',
+          relationship_to_athlete: 'parent',
+          ...payload,
+        }]));
+    }
+
+    if (error) {
+      setConsentSaveError('Could not save preferences. Please try again.');
+    } else {
+      setConsentEditing(false);
+      await loadData();
+    }
+    setConsentSaving(false);
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -222,6 +316,28 @@ export default function ParentDashboardPage() {
     return null;
   }
 
+  const a = athlete!;
+
+  // Derived state for onboarding
+  const consentGranted = consent?.consent_status === 'granted';
+  const profileLive = LIVE_STATUSES.has(a.profile_status);
+  const visibilityBoosted = a.profile_tier !== 'basic';
+
+  const showWelcomeBanner =
+    !bannerDismissed &&
+    !localStorage.getItem(`banner_dismissed_${a.id}`) &&
+    (a.profile_status === 'pending' || !consentGranted);
+
+  const dismissBanner = () => {
+    localStorage.setItem(`banner_dismissed_${a.id}`, '1');
+    setBannerDismissed(true);
+  };
+
+  const scrollToConsent = () => {
+    consentCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!consentGranted) setConsentEditing(true);
+  };
+
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <Users className="w-4 h-4" /> },
     { id: 'media', label: 'Media', icon: <Camera className="w-4 h-4" /> },
@@ -231,16 +347,53 @@ export default function ParentDashboardPage() {
 
   const pendingCount = updates.filter(u => u.status === 'pending').length;
   const mediaCount = media.length;
+  const consentNeedsAttention = !consentGranted;
 
   const profileStatusMeta: Record<string, { label: string; cls: string; pulse: string }> = {
-    pending:        { label: 'Pending Approval',       cls: 'text-amber-400', pulse: 'bg-amber-400' },
-    active:         { label: 'Profile Live',           cls: 'text-green-400', pulse: 'bg-green-400' },
+    pending:        { label: 'Pending Approval',        cls: 'text-amber-400', pulse: 'bg-amber-400' },
+    active:         { label: 'Profile Live',            cls: 'text-green-400', pulse: 'bg-green-400' },
     approved:       { label: 'Profile Approved — Live', cls: 'text-green-400', pulse: 'bg-green-400' },
-    verified_event: { label: 'Verified Event Profile', cls: 'text-green-400', pulse: 'bg-green-400' },
-    hidden:         { label: 'Profile Hidden',         cls: 'text-red-400',   pulse: 'bg-red-400' },
-    rejected:       { label: 'Profile Not Approved',   cls: 'text-red-400',   pulse: 'bg-red-400' },
+    verified_event: { label: 'Verified Event Profile',  cls: 'text-green-400', pulse: 'bg-green-400' },
+    hidden:         { label: 'Profile Hidden',          cls: 'text-red-400',   pulse: 'bg-red-400' },
+    rejected:       { label: 'Profile Not Approved',    cls: 'text-red-400',   pulse: 'bg-red-400' },
   };
-  const statusMeta = profileStatusMeta[athlete!.profile_status] || profileStatusMeta.pending;
+  const statusMeta = profileStatusMeta[a.profile_status] || profileStatusMeta.pending;
+
+  // Checklist steps
+  const checklist = [
+    {
+      label: 'Profile Submitted',
+      done: true,
+      description: `${a.first_name}'s profile is in the system.`,
+      action: null,
+    },
+    {
+      label: 'Participation Consent Granted',
+      done: consentGranted,
+      description: consentGranted
+        ? 'You have approved participation preferences.'
+        : 'Review and approve how NextUp uses your athlete\'s profile.',
+      action: scrollToConsent,
+    },
+    {
+      label: 'Profile Approved',
+      done: profileLive,
+      description: profileLive
+        ? `${a.first_name}'s profile is live on NextUp.`
+        : 'Our team reviews profiles within 48 hours.',
+      action: null,
+    },
+    {
+      label: 'Visibility Boost Active',
+      done: visibilityBoosted,
+      description: visibilityBoosted
+        ? 'Premium visibility is active.'
+        : `Give ${a.first_name} priority placement and a verified badge.`,
+      action: visibilityBoosted ? null : () => setTab('support'),
+    },
+  ];
+
+  const completedSteps = checklist.filter(s => s.done).length;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -250,13 +403,13 @@ export default function ParentDashboardPage() {
           <div>
             <p className="text-gold text-xs font-bold uppercase tracking-widest mb-0.5">Parent Portal</p>
             <h1 className="text-xl font-bold">
-              {athlete!.first_name} {athlete!.last_initial}.
-              <span className="ml-2 text-base font-normal text-gray-400">{athlete!.sport}</span>
+              {a.first_name} {a.last_initial}.
+              <span className="ml-2 text-base font-normal text-gray-400">{a.sport}</span>
             </h1>
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(`/athletes/${athlete!.slug}`)}
+              onClick={() => navigate(`/athletes/${a.slug}`)}
               className="hidden sm:inline-flex items-center gap-1.5 text-xs text-gray-300 hover:text-white border border-white/20 hover:border-white/40 px-3 py-2 rounded-lg transition-colors"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -275,13 +428,48 @@ export default function ParentDashboardPage() {
         {/* Status strip */}
         <div className="border-t border-white/10 px-6 lg:px-8 py-2 max-w-6xl mx-auto">
           <span className={`text-xs font-semibold inline-flex items-center gap-1.5 ${statusMeta.cls}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.pulse} ${athlete!.profile_status === 'pending' || athlete!.profile_status === 'active' ? 'animate-pulse' : ''}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.pulse} ${a.profile_status === 'pending' || a.profile_status === 'active' ? 'animate-pulse' : ''}`} />
             {statusMeta.label}
           </span>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-6 lg:px-8 py-8">
+
+        {/* ── Welcome Banner ── */}
+        {showWelcomeBanner && (
+          <div className="relative bg-gradient-to-r from-navy to-[#1a3a5c] text-white rounded-2xl p-6 mb-8 overflow-hidden shadow-lg">
+            <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+            <button
+              onClick={dismissBanner}
+              className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+              aria-label="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-gold" />
+                <span className="text-gold text-xs font-bold uppercase tracking-widest">Getting Started</span>
+              </div>
+              <h2 className="text-xl font-black mb-1">Welcome to {a.first_name}'s Parent Portal</h2>
+              <p className="text-gray-300 text-sm leading-relaxed max-w-lg">
+                You're a few steps away from getting {a.first_name} full visibility on the NextUp Network.
+                Complete the steps below to unlock everything.
+              </p>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="flex-1 max-w-xs bg-white/10 rounded-full h-1.5">
+                  <div
+                    className="bg-gold h-1.5 rounded-full transition-all duration-500"
+                    style={{ width: `${(completedSteps / checklist.length) * 100}%` }}
+                  />
+                </div>
+                <span className="text-xs text-gray-400 font-semibold">{completedSteps} of {checklist.length} complete</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Tab nav */}
         <div className="flex gap-1 bg-white border border-gray-200 rounded-2xl p-1.5 mb-8 overflow-x-auto">
           {tabs.map(t => (
@@ -302,6 +490,9 @@ export default function ParentDashboardPage() {
               {t.id === 'media' && mediaCount > 0 && (
                 <span className="bg-navy/20 text-navy text-[10px] font-black px-1.5 py-0.5 rounded-full">{mediaCount}</span>
               )}
+              {t.id === 'overview' && consentNeedsAttention && (
+                <span className="w-2 h-2 bg-amber-400 rounded-full" />
+              )}
             </button>
           ))}
         </div>
@@ -313,62 +504,131 @@ export default function ParentDashboardPage() {
               {/* Athlete card */}
               <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
                 <div className="w-20 h-20 rounded-2xl bg-navy/10 overflow-hidden mb-3">
-                  {athlete!.image_url ? (
-                    <img src={athlete!.image_url} alt={athlete!.first_name} className="w-full h-full object-cover" />
+                  {a.image_url ? (
+                    <img src={a.image_url} alt={a.first_name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Users className="w-8 h-8 text-navy/40" />
                     </div>
                   )}
                 </div>
-                <h2 className="text-lg font-bold text-navy">{athlete!.first_name} {athlete!.last_initial}.</h2>
-                <p className="text-gold font-semibold text-sm">{athlete!.sport}</p>
+                <h2 className="text-lg font-bold text-navy">{a.first_name} {a.last_initial}.</h2>
+                <p className="text-gold font-semibold text-sm">{a.sport}</p>
 
                 <div className="mt-4 space-y-2 text-sm">
-                  {athlete!.grade && <div className="flex justify-between"><span className="text-gray-400">Level</span><span className="text-navy font-medium">{athlete!.grade}</span></div>}
-                  {athlete!.school && <div className="flex justify-between"><span className="text-gray-400">School</span><span className="text-navy font-medium">{athlete!.school}</span></div>}
-                  {athlete!.team_name && <div className="flex justify-between"><span className="text-gray-400">Team</span><span className="text-navy font-medium">{athlete!.team_name}</span></div>}
-                  {athlete!.city && <div className="flex justify-between"><span className="text-gray-400">City</span><span className="text-navy font-medium">{athlete!.city}</span></div>}
+                  {a.grade && <div className="flex justify-between"><span className="text-gray-400">Level</span><span className="text-navy font-medium">{a.grade}</span></div>}
+                  {a.school && <div className="flex justify-between"><span className="text-gray-400">School</span><span className="text-navy font-medium">{a.school}</span></div>}
+                  {a.team_name && <div className="flex justify-between"><span className="text-gray-400">Team</span><span className="text-navy font-medium">{a.team_name}</span></div>}
+                  {a.city && <div className="flex justify-between"><span className="text-gray-400">City</span><span className="text-navy font-medium">{a.city}</span></div>}
                 </div>
               </div>
 
-              {/* Consent card */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+              {/* ── Interactive Consent Card ── */}
+              <div
+                ref={consentCardRef}
+                className={`bg-white rounded-2xl border-2 p-6 shadow-sm transition-colors duration-200 ${
+                  consentGranted ? 'border-gray-200' : 'border-amber-300'
+                }`}
+              >
                 <h3 className="font-bold text-navy mb-3 text-sm flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-gold" />
-                  Consent Status
+                  {consentGranted
+                    ? <ShieldCheck className="w-4 h-4 text-green-500" />
+                    : <ShieldAlert className="w-4 h-4 text-amber-500" />
+                  }
+                  Participation Preferences
                 </h3>
-                {consent ? (
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Profile consent</span>
-                      {consent.consent_status === 'granted' ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-                          <CheckCircle className="w-3 h-3" /> Granted
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                          <Clock className="w-3 h-3" /> Pending
-                        </span>
-                      )}
+
+                {/* Read-only granted state */}
+                {consentGranted && !consentEditing && (
+                  <>
+                    <div className="space-y-2 text-sm">
+                      {[
+                        { label: 'Public profile (name & photo)', value: consent!.can_use_name_image_likeness },
+                        { label: 'Highlight clips on platform',   value: consent!.can_use_voice },
+                        { label: 'Featured on social media',      value: consent!.can_use_on_social },
+                        { label: 'Sponsor/brand packages',        value: consent!.can_use_for_sponsor_package },
+                      ].map(row => (
+                        <div key={row.label} className="flex items-center justify-between">
+                          <span className="text-gray-500 text-xs">{row.label}</span>
+                          <span className={`text-xs font-semibold ${row.value ? 'text-green-700' : 'text-gray-400'}`}>
+                            {row.value ? 'Allowed' : 'Off'}
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Name & likeness</span>
-                      <span className={`text-xs font-semibold ${consent.can_use_name_image_likeness ? 'text-green-700' : 'text-gray-400'}`}>
-                        {consent.can_use_name_image_likeness ? 'Allowed' : 'Not yet'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Social media use</span>
-                      <span className={`text-xs font-semibold ${consent.can_use_on_social ? 'text-green-700' : 'text-gray-400'}`}>
-                        {consent.can_use_on_social ? 'Allowed' : 'Not yet'}
-                      </span>
-                    </div>
+                    <button
+                      onClick={() => setConsentEditing(true)}
+                      className="mt-4 text-xs font-semibold text-gold hover:underline"
+                    >
+                      Update preferences
+                    </button>
+                  </>
+                )}
+
+                {/* Pending / no consent — call to action */}
+                {!consentGranted && !consentEditing && (
+                  <div>
+                    <p className="text-sm text-amber-800 mb-4 leading-relaxed">
+                      Tell us how NextUp can use {a.first_name}'s profile to maximize visibility and opportunities.
+                    </p>
+                    <button
+                      onClick={() => setConsentEditing(true)}
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      Review &amp; Approve Participation
+                    </button>
                   </div>
-                ) : (
-                  <div className="flex items-start gap-2 text-sm text-gray-500">
-                    <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    No consent record on file. Contact support to update.
+                )}
+
+                {/* Edit mode */}
+                {consentEditing && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                      NextUp uses your athlete's name, photo, and highlights to build their public profile and connect them with opportunities. You control what we can use.
+                    </p>
+
+                    <div className="space-y-4 mb-5">
+                      {(
+                        [
+                          { key: 'can_use_name_image_likeness', label: 'Public profile (name & photo)',     desc: 'Show name and photo on the NextUp platform.' },
+                          { key: 'can_use_voice',               label: 'Highlight clips on platform',       desc: 'Display video clips on the profile page.' },
+                          { key: 'can_use_on_social',           label: 'Featured on NextUp social media',   desc: 'Share highlights on NextUp\'s social channels.' },
+                          { key: 'can_use_for_sponsor_package', label: 'Included in sponsor/brand packages', desc: 'Include athlete in partnership opportunities.' },
+                        ] as { key: keyof typeof consentPrefs; label: string; desc: string }[]
+                      ).map(row => (
+                        <div key={row.key} className="flex items-start gap-3">
+                          <Toggle
+                            checked={consentPrefs[row.key]}
+                            onChange={v => setConsentPrefs(p => ({ ...p, [row.key]: v }))}
+                          />
+                          <div>
+                            <p className="text-sm font-semibold text-navy leading-tight">{row.label}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{row.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {consentSaveError && (
+                      <p className="text-red-600 text-xs mb-3">{consentSaveError}</p>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveConsent}
+                        disabled={consentSaving}
+                        className="flex-1 bg-navy hover:bg-navy/90 disabled:opacity-50 text-white font-bold py-2.5 rounded-xl text-sm transition-colors"
+                      >
+                        {consentSaving ? 'Saving...' : 'Save Participation Preferences'}
+                      </button>
+                      <button
+                        onClick={() => { setConsentEditing(false); setConsentSaveError(''); }}
+                        className="px-3 py-2.5 rounded-xl border border-gray-200 text-gray-500 hover:text-navy text-sm transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -376,47 +636,92 @@ export default function ParentDashboardPage() {
 
             {/* Right side */}
             <div className="md:col-span-2 space-y-4">
+
+              {/* ── Onboarding Checklist ── */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-navy text-sm">Setup Progress</h3>
+                  <span className="text-xs text-gray-400 font-semibold">{completedSteps} / {checklist.length}</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-1.5 mb-5">
+                  <div
+                    className="bg-gold h-1.5 rounded-full transition-all duration-500"
+                    style={{ width: `${(completedSteps / checklist.length) * 100}%` }}
+                  />
+                </div>
+                <div className="space-y-3">
+                  {checklist.map((step, i) => (
+                    <div
+                      key={i}
+                      className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${
+                        step.action && !step.done ? 'hover:bg-gray-50 cursor-pointer' : ''
+                      }`}
+                      onClick={step.action && !step.done ? step.action : undefined}
+                    >
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                        step.done
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-gray-100 text-gray-300'
+                      }`}>
+                        {step.done
+                          ? <CheckCircle className="w-4 h-4" />
+                          : <span className="w-2 h-2 rounded-full bg-gray-300" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold ${step.done ? 'text-navy' : 'text-gray-500'}`}>
+                          {step.label}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{step.description}</p>
+                      </div>
+                      {step.action && !step.done && (
+                        <ChevronRight className="w-4 h-4 text-gold shrink-0 mt-1" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Quick actions */}
               <div className="grid sm:grid-cols-3 gap-3">
                 {[
                   { label: 'Upload Photo / Video', icon: <Upload className="w-4 h-4" />, action: () => setTab('media') },
                   { label: 'View Submissions', icon: <Clock className="w-4 h-4" />, action: () => setTab('updates') },
-                  { label: 'View Public Profile', icon: <ExternalLink className="w-4 h-4" />, action: () => navigate(`/athletes/${athlete!.slug}`) },
-                ].map(a => (
-                  <button key={a.label} onClick={a.action}
+                  { label: 'View Public Profile', icon: <ExternalLink className="w-4 h-4" />, action: () => navigate(`/athletes/${a.slug}`) },
+                ].map(action => (
+                  <button key={action.label} onClick={action.action}
                     className="flex items-center gap-2 bg-white border border-gray-200 hover:border-gold/40 hover:shadow-sm px-4 py-3 rounded-xl text-sm font-semibold text-navy transition-all group">
-                    <span className="text-gold">{a.icon}</span>
-                    {a.label}
+                    <span className="text-gold">{action.icon}</span>
+                    {action.label}
                     <ChevronRight className="w-3.5 h-3.5 ml-auto text-gray-300 group-hover:text-gold transition-colors" />
                   </button>
                 ))}
               </div>
 
               {/* Profile status info */}
-              {(athlete!.profile_status === 'pending') && (
+              {a.profile_status === 'pending' && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                     <div>
                       <p className="text-amber-900 font-semibold text-sm">Profile Under Review</p>
                       <p className="text-amber-700 text-sm mt-1">
-                        Your athlete's profile is being reviewed by the NextUp team. Profiles are typically approved within 48 hours.
+                        {a.first_name}'s profile is being reviewed by the NextUp team. Profiles are typically approved within 48 hours.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {(athlete!.profile_status === 'active' || athlete!.profile_status === 'approved' || athlete!.profile_status === 'verified_event') && (
+              {profileLive && (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-5">
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
                     <div>
                       <p className="text-green-900 font-semibold text-sm">Profile is Live</p>
                       <p className="text-green-700 text-sm mt-1">
-                        {athlete!.first_name}'s profile is published and visible on NextUp.
-                        {' '}
-                        <button onClick={() => navigate(`/athletes/${athlete!.slug}`)} className="underline font-semibold hover:no-underline">
+                        {a.first_name}'s profile is published and visible on NextUp.{' '}
+                        <button onClick={() => navigate(`/athletes/${a.slug}`)} className="underline font-semibold hover:no-underline">
                           View it here.
                         </button>
                       </p>
@@ -473,7 +778,7 @@ export default function ParentDashboardPage() {
         {tab === 'media' && (
           <div className="max-w-3xl space-y-6">
             <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-              <h3 className="font-bold text-navy mb-1">Upload Media for {athlete!.first_name}</h3>
+              <h3 className="font-bold text-navy mb-1">Upload Media for {a.first_name}</h3>
               <p className="text-gray-500 text-sm mb-5">Photos and videos are reviewed before appearing on the profile.</p>
 
               {uploadSuccess && (
@@ -597,9 +902,9 @@ export default function ParentDashboardPage() {
           <div className="max-w-2xl space-y-4">
             <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm text-center">
               <div className="w-16 h-16 bg-gold/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-gold" />
+                <Star className="w-8 h-8 text-gold" />
               </div>
-              <h2 className="text-xl font-bold text-navy mb-2">Support {athlete!.first_name}'s Journey</h2>
+              <h2 className="text-xl font-bold text-navy mb-2">Support {a.first_name}'s Journey</h2>
               <p className="text-gray-600 text-sm leading-relaxed mb-6">
                 Unlock a verified profile, premium media, and increased visibility for your athlete on the NextUp Network.
               </p>
@@ -614,7 +919,7 @@ export default function ParentDashboardPage() {
             <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
               <h3 className="font-bold text-navy mb-3 text-sm">Need Help?</h3>
               <p className="text-gray-500 text-sm mb-4">
-                Have questions about your athlete's profile, consent settings, or media approvals?
+                Have questions about {a.first_name}'s profile, consent settings, or media approvals?
               </p>
               <a
                 href="/contact"

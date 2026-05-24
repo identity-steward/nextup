@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Camera, Video, Star, ArrowRight, Tag, Loader2 } from 'lucide-react';
+import { Zap, Camera, Video, Star, ArrowRight, Tag, Loader2, Users, MessageCircle, Shield, Heart, BookOpen, Flame, Video as LucideIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface VisibilityTag {
@@ -38,6 +38,17 @@ interface FeedItem {
 }
 
 const PAGE_SIZE = 12;
+
+const TAG_ICONS: Record<string, LucideIcon> = {
+  leadership: Users,
+  hustle: Zap,
+  communication: MessageCircle,
+  composure: Shield,
+  confidence: Star,
+  teamwork: Heart,
+  coachable: BookOpen,
+  energy: Flame,
+};
 
 const SPORT_COLORS: Record<string, string> = {
   basketball: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
@@ -178,15 +189,18 @@ function FeedCard({ item }: { item: FeedItem }) {
         {/* Trait / development tags */}
         {tags.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Tag className="w-3 h-3 text-amber-500/60 shrink-0" />
-            {tags.map(tag => (
-              <span
-                key={tag.slug}
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20"
-              >
-                {tag.label}
-              </span>
-            ))}
+            {tags.map(tag => {
+              const Icon = TAG_ICONS[tag.slug] ?? Tag;
+              return (
+                <span
+                  key={tag.slug}
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20"
+                >
+                  <Icon className="w-3 h-3 shrink-0" />
+                  {tag.label}
+                </span>
+              );
+            })}
           </div>
         )}
 

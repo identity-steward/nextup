@@ -50,6 +50,7 @@ export function AdminMediaPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [availableTags, setAvailableTags] = useState<VisibilityTag[]>([]);
   const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>({});
+  const [savingTag, setSavingTag] = useState<string | null>(null);
 
   useEffect(() => {
     loadTags();
@@ -133,6 +134,30 @@ export function AdminMediaPage() {
         : [...current, tagId];
       return { ...prev, [itemId]: next };
     });
+  };
+
+  // Live upsert/delete for already-approved items
+  const toggleApprovedTag = async (item: MediaItem, tagId: string) => {
+    if (!user?.id) return;
+    const key = `${item.id}:${tagId}`;
+    setSavingTag(key);
+
+    const alreadyApplied = (item.tags ?? []).some(t => t.id === tagId);
+
+    if (alreadyApplied) {
+      await supabase
+        .from('media_tags')
+        .delete()
+        .eq('media_upload_id', item.id)
+        .eq('tag_id', tagId);
+    } else {
+      await supabase
+        .from('media_tags')
+        .upsert({ media_upload_id: item.id, tag_id: tagId, assigned_by: user.id });
+    }
+
+    setSavingTag(null);
+    await load();
   };
 
   const review = async (id: string, action: 'approved' | 'rejected') => {
@@ -274,18 +299,34 @@ export function AdminMediaPage() {
                       </div>
                     </div>
 
-                    {/* Read-only tags for approved items */}
-                    {item.status === 'approved' && item.tags && item.tags.length > 0 && (
-                      <div className="mt-3 flex items-center gap-1.5 flex-wrap">
-                        <Tag className="w-3 h-3 text-gray-400 shrink-0" />
-                        {item.tags.map(tag => (
-                          <span
-                            key={tag.id}
-                            className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full bg-navy/5 text-navy border border-navy/15"
-                          >
-                            {tag.label}
-                          </span>
-                        ))}
+                    {/* Editable tags for approved items */}
+                    {item.status === 'approved' && availableTags.length > 0 && (
+                      <div className="mt-3 space-y-1.5">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                          <Tag className="w-3 h-3" />
+                          Tags
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {availableTags.map(tag => {
+                            const active = (item.tags ?? []).some(t => t.id === tag.id);
+                            const busy = savingTag === `${item.id}:${tag.id}`;
+                            return (
+                              <button
+                                key={tag.id}
+                                type="button"
+                                disabled={busy}
+                                onClick={() => toggleApprovedTag(item, tag.id)}
+                                className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all disabled:opacity-50 ${
+                                  active
+                                    ? 'bg-navy text-white border-navy'
+                                    : 'bg-white text-gray-500 border-gray-200 hover:border-navy/40 hover:text-navy'
+                                }`}
+                              >
+                                {busy ? '...' : tag.label}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 

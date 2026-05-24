@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Camera, Video, Star, ArrowRight, Tag } from 'lucide-react';
+import { Zap, Camera, Video, Star, ArrowRight, Tag, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface VisibilityTag {
@@ -37,6 +37,8 @@ interface FeedItem {
   media_tags: MediaTag[];
 }
 
+const PAGE_SIZE = 12;
+
 const SPORT_COLORS: Record<string, string> = {
   basketball: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   football: 'bg-green-500/20 text-green-400 border-green-500/30',
@@ -53,17 +55,17 @@ function getSportColor(sport: string | null): string {
 
 function SkeletonCard() {
   return (
-    <div className="bg-[#111827] rounded-2xl overflow-hidden animate-pulse">
-      <div className="aspect-[16/9] bg-gray-800" />
+    <div className="bg-[#111827] rounded-2xl overflow-hidden animate-pulse border border-gray-800">
+      <div className="aspect-[4/5] bg-gray-800" />
       <div className="p-5 space-y-3">
         <div className="flex items-center gap-2">
           <div className="h-4 bg-gray-700 rounded-full w-24" />
           <div className="h-4 bg-gray-700 rounded-full w-16" />
         </div>
-        <div className="h-5 bg-gray-700 rounded w-3/4" />
         <div className="h-3 bg-gray-800 rounded w-1/2" />
         <div className="h-3 bg-gray-800 rounded w-full" />
-        <div className="h-8 bg-gray-700 rounded-xl mt-4" />
+        <div className="h-3 bg-gray-800 rounded w-3/4" />
+        <div className="h-10 bg-gray-700 rounded-xl mt-4" />
       </div>
     </div>
   );
@@ -77,46 +79,54 @@ function FeedCard({ item }: { item: FeedItem }) {
   const isPremium = item.athlete.profile_tier === 'premium';
 
   return (
-    <div
-      className={`bg-[#111827] rounded-2xl overflow-hidden flex flex-col transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl ${
+    <article
+      className={`bg-[#111827] rounded-2xl overflow-hidden flex flex-col transition-shadow duration-300 hover:shadow-2xl hover:shadow-black/40 ${
         item.featured
           ? 'border-2 border-amber-400/60 shadow-lg shadow-amber-400/10'
           : 'border border-gray-800'
       }`}
     >
-      {/* Media preview */}
-      <div className="relative aspect-[16/9] bg-[#0d1520] overflow-hidden">
+      {/* Media */}
+      <div className="relative bg-[#0d1520] overflow-hidden">
         {item.media_type === 'photo' && item.public_url ? (
-          <img
-            src={item.public_url}
-            alt={item.caption ?? 'Athlete media'}
-            className="w-full h-full object-cover"
-          />
+          <div className="aspect-[4/5]">
+            <img
+              src={item.public_url}
+              alt={item.caption ?? 'Athlete media'}
+              loading="lazy"
+              className="w-full h-full object-cover"
+            />
+          </div>
         ) : item.media_type === 'video' && item.public_url ? (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-[#0d1520]">
-            <Video className="w-10 h-10 text-gray-600" />
-            <span className="text-xs text-gray-500 font-medium">Video</span>
+          <div className="aspect-video">
+            <video
+              src={item.public_url}
+              controls
+              playsInline
+              preload="metadata"
+              className="w-full h-full object-cover bg-[#0d1520]"
+            />
           </div>
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-[#0d1520]">
+          <div className="aspect-[4/5] flex flex-col items-center justify-center gap-3">
             {item.media_type === 'video' ? (
-              <Video className="w-10 h-10 text-gray-600" />
+              <Video className="w-12 h-12 text-gray-700" />
             ) : (
-              <Camera className="w-10 h-10 text-gray-600" />
+              <Camera className="w-12 h-12 text-gray-700" />
             )}
-            <span className="text-xs text-gray-500 font-medium">No preview</span>
+            <span className="text-xs text-gray-600 font-medium">No preview</span>
           </div>
         )}
 
         {/* Featured badge */}
         {item.featured && (
-          <div className="absolute top-3 right-3 flex items-center gap-1 bg-amber-400 text-[#080f19] text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide">
+          <div className="absolute top-3 right-3 flex items-center gap-1 bg-amber-400 text-[#080f19] text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide shadow-md">
             <Zap className="w-3 h-3" />
             Featured
           </div>
         )}
 
-        {/* Source badge */}
+        {/* Source / event badge */}
         {(item.event_code || item.source_type === 'creator_upload') && (
           <div className="absolute top-3 left-3">
             {item.event_code ? (
@@ -134,7 +144,7 @@ function FeedCard({ item }: { item: FeedItem }) {
 
       {/* Card body */}
       <div className="p-5 flex flex-col flex-1 gap-3">
-        {/* Athlete name + sport */}
+        {/* Athlete name + sport + premium */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-white font-bold text-base leading-tight">
             {item.athlete.first_name} {item.athlete.last_initial}.
@@ -158,14 +168,14 @@ function FeedCard({ item }: { item: FeedItem }) {
           </p>
         )}
 
-        {/* Caption */}
+        {/* Caption — full text, no clamp */}
         {item.caption && (
-          <p className="text-gray-400 text-sm leading-relaxed line-clamp-2 italic">
+          <p className="text-gray-400 text-sm leading-relaxed italic">
             "{item.caption}"
           </p>
         )}
 
-        {/* Tags */}
+        {/* Trait / development tags */}
         {tags.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
             <Tag className="w-3 h-3 text-amber-500/60 shrink-0" />
@@ -181,119 +191,184 @@ function FeedCard({ item }: { item: FeedItem }) {
         )}
 
         {/* View Profile CTA */}
-        <div className="mt-auto pt-2">
+        <div className="mt-auto pt-3">
           <Link
             to={`/athletes/${item.athlete.slug}`}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 font-semibold text-sm border border-amber-400/20 hover:border-amber-400/40 transition-all duration-200 group"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 font-semibold text-sm border border-amber-400/20 hover:border-amber-400/40 transition-all duration-200 group"
           >
             View Profile
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
       </div>
-    </div>
+    </article>
   );
+}
+
+async function fetchPage(
+  cursor: string | null,
+  sportFilter: string,
+  typeFilter: 'All' | 'Photos' | 'Videos',
+): Promise<FeedItem[]> {
+  let query = supabase
+    .from('media_uploads')
+    .select(`
+      id, media_type, public_url, caption, source_type, event_code, featured, created_at,
+      athlete:athletes!inner(id, first_name, last_initial, sport, slug, school, city, profile_tier),
+      media_tags(tag_id, visibility_tags(slug, label))
+    `)
+    .eq('status', 'approved')
+    .order('featured', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(PAGE_SIZE);
+
+  if (cursor) {
+    query = query.lt('created_at', cursor);
+  }
+
+  if (sportFilter !== 'All Sports') {
+    query = query.eq('athlete.sport', sportFilter);
+  }
+
+  if (typeFilter === 'Photos') {
+    query = query.eq('media_type', 'photo');
+  } else if (typeFilter === 'Videos') {
+    query = query.eq('media_type', 'video');
+  }
+
+  const { data } = await query;
+  return (data ?? []) as unknown as FeedItem[];
 }
 
 export default function LiveFeedPage() {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [sportFilter, setSportFilter] = useState('All Sports');
   const [typeFilter, setTypeFilter] = useState<'All' | 'Photos' | 'Videos'>('All');
 
+  // All unique sports seen across all loaded items (persists across pages for stable dropdown)
+  const [knownSports, setKnownSports] = useState<string[]>([]);
+
+  const cursorRef = useRef<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Initial / filter-reset load
   useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from('media_uploads')
-        .select(`
-          id, media_type, public_url, caption, source_type, event_code, featured, created_at,
-          athlete:athletes!inner(id, first_name, last_initial, sport, slug, school, city, profile_tier),
-          media_tags(tag_id, visibility_tags(slug, label))
-        `)
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false })
-        .limit(50);
+      setItems([]);
+      setHasMore(true);
+      cursorRef.current = null;
 
-      if (data) {
-        setItems(data as unknown as FeedItem[]);
-      }
+      const page = await fetchPage(null, sportFilter, typeFilter);
+
+      if (cancelled) return;
+
+      setItems(page);
+      setHasMore(page.length === PAGE_SIZE);
+      cursorRef.current = page.length > 0 ? page[page.length - 1].created_at : null;
+
+      // Accumulate known sports for stable dropdown
+      setKnownSports(prev => {
+        const set = new Set(prev);
+        page.forEach(item => { if (item.athlete.sport) set.add(item.athlete.sport); });
+        return Array.from(set).sort();
+      });
+
       setLoading(false);
     };
 
     load();
-  }, []);
+    return () => { cancelled = true; };
+  }, [sportFilter, typeFilter]);
 
-  // Derive sport options from loaded items
-  const sportOptions = useMemo(() => {
-    const sports = new Set<string>();
-    items.forEach(item => {
-      if (item.athlete.sport) sports.add(item.athlete.sport);
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || !cursorRef.current) return;
+
+    setLoadingMore(true);
+    const page = await fetchPage(cursorRef.current, sportFilter, typeFilter);
+
+    setItems(prev => [...prev, ...page]);
+    setHasMore(page.length === PAGE_SIZE);
+    cursorRef.current = page.length > 0 ? page[page.length - 1].created_at : null;
+
+    setKnownSports(prev => {
+      const set = new Set(prev);
+      page.forEach(item => { if (item.athlete.sport) set.add(item.athlete.sport); });
+      return Array.from(set).sort();
     });
-    return ['All Sports', ...Array.from(sports).sort()];
-  }, [items]);
 
-  const filtered = useMemo(() => {
-    return items.filter(item => {
-      const matchesSport =
-        sportFilter === 'All Sports' ||
-        item.athlete.sport?.toLowerCase() === sportFilter.toLowerCase();
-      const matchesType =
-        typeFilter === 'All' ||
-        (typeFilter === 'Photos' && item.media_type === 'photo') ||
-        (typeFilter === 'Videos' && item.media_type === 'video');
-      return matchesSport && matchesType;
-    });
-  }, [items, sportFilter, typeFilter]);
+    setLoadingMore(false);
+  }, [loadingMore, hasMore, sportFilter, typeFilter]);
 
-  // Featured items first, then rest
-  const sorted = useMemo(
-    () => [...filtered].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0)),
-    [filtered]
+  // IntersectionObserver wired to sentinel
+  useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { rootMargin: '200px' },
+    );
+
+    if (sentinelRef.current) observerRef.current.observe(sentinelRef.current);
+
+    return () => { observerRef.current?.disconnect(); };
+  }, [loadMore]);
+
+  const sportOptions = useMemo(
+    () => ['All Sports', ...knownSports],
+    [knownSports],
   );
+
+  const isEmpty = !loading && items.length === 0;
 
   return (
     <div className="min-h-screen bg-[#0d1520] pt-20">
       {/* Hero */}
-      <section className="bg-[#080f19] py-16 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-amber-400/10 text-amber-400 px-4 py-2 rounded-full text-sm font-semibold mb-6 border border-amber-400/20">
+      <section className="bg-[#080f19] py-14 border-b border-gray-800">
+        <div className="max-w-xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 bg-amber-400/10 text-amber-400 px-4 py-2 rounded-full text-sm font-semibold mb-5 border border-amber-400/20">
             <Zap className="w-4 h-4" />
             Spotlight
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 leading-tight">
             NextUp Spotlight
           </h1>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Approved photos and highlights from Memphis athletes. Real moments, real visibility.
+          <p className="text-lg text-gray-400 leading-relaxed">
+            Curated photos and highlights from Memphis athletes. Real moments, real visibility.
           </p>
         </div>
       </section>
 
-      {/* Filter bar */}
-      <section className="bg-[#0d1520] border-b border-gray-800 sticky top-20 z-30">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+      {/* Sticky filter bar */}
+      <section className="bg-[#0d1520]/95 backdrop-blur-sm border-b border-gray-800 sticky top-20 z-30">
+        <div className="max-w-xl mx-auto px-4 py-3">
+          <div className="flex gap-2 items-center">
             {/* Sport dropdown */}
             <select
               value={sportFilter}
               onChange={e => setSportFilter(e.target.value)}
-              className="px-4 py-2.5 rounded-xl border border-gray-700 bg-[#111827] text-gray-300 text-sm focus:border-amber-400 focus:outline-none"
+              className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-gray-700 bg-[#111827] text-gray-300 text-sm focus:border-amber-400 focus:outline-none"
             >
               {sportOptions.map(s => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
+                <option key={s} value={s}>{s}</option>
               ))}
             </select>
 
             {/* Type filter pills */}
-            <div className="flex gap-1 bg-[#111827] border border-gray-700 rounded-xl p-1">
+            <div className="flex gap-1 bg-[#111827] border border-gray-700 rounded-xl p-1 shrink-0">
               {(['All', 'Photos', 'Videos'] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => setTypeFilter(type)}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     typeFilter === type
                       ? 'bg-amber-400 text-[#080f19]'
                       : 'text-gray-400 hover:text-white'
@@ -303,82 +378,67 @@ export default function LiveFeedPage() {
                 </button>
               ))}
             </div>
-
-            {!loading && (
-              <p className="text-xs text-gray-600 sm:ml-auto">
-                {sorted.length} item{sorted.length !== 1 ? 's' : ''}
-              </p>
-            )}
           </div>
         </div>
       </section>
 
-      {/* Grid */}
-      <section className="py-12">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      {/* Feed */}
+      <section className="py-8 px-4">
+        <div className="max-w-[520px] mx-auto flex flex-col gap-6">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <>
               <SkeletonCard />
               <SkeletonCard />
               <SkeletonCard />
-            </div>
-          ) : sorted.length === 0 ? (
+            </>
+          ) : isEmpty ? (
             <div className="text-center py-24">
               <Camera className="w-14 h-14 text-gray-700 mx-auto mb-5" />
               <h2 className="text-xl font-bold text-white mb-3">Nothing here yet</h2>
               <p className="text-gray-500 mb-8 max-w-sm mx-auto leading-relaxed">
-                {items.length === 0
-                  ? 'No approved media yet. Check back soon as athletes share their highlights.'
-                  : 'No media matches your current filters. Try adjusting your selection.'}
+                No media matches your current filters. Try adjusting your selection.
               </p>
-              {items.length === 0 ? (
-                <Link
-                  to="/signup"
-                  className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-[#080f19] font-bold px-8 py-3 rounded-xl transition-colors"
-                >
-                  Join NextUp
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              ) : (
-                <button
-                  onClick={() => { setSportFilter('All Sports'); setTypeFilter('All'); }}
-                  className="text-amber-400 hover:text-amber-300 font-semibold text-sm underline underline-offset-2"
-                >
-                  Clear filters
-                </button>
-              )}
+              <button
+                onClick={() => { setSportFilter('All Sports'); setTypeFilter('All'); }}
+                className="text-amber-400 hover:text-amber-300 font-semibold text-sm underline underline-offset-2"
+              >
+                Clear filters
+              </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sorted.map(item => (
+            <>
+              {items.map(item => (
                 <FeedCard key={item.id} item={item} />
               ))}
-            </div>
+
+              {/* Bottom loading spinner */}
+              {loadingMore && (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+                </div>
+              )}
+
+              {/* End of feed */}
+              {!hasMore && !loadingMore && (
+                <div className="text-center py-10 border-t border-gray-800">
+                  <p className="text-gray-600 text-sm font-medium mb-1">You've seen everything.</p>
+                  <p className="text-gray-700 text-xs">More highlights added as athletes share their moments.</p>
+                  <Link
+                    to="/signup"
+                    className="inline-flex items-center gap-2 mt-6 bg-amber-400 hover:bg-amber-300 text-[#080f19] font-bold px-8 py-3 rounded-xl text-sm transition-colors"
+                  >
+                    Get Your Athlete Featured
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              )}
+
+              {/* Sentinel — triggers loadMore via IntersectionObserver */}
+              {hasMore && <div ref={sentinelRef} className="h-1" aria-hidden="true" />}
+            </>
           )}
         </div>
       </section>
-
-      {/* Bottom CTA */}
-      {!loading && sorted.length > 0 && (
-        <section className="py-16 bg-[#080f19] border-t border-gray-800">
-          <div className="max-w-2xl mx-auto px-6 lg:px-8 text-center">
-            <Zap className="w-10 h-10 text-amber-400 mx-auto mb-4" />
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-              Get Your Athlete Featured
-            </h2>
-            <p className="text-gray-400 mb-8 leading-relaxed">
-              Submit media for your athlete and get approved content featured on the NextUp Spotlight.
-            </p>
-            <Link
-              to="/signup"
-              className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-[#080f19] font-bold px-10 py-4 rounded-xl text-lg transition-colors"
-            >
-              Get Started
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
-        </section>
-      )}
     </div>
   );
 }

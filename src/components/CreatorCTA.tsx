@@ -25,7 +25,7 @@ export default function CreatorCTA() {
               <span className="text-gold">NextUp Creator</span>
             </h2>
             <p className="text-gray-300 text-lg leading-relaxed mb-8">
-              Film, edit, and tell the stories of the next generation of athletes. Join a growing network of creators making real impact in youth sports.
+              NextUp creators are developmental documentarians. You capture leadership, composure, resilience, and growth — not just highlights. Your work builds the athlete's Journey and powers the Spotlight.
             </p>
             <div className="flex flex-wrap gap-3 mb-10">
               {roles.map(({ icon: Icon, label }) => (
@@ -62,10 +62,10 @@ export default function CreatorCTA() {
                 </div>
                 <div className="space-y-3">
                   {[
-                    'Attend games & tournaments',
-                    'Create highlight reels',
-                    'Build your portfolio',
-                    'Get paid for your work',
+                    'Document athletes at games and tournaments',
+                    'Capture developmental moments — leadership, hustle, composure',
+                    'Build your creator portfolio',
+                    'Contribute to every athlete\'s Journey',
                   ].map((item) => (
                     <div key={item} className="flex items-center gap-3">
                       <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />

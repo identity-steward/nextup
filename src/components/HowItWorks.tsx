@@ -1,23 +1,23 @@
-import { Search, DollarSign, Bell } from 'lucide-react';
+import { UserPlus, Camera, TrendingUp } from 'lucide-react';
 
 const steps = [
   {
     number: '01',
-    icon: Search,
-    title: 'Discover Athletes',
-    description: 'Find real athletes in your city competing right now. Browse profiles, watch highlights, and connect with the next generation.',
+    icon: UserPlus,
+    title: 'Create Your Profile',
+    description: 'Build a parent-managed athlete profile with bio, sport, school, and grade. Your story starts here — on your terms.',
   },
   {
     number: '02',
-    icon: DollarSign,
-    title: 'Support Directly',
-    description: 'Join their support team or make a direct contribution toward training, travel, and development. Every dollar goes to the athlete.',
+    icon: Camera,
+    title: 'Capture the Moments',
+    description: 'NextUp creators document your athlete at games and tournaments — leadership, composure, hustle, and growth. Real moments, real context.',
   },
   {
     number: '03',
-    icon: Bell,
-    title: 'Follow Their Journey',
-    description: 'Get updates, highlights, and real progress reports as the athletes you support grow and compete throughout the season.',
+    icon: TrendingUp,
+    title: 'Build Your Journey',
+    description: 'Every documented moment adds to your athlete\'s Journey — a longitudinal record of development that grows with them over time.',
   },
 ];
 
@@ -27,13 +27,13 @@ export default function HowItWorks() {
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 bg-navy/8 border border-navy/15 text-navy px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-5">
-            Simple Process
+            How It Works
           </div>
           <h2 className="text-4xl md:text-5xl font-black text-navy mb-5 leading-tight">
             How It Works
           </h2>
           <p className="text-gray-500 text-lg">
-            Three steps to become part of an athlete's journey.
+            From first profile to documented legacy — three steps.
           </p>
         </div>
 

@@ -1,10 +1,10 @@
-import { ArrowRight, Heart, Star, Users, Flame } from 'lucide-react';
+import { ArrowRight, Star, Users, Flame } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
 import type { Athlete } from '../types/athlete';
 
-const JACOB_STORY = 'Jacob is a Memphis 8th grader competing in AAU basketball this Spring. He needs support to cover uniform and travel for the MADE Hoops regional and upcoming tournaments.';
+const JACOB_STORY = 'Jacob is a Memphis 8th grader competing in AAU basketball this Spring. His profile documents his development — from composure under pressure to leadership on the bench — so his growth is visible long after the final buzzer.';
 const JACOB_GOAL_LABEL = 'AAU regional travel';
 
 function ProgressBar({ raised, goal, goalLabel }: { raised: number; goal: number; goalLabel: string }) {
@@ -98,8 +98,8 @@ function JacobCard({ athlete }: { athlete: Athlete }) {
               to="/athletes/jacob-fouse"
               className="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-black text-base py-4 rounded-xl transition-all duration-200 shadow-[0_0_28px_rgba(245,158,11,0.45)] hover:shadow-[0_0_44px_rgba(245,158,11,0.65)] uppercase tracking-wide"
             >
-              <Heart className="w-5 h-5" fill="white" />
-              Support Jacob
+              <ArrowRight className="w-5 h-5" />
+              View Jacob's Journey
             </Link>
             <Link
               to="/athletes/jacob-fouse"
@@ -132,19 +132,19 @@ export default function FeaturedAthletesPreview() {
         <div className="mb-10 text-center">
           <div className="inline-flex items-center gap-2 bg-sky-500/15 border border-sky-500/30 text-sky-400 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-5">
             <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-            Live — Memphis Events
+            Featured Profile
           </div>
           <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-3">
-            Support Memphis Athletes<br />Right Now
+            Meet a NextUp Athlete
           </h2>
           <p className="text-gray-400 text-lg max-w-xl mx-auto">
-            Real players. Real goals. Help fund their next step—directly.
+            A fully documented athlete profile — story, development traits, and Journey — built to show who they really are.
           </p>
         </div>
 
         {!loading && jacob && (
           <p className="text-amber-400 font-black text-base mb-6 tracking-wide text-center">
-            Start by supporting {jacob.first_name} ↓
+            Explore {jacob.first_name}'s profile below ↓
           </p>
         )}
 

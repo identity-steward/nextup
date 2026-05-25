@@ -9,13 +9,13 @@ export default function JacobHighlightReel() {
         <div className="flex items-center gap-3 mb-5">
           <div className="w-px h-8 bg-sky-500 flex-shrink-0" />
           <div>
-            <p className="text-sky-400 text-xs font-black uppercase tracking-widest mb-0.5">Game Highlights</p>
-            <h2 className="text-2xl md:text-3xl font-black text-white leading-tight">Watch Jacob in Action</h2>
+            <p className="text-sky-400 text-xs font-black uppercase tracking-widest mb-0.5">Documented Moment</p>
+            <h2 className="text-2xl md:text-3xl font-black text-white leading-tight">Jacob's Journey in Motion</h2>
           </div>
         </div>
 
         <p className="text-gray-400 text-sm mb-6 pl-4">
-          Already getting recognition — now help him go further.
+          This is what developmental storytelling looks like. Real moments, captured with purpose.
         </p>
 
         <div className="relative mb-6">
@@ -24,7 +24,7 @@ export default function JacobHighlightReel() {
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/8 bg-white/[0.02]">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-                <span className="text-xs font-bold text-white/60 uppercase tracking-widest">NextPro Highlight</span>
+                <span className="text-xs font-bold text-white/60 uppercase tracking-widest">NextUp Spotlight</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <BadgeCheck className="w-3.5 h-3.5 text-sky-400" />

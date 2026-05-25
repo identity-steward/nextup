@@ -21,25 +21,25 @@ export default function Hero() {
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 bg-sky-500/15 border border-sky-500/30 text-sky-400 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-8">
             <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-            Youth Athlete Network
+            Athlete Development Infrastructure
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-[0.92] tracking-tight mb-7">
-            Support Real Memphis
+            Own Your Story.
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500">
-              Athletes Building
+              Document Your
             </span>
             <br />
-            Their Future
+            Growth.
           </h1>
 
           <p className="text-lg md:text-xl text-gray-300 leading-relaxed mb-5 max-w-xl">
-            From training to tournaments—be part of their journey.
+            Performance is intelligence in motion.
           </p>
 
           <p className="text-sm text-gray-400 leading-relaxed mb-10 max-w-xl border-l-2 border-sky-500/50 pl-4">
-            Parent-managed profiles. Safe visibility. Support goes directly toward training, travel, and development.
+            Parent-managed profiles. Developmental storytelling. Spotlight and Journey visibility — built for the athlete, owned by the athlete.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
@@ -47,7 +47,7 @@ export default function Hero() {
               to="/athletes/jacob-fouse"
               className="group flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-black text-base px-9 py-4 rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-[0_0_40px_rgba(245,158,11,0.55)] uppercase tracking-wide ring-2 ring-amber-400/30 ring-offset-2 ring-offset-transparent"
             >
-              Support Jacob Now
+              See Jacob's Journey
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
 
@@ -56,7 +56,7 @@ export default function Hero() {
               className="group flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 text-white font-bold text-base px-8 py-4 rounded-lg transition-all duration-200 uppercase tracking-wide"
             >
               <Users className="w-5 h-5" />
-              Get Started
+              Build Your Profile
             </Link>
           </div>
         </div>

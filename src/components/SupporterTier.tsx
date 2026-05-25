@@ -3,23 +3,23 @@ import { Link } from 'react-router-dom';
 
 const freeBenefits = [
   'Athlete profile page on NextUp Memphis',
-  'Basic stats and bio section',
-  'Share your story with the community',
+  'Bio, sport, school, and developmental story',
   'Parent-managed and privacy-first',
+  'Visible in the NextUp network',
 ];
 
 const starterBenefits = [
   'Everything in Free',
   'Highlight reel embed (up to 3 clips)',
-  'Tournament & event schedule display',
-  'Supporter progress tracker',
+  'Tournament and event schedule display',
+  'Journey documentation enabled',
   'Priority review and publishing',
 ];
 
 const featuredBenefits = [
   'Everything in Starter',
-  'Featured placement on homepage',
-  'Full highlight reel (unlimited clips)',
+  'Spotlight placement on homepage',
+  'Full Journey timeline (unlimited moments)',
   'Sponsor outreach support',
   'Custom athlete story content',
   'Social media promotion',
@@ -37,10 +37,10 @@ export default function SupporterTier() {
             Athlete Profile Plans
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-navy mb-4 leading-tight">
-            Get Your Athlete Seen
+            Build Your Athlete's Profile
           </h2>
           <p className="text-gray-500 text-lg">
-            Start free. Upgrade when you're ready for more visibility and support.
+            Start free. Upgrade when you're ready for full Spotlight visibility and Journey documentation.
           </p>
         </div>
 
@@ -178,14 +178,14 @@ export default function SupporterTier() {
           {/* Jacob CTA */}
           <div className="flex items-center gap-4 bg-[#0a0e1a] border border-white/10 rounded-2xl px-6 py-5">
             <div className="flex-1 min-w-0">
-              <p className="text-white font-bold text-sm">Want to support Jacob directly?</p>
-              <p className="text-gray-400 text-xs mt-0.5">Visit his profile to choose your amount and see his full story.</p>
+              <p className="text-white font-bold text-sm">Explore Jacob's Profile</p>
+              <p className="text-gray-400 text-xs mt-0.5">See his full Journey, documented moments, and story on his athlete profile.</p>
             </div>
             <Link
               to="/athletes/jacob-fouse"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-black text-xs px-5 py-2.5 rounded-xl transition-all duration-200 shadow-[0_0_16px_rgba(245,158,11,0.35)] hover:shadow-[0_0_28px_rgba(245,158,11,0.55)] uppercase tracking-wide whitespace-nowrap"
             >
-              <Heart className="w-3.5 h-3.5" fill="white" />
+              <ArrowRight className="w-3.5 h-3.5" />
               Jacob's Profile
             </Link>
           </div>

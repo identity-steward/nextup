@@ -10,16 +10,16 @@ export default function FounderStory() {
             Our Story
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-navy mb-6">
-            Why NextUp Started
+            Why NextUp Exists
           </h2>
         </div>
 
         <div className="bg-white rounded-3xl shadow-lg p-8 md:p-12 border-2 border-gray-100">
           <p className="text-xl text-gray-700 leading-relaxed mb-6">
-            Too many young athletes are putting in real work but their journey is never captured.
+            Too many young athletes are putting in real work — developing character, leadership, and resilience — and none of it gets documented.
           </p>
           <p className="text-xl text-gray-700 leading-relaxed">
-            NextUpMemphis was created to document that journey early — through highlights, profiles, and storytelling — so every athlete has a record of their growth.
+            NextUp Memphis was built to change that. Through developmental storytelling, creator documentation, and athlete-owned profiles, every player has a record of who they were becoming — not just what they scored.
           </p>
         </div>
       </div>

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { MapPin, Award, Heart, Share2, Copy, CheckCircle, Play, Users, Eye, Star, Zap, Shield, Trophy } from 'lucide-react';
 import type { Athlete } from '../types/athlete';
+import TraitSection from './TraitSection';
+import type { AthleteTag as TraitAthleteTag } from '../types/traits';
 
 interface ApprovedMedia {
   id: string;
@@ -10,15 +12,11 @@ interface ApprovedMedia {
   featured: boolean;
 }
 
-interface AthleteTag {
-  visibility_tags: { id: string; slug: string; label: string } | null;
-}
-
 interface AthleteProfileTemplateProps {
   athlete: Athlete;
   onBack?: () => void;
   approvedMedia?: ApprovedMedia[];
-  athleteTags?: AthleteTag[];
+  athleteTags?: TraitAthleteTag[];
 }
 
 const CHECK_ICON = (
@@ -336,25 +334,7 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
         </section>
       )}
 
-      {athleteTags.length > 0 && (
-        <section className="py-10 bg-white border-t border-gray-100">
-          <div className="max-w-4xl mx-auto px-6 lg:px-8">
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Character Tags</h2>
-            <div className="flex flex-wrap gap-2">
-              {athleteTags.map((tag, i) =>
-                tag.visibility_tags ? (
-                  <span
-                    key={tag.visibility_tags.id ?? i}
-                    className="inline-flex items-center bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-full"
-                  >
-                    {tag.visibility_tags.label}
-                  </span>
-                ) : null
-              )}
-            </div>
-          </div>
-        </section>
-      )}
+      <TraitSection athleteTags={athleteTags} />
 
       {approvedMedia.length > 0 && (
         <section className="py-12 bg-gray-50 border-t border-gray-100">

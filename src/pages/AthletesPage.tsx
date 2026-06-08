@@ -3,6 +3,10 @@ import { Users, MapPin, ArrowRight, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
 import type { Athlete } from '../types/athlete';
+import { supabase } from '../lib/supabase';
+import TraitBadge from '../components/TraitBadge';
+import type { VisibilityTag } from '../types/traits';
+import { sortedTraits } from '../types/traits';
 
 const SPORTS = ['All Sports', 'Basketball', 'Football', 'Track & Field', 'Soccer', 'Baseball', 'Volleyball', 'Other'];
 
@@ -11,12 +15,32 @@ export default function AthletesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sport, setSport] = useState('All Sports');
+  const [traitMap, setTraitMap] = useState<Map<string, VisibilityTag[]>>(new Map());
 
   useEffect(() => {
     AthleteService.getAllAthletes().then(data => {
       setAthletes(data);
       setLoading(false);
     });
+
+    supabase
+      .from('athlete_tags')
+      .select('athlete_id, visibility_tags(id, slug, label, category, sort_order)')
+      .then(({ data }) => {
+        if (!data) return;
+        const map = new Map<string, VisibilityTag[]>();
+        for (const row of (data as unknown as { athlete_id: string; visibility_tags: VisibilityTag | null }[])) {
+          if (!row.visibility_tags) continue;
+          const existing = map.get(row.athlete_id) ?? [];
+          existing.push(row.visibility_tags);
+          map.set(row.athlete_id, existing);
+        }
+        // Sort each athlete's traits by sort_order
+        for (const [id, tags] of map.entries()) {
+          map.set(id, sortedTraits(tags.map(vt => ({ visibility_tags: vt }))));
+        }
+        setTraitMap(map);
+      });
   }, []);
 
   const filtered = useMemo(() => {
@@ -136,7 +160,25 @@ export default function AthletesPage() {
                       {athlete.first_name} {athlete.last_initial}.
                     </h3>
                     <p className="text-gray-600 mb-1">{athlete.position} • {athlete.grade}</p>
-                    <p className="text-gold font-semibold text-sm mb-4">{athlete.descriptor}</p>
+                    <p className="text-gold font-semibold text-sm mb-3">{athlete.descriptor}</p>
+                    {(() => {
+                      const traits = traitMap.get(athlete.id) ?? [];
+                      if (traits.length === 0) return null;
+                      const visible = traits.slice(0, 3);
+                      const extra = traits.length - visible.length;
+                      return (
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {visible.map(trait => (
+                            <TraitBadge key={trait.id} trait={trait} size="sm" />
+                          ))}
+                          {extra > 0 && (
+                            <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 text-gray-500 text-xs font-semibold px-2 py-0.5">
+                              +{extra} more
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <Link
                       to={getProfilePath(athlete)}
                       className="btn-primary w-full flex items-center justify-center gap-2"

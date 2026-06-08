@@ -17,7 +17,7 @@ interface ApprovedMedia {
 }
 
 interface AthleteTag {
-  visibility_tags: { id: string; slug: string; label: string } | null;
+  visibility_tags: { id: string; slug: string; label: string; category: string; sort_order?: number } | null;
 }
 
 export default function AthleteProfilePage() {
@@ -70,12 +70,12 @@ export default function AthleteProfilePage() {
             .limit(12),
           supabase
             .from('athlete_tags')
-            .select('visibility_tags(id, slug, label)')
+            .select('visibility_tags(id, slug, label, category, sort_order)')
             .eq('athlete_id', data.id),
         ]);
 
         setApprovedMedia((mediaData as ApprovedMedia[]) ?? []);
-        setAthleteTags((tagData as AthleteTag[]) ?? []);
+        setAthleteTags((tagData as unknown as AthleteTag[]) ?? []);
       }
 
       setLoading(false);

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ProfileHero from '../components/jacob/ProfileHero';
 import ProfileHighlightVideo from '../components/jacob/ProfileHighlightVideo';
 import ProfileAbout from '../components/jacob/ProfileAbout';
+import ProfileTraits from '../components/jacob/ProfileTraits';
 import ProfileAttributes from '../components/jacob/ProfileAttributes';
 import ProfileMidCTA from '../components/jacob/ProfileMidCTA';
 import ProfileHighlightGrid from '../components/jacob/ProfileHighlightGrid';
@@ -50,7 +51,10 @@ export default function JacobFousePage() {
       {/* 3. About */}
       <ProfileAbout />
 
-      {/* 4. Attributes */}
+      {/* 4. Character Traits */}
+      <ProfileTraits />
+
+      {/* 5. Attributes */}
       <ProfileAttributes />
 
       {/* 5. Mid-page CTA */}

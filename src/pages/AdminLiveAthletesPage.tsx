@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { CheckCircle, Clock, XCircle, Tag, RefreshCw, ExternalLink, Star, Shield } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Tag, RefreshCw, ExternalLink, Star, Shield, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +9,8 @@ interface VisibilityTag {
   id: string;
   slug: string;
   label: string;
+  category: string;
+  sort_order: number;
 }
 
 interface AthleteRow {
@@ -30,6 +32,18 @@ interface AthleteRow {
   consent_status?: string | null;
   sab_code?: string | null;
 }
+
+const CATEGORY_DISPLAY: Record<string, { label: string; selectedClass: string; dotClass: string }> = {
+  character:      { label: 'Character',      selectedClass: 'bg-[#1a1f3a] text-white border-[#1a1f3a]',          dotClass: 'bg-[#1a1f3a]' },
+  performance:    { label: 'Performance',    selectedClass: 'bg-sky-600 text-white border-sky-600',               dotClass: 'bg-sky-500' },
+  academic:       { label: 'Academic',       selectedClass: 'bg-emerald-600 text-white border-emerald-600',       dotClass: 'bg-emerald-500' },
+  community:      { label: 'Community',      selectedClass: 'bg-violet-600 text-white border-violet-600',         dotClass: 'bg-violet-500' },
+  creative:       { label: 'Creative',       selectedClass: 'bg-orange-500 text-white border-orange-500',         dotClass: 'bg-orange-400' },
+  leadership_role:{ label: 'Leadership',     selectedClass: 'bg-amber-600 text-white border-amber-600',           dotClass: 'bg-amber-500' },
+  wellness:       { label: 'Wellness',       selectedClass: 'bg-rose-500 text-white border-rose-500',             dotClass: 'bg-rose-400' },
+};
+
+const CATEGORY_ORDER = ['character', 'performance', 'academic', 'community', 'creative', 'leadership_role', 'wellness'];
 
 const STATUS_OPTIONS = ['pending', 'active', 'hidden', 'rejected'] as const;
 const TIER_OPTIONS = ['basic', 'premium'] as const;
@@ -65,6 +79,31 @@ export function AdminLiveAthletesPage() {
   const [pendingStatus, setPendingStatus] = useState<Record<string, string>>({});
   const [pendingTier, setPendingTier] = useState<Record<string, string>>({});
   const [pendingTags, setPendingTags] = useState<Record<string, string[]>>({});
+  // Track which category sections are expanded per athlete
+  const [expandedCats, setExpandedCats] = useState<Record<string, Set<string>>>({});
+
+  const groupedTags = useMemo(() => {
+    const map = new Map<string, VisibilityTag[]>();
+    for (const cat of CATEGORY_ORDER) map.set(cat, []);
+    for (const tag of availableTags) {
+      const bucket = map.get(tag.category) ?? [];
+      bucket.push(tag);
+      map.set(tag.category, bucket);
+    }
+    // Remove empty categories
+    for (const [cat, tags] of map.entries()) {
+      if (tags.length === 0) map.delete(cat);
+    }
+    return map;
+  }, [availableTags]);
+
+  const toggleCategory = (athleteId: string, cat: string) => {
+    setExpandedCats(prev => {
+      const current = new Set(prev[athleteId] ?? []);
+      current.has(cat) ? current.delete(cat) : current.add(cat);
+      return { ...prev, [athleteId]: current };
+    });
+  };
 
   useEffect(() => {
     loadTags();
@@ -76,7 +115,8 @@ export function AdminLiveAthletesPage() {
   const loadTags = async () => {
     const { data } = await supabase
       .from('visibility_tags')
-      .select('id, slug, label')
+      .select('id, slug, label, category, sort_order')
+      .order('category')
       .order('sort_order');
     setAvailableTags((data || []) as VisibilityTag[]);
   };
@@ -337,29 +377,62 @@ export function AdminLiveAthletesPage() {
                   </div>
                 </div>
 
-                {/* Tag picker */}
+                {/* Tag picker — grouped by category */}
                 {availableTags.length > 0 && (
                   <div className="mb-4">
-                    <label className="block text-xs font-semibold text-gray-500 mb-2">
-                      <Tag className="w-3 h-3 inline mr-1" />
-                      Visibility Tags
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {availableTags.map(tag => {
-                        const selected = (pendingTags[athlete.id] || []).includes(tag.id);
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Tag className="w-3 h-3 text-gray-400" />
+                      <span className="text-xs font-semibold text-gray-500">Character &amp; Traits</span>
+                      {(pendingTags[athlete.id] ?? []).length > 0 && (
+                        <span className="ml-1 bg-[#1a1f3a] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                          {(pendingTags[athlete.id] ?? []).length} assigned
+                        </span>
+                      )}
+                    </div>
+                    <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                      {Array.from(groupedTags.entries()).map(([cat, tags]) => {
+                        const meta = CATEGORY_DISPLAY[cat] ?? { label: cat, selectedClass: 'bg-gray-700 text-white border-gray-700', dotClass: 'bg-gray-400' };
+                        const expanded = expandedCats[athlete.id]?.has(cat) ?? false;
+                        const assignedInCat = tags.filter(t => (pendingTags[athlete.id] ?? []).includes(t.id)).length;
                         return (
-                          <button
-                            key={tag.id}
-                            type="button"
-                            onClick={() => toggleTag(athlete.id, tag.id)}
-                            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-150 ${
-                              selected
-                                ? 'bg-[#1a1f3a] text-white border-[#1a1f3a]'
-                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 hover:text-gray-700'
-                            }`}
-                          >
-                            {tag.label}
-                          </button>
+                          <div key={cat}>
+                            <button
+                              type="button"
+                              onClick={() => toggleCategory(athlete.id, cat)}
+                              className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${meta.dotClass}`} />
+                                <span className="text-xs font-bold text-gray-600">{meta.label}</span>
+                                <span className="text-[10px] text-gray-400">{tags.length} tags</span>
+                                {assignedInCat > 0 && (
+                                  <span className="text-[10px] font-bold text-sky-600">{assignedInCat} on</span>
+                                )}
+                              </div>
+                              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
+                            </button>
+                            {expanded && (
+                              <div className="px-3 py-2.5 flex flex-wrap gap-1.5 bg-white">
+                                {tags.map(tag => {
+                                  const selected = (pendingTags[athlete.id] ?? []).includes(tag.id);
+                                  return (
+                                    <button
+                                      key={tag.id}
+                                      type="button"
+                                      onClick={() => toggleTag(athlete.id, tag.id)}
+                                      className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all duration-150 ${
+                                        selected
+                                          ? meta.selectedClass
+                                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 hover:text-gray-700'
+                                      }`}
+                                    >
+                                      {tag.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>

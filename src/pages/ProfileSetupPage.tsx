@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, AlertCircle, ChevronRight, ChevronLeft, User, MapPin, Trophy, Link2, ArrowRight } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -31,8 +31,7 @@ function slugify(firstName: string, lastName: string): string {
 }
 
 export default function ProfileSetupPage() {
-  const navigate = useNavigate();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [step, setStep] = useState<Step>('basics');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');

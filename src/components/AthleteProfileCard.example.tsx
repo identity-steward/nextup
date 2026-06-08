@@ -190,6 +190,7 @@ export function DynamicExample() {
       />
     );
   };
+  void handleSubmit;
 
   return null;
 }

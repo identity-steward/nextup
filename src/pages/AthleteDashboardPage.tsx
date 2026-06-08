@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, CreditCard as Edit3, Upload, Link2, Trophy, Star, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Instagram, Twitter, ExternalLink, Camera, Video, LogOut, ArrowLeft } from 'lucide-react';
+import { User, CreditCard as Edit3, Upload, Link2, Trophy, Star, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Instagram, Twitter, ExternalLink, Camera, Video, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -200,7 +200,6 @@ export default function AthleteDashboardPage() {
     setUploadSuccess(false);
 
     const bucket = BUCKETS[uploadType];
-    const ext = uploadFile.name.split('.').pop();
     const path = `${athlete.id}/${Date.now()}-${uploadFile.name.replace(/[^a-z0-9.\-_]/gi, '_')}`;
 
     const { error: storageError } = await supabase.storage

@@ -47,7 +47,7 @@ const SPORT_COLORS: Record<string, string> = {
 function SportPanel({
   sport,
   jerseyNumber,
-  name,
+  name: _name,
   position,
   school,
   team,

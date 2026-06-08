@@ -46,7 +46,6 @@ export function AdminMediaPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('pending');
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
-  const [assignSlug, setAssignSlug] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState<string | null>(null);
   const [availableTags, setAvailableTags] = useState<VisibilityTag[]>([]);
   const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>({});

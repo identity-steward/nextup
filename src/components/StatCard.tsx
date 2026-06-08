@@ -1,10 +1,10 @@
-import React from 'react';
-import { Video as LucideIcon } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
+import type { ComponentType } from 'react';
 
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: ComponentType<LucideProps>;
   change?: {
     value: string;
     positive: boolean;

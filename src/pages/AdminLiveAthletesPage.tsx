@@ -45,7 +45,7 @@ const CATEGORY_DISPLAY: Record<string, { label: string; selectedClass: string; d
 
 const CATEGORY_ORDER = ['character', 'performance', 'academic', 'community', 'creative', 'leadership_role', 'wellness'];
 
-const STATUS_OPTIONS = ['pending', 'active', 'hidden', 'rejected'] as const;
+const STATUS_OPTIONS = ['pending', 'active', 'verified_event', 'hidden', 'rejected'] as const;
 const TIER_OPTIONS = ['basic', 'premium'] as const;
 
 const statusStyle: Record<string, string> = {
@@ -155,13 +155,15 @@ export function AdminLiveAthletesPage() {
     (sabData || []).forEach(s => { if (!sabMap[s.athlete_id]) sabMap[s.athlete_id] = s.sab_code; });
     const { data: tagData } = await supabase
       .from('athlete_tags')
-      .select('athlete_id, visibility_tags(id, slug, label)')
+      .select('athlete_id, visibility_tags(id, slug, label, category, sort_order)')
       .in('athlete_id', ids);
 
     const tagsMap: Record<string, VisibilityTag[]> = {};
-    (tagData || []).forEach((row: { athlete_id: string; visibility_tags: VisibilityTag | null }) => {
+    (tagData || []).forEach((row: { athlete_id: string; visibility_tags: VisibilityTag | VisibilityTag[] | null }) => {
       if (!tagsMap[row.athlete_id]) tagsMap[row.athlete_id] = [];
-      if (row.visibility_tags) tagsMap[row.athlete_id].push(row.visibility_tags);
+      if (!row.visibility_tags) return;
+      const tag = Array.isArray(row.visibility_tags) ? row.visibility_tags[0] : row.visibility_tags;
+      if (tag) tagsMap[row.athlete_id].push(tag);
     });
 
     const rows: AthleteRow[] = athleteData.map(a => ({

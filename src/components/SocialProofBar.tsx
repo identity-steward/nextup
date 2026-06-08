@@ -1,4 +1,4 @@
-import { Star, Users, Video, Eye } from 'lucide-react';
+import { Star, Video, Eye } from 'lucide-react';
 
 export default function SocialProofBar() {
   return (

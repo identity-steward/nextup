@@ -1,6 +1,5 @@
 import { supabase } from '../../lib/supabase';
 import { ContentAgentService } from '../../services/contentAgentService';
-import { OutreachAgentService } from '../../services/outreachAgentService';
 import { TaskService } from '../../services/taskService';
 import { AuditService } from '../../services/auditService';
 import type { AgentResult } from '../../types/agent';
@@ -8,7 +7,7 @@ import type { AgentResult } from '../../types/agent';
 export type EventTriggerSource = 'media_pass_requests';
 
 export async function dispatchEventTrigger(
-  source: EventTriggerSource,
+  _source: EventTriggerSource,
   recordId: string
 ): Promise<{ content: AgentResult; outreach: AgentResult }> {
   const [content, outreach] = await Promise.all([

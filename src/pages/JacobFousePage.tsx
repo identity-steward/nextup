@@ -78,7 +78,7 @@ export default function JacobFousePage() {
       />
 
       {/* 8. Journey Updates */}
-      <ProfileUpdates />
+      <ProfileUpdates slug="jacob-f" />
 
       {/* 9. Share */}
       <ProfileShare />

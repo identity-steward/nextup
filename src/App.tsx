@@ -31,6 +31,7 @@ import { AdminAgentOpsPage } from './pages/AdminAgentOpsPage';
 import { AdminProfileUpdatesPage } from './pages/AdminProfileUpdatesPage';
 import { AdminMediaPage } from './pages/AdminMediaPage';
 import { AdminLiveAthletesPage } from './pages/AdminLiveAthletesPage';
+import { AdminJourneyEntriesPage } from './pages/AdminJourneyEntriesPage';
 import AthleteDashboardPage from './pages/AthleteDashboardPage';
 import ThankYouPage from './pages/ThankYouPage';
 
@@ -144,6 +145,14 @@ function AppContent() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminLiveAthletesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/journey"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminJourneyEntriesPage />
               </ProtectedRoute>
             }
           />

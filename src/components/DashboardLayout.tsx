@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, Home, Users, Video, School, CreditCard, Heart, Settings, LogOut, Zap, CreditCard as Edit3, Camera, Tag } from 'lucide-react';
+import { Menu, X, Home, Users, Video, School, CreditCard, Heart, Settings, LogOut, Zap, CreditCard as Edit3, Camera, Tag, BookOpen } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,6 +14,7 @@ const navigation = [
   { name: 'Athlete Signups', icon: Users, path: '/admin/athletes' },
   { name: 'Parent Intake', icon: Heart, path: '/admin/intake' },
   { name: 'Profile Updates', icon: Edit3, path: '/admin/profile-updates' },
+  { name: 'Journey Entries', icon: BookOpen, path: '/admin/journey' },
   { name: 'Media Review', icon: Camera, path: '/admin/media' },
   { name: 'Creator Applications', icon: Video, path: '/admin/creators' },
   { name: 'Team Inquiries', icon: School, path: '/admin/teams' },

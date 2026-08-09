@@ -8,7 +8,6 @@ import AthletesPage from './pages/AthletesPage';
 import SignupPage from './pages/SignupPage';
 import JoinPage from './pages/JoinPage';
 import CreatorPage from './pages/CreatorPage';
-import SponsorsPage from './pages/SponsorsPage';
 import AboutPage from './pages/AboutPage';
 import ForSchoolsPage from './pages/ForSchoolsPage';
 import HackathonDemoPage from './pages/HackathonDemoPage';
@@ -16,13 +15,16 @@ import CreatorsPage from './pages/CreatorsPage';
 import CreatorProfilePage from './pages/CreatorProfilePage';
 import SignInPage from './pages/SignInPage';
 import AthleteProfilePage from './pages/AthleteProfilePage';
-import SupportPage from './pages/SupportPage';
 import ContactPage from './pages/ContactPage';
 import ParentIntakePage from './pages/ParentIntakePage';
 import { isSupabaseConfigured } from './lib/supabase';
 import JacobFousePage from './pages/JacobFousePage';
 import LiveFeedPage from './pages/LiveFeedPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
+import StartPage from './pages/StartPage';
+import PartnersPage from './pages/PartnersPage';
+import PrivacyTrustPage from './pages/PrivacyTrustPage';
+import HowItWorksPage from './pages/HowItWorksPage';
 
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminAthletesPage } from './pages/AdminAthletesPage';
@@ -34,6 +36,16 @@ import { AdminLiveAthletesPage } from './pages/AdminLiveAthletesPage';
 import { AdminJourneyEntriesPage } from './pages/AdminJourneyEntriesPage';
 import AthleteDashboardPage from './pages/AthleteDashboardPage';
 import ThankYouPage from './pages/ThankYouPage';
+import AppDashboardPage from './pages/AppDashboardPage';
+import StoryPage from './pages/StoryPage';
+import AdminNarrationPage from './pages/AdminNarrationPage';
+import SharePage from './pages/SharePage';
+import PrivacyPage from './pages/PrivacyPage';
+import AdminTrustPage from './pages/AdminTrustPage';
+import PathwaysPage from './pages/PathwaysPage';
+import AdminPathwaysPage from './pages/AdminPathwaysPage';
+import OutcomePage from './pages/OutcomePage';
+import AdminOutcomesPage from './pages/AdminOutcomesPage';
 
 function AppContent() {
   return (
@@ -48,32 +60,90 @@ function AppContent() {
           </div>
         )}
         <Routes>
-          {/* Public */}
+          {/* Public — Phase 1 simplified navigation */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/athletes" element={<AthletesPage />} />
-          <Route path="/athletes/jacob-fouse" element={<JacobFousePage />} />
-          <Route path="/athletes/:slug" element={<AthleteProfilePage />} />
+          <Route path="/how-it-works" element={<HowItWorksPage />} />
+          <Route path="/youth" element={<AthletesPage />} />
+          <Route path="/youth/jacob-fouse" element={<JacobFousePage />} />
+          <Route path="/youth/:slug" element={<AthleteProfilePage />} />
+          <Route path="/partners" element={<PartnersPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/method" element={<Navigate to="/about" replace />} />
+          <Route path="/privacy" element={<PrivacyTrustPage />} />
+          <Route path="/start" element={<StartPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/signin" element={<SignInPage />} />
+
+          {/* Preserved routes — kept functional, not in public nav */}
+          <Route path="/athletes" element={<Navigate to="/youth" replace />} />
+          <Route path="/athletes/jacob-fouse" element={<Navigate to="/youth/jacob-fouse" replace />} />
+          <Route path="/athletes/:slug" element={<Navigate to="/youth/:slug" replace />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signup/player" element={<JoinPage />} />
           <Route path="/signup/parent" element={<ParentIntakePage />} />
           <Route path="/live-feed" element={<LiveFeedPage />} />
           <Route path="/creators" element={<CreatorsPage />} />
           <Route path="/creators/:slug" element={<CreatorProfilePage />} />
-          <Route path="/sponsors" element={<SponsorsPage />} />
-          <Route path="/support" element={<SupportPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/about" element={<AboutPage />} />
+          <Route path="/sponsors" element={<Navigate to="/partners" replace />} />
+          <Route path="/support" element={<Navigate to="/partners" replace />} />
           <Route path="/schools" element={<ForSchoolsPage />} />
           <Route path="/demo" element={<HackathonDemoPage />} />
           <Route path="/thank-you" element={<ThankYouPage />} />
           <Route path="/creator" element={<CreatorPage />} />
 
           {/* Legacy redirects */}
-          <Route path="/join" element={<Navigate to="/signup/player" replace />} />
+          <Route path="/join" element={<Navigate to="/start" replace />} />
           <Route path="/parent-intake" element={<Navigate to="/signup/parent" replace />} />
 
-          {/* Auth */}
-          <Route path="/signin" element={<SignInPage />} />
+          {/* Phase 2 — Private person-centered app */}
+          <Route
+            path="/app"
+            element={
+              <ProtectedRoute>
+                <AppDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/app/story"
+            element={
+              <ProtectedRoute>
+                <StoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/app/share"
+            element={
+              <ProtectedRoute>
+                <SharePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/app/privacy"
+            element={
+              <ProtectedRoute>
+                <PrivacyPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/app/pathways"
+            element={
+              <ProtectedRoute>
+                <PathwaysPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/app/outcome"
+            element={
+              <ProtectedRoute>
+                <OutcomePage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected */}
           <Route
@@ -153,6 +223,38 @@ function AppContent() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminJourneyEntriesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/narration"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminNarrationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/trust"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminTrustPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/pathways"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminPathwaysPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/outcomes"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminOutcomesPage />
               </ProtectedRoute>
             }
           />

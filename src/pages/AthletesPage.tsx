@@ -68,10 +68,13 @@ export default function AthletesPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-8 h-8 text-gold" />
-            <h1 className="text-4xl md:text-5xl font-bold">NextUp Memphis Athletes</h1>
+            <h1 className="text-4xl md:text-5xl font-bold">Youth &amp; Opportunity</h1>
           </div>
           <p className="text-xl text-gray-300 max-w-3xl">
-            Explore the journeys, highlights, and stories of young athletes across the city.
+            Explore the journeys, highlights, and stories of young athletes
+            across Memphis. Performance is intelligence in motion.
+            Documentation is intelligence preserved. Opportunity is intelligence
+            connected. Sustainability is intelligence repeated.
           </p>
         </div>
       </section>

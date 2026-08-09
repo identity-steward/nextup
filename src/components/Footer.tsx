@@ -1,9 +1,9 @@
-import { Mail, Instagram, Youtube, Linkedin } from 'lucide-react';
+import { Mail, Instagram, Youtube, Linkedin, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const SOCIALS = {
   instagram: 'https://www.instagram.com/nextupmemphis?igsh=dTg4bHg0dnVnODBv&utm_source=qr',
-  youtube: 'https://youtube.com/@nextupmemphis-ip?si=LLAr7-1L8l1hqo1A',
+  youtube: 'https://youtube.com/@nextupmemphis-ip?si=LLArL-1L8l1hqo1A',
   linkedin: 'https://www.linkedin.com/company/nextupmemphis',
 };
 
@@ -36,28 +36,28 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4 text-lg">Quick Links</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/athletes" className="hover:text-gold transition-colors duration-200">
-                  View Athletes
+                <Link to="/youth" className="hover:text-gold transition-colors duration-200">
+                  Youth &amp; Opportunity
                 </Link>
               </li>
               <li>
-                <Link to="/signup" className="hover:text-gold transition-colors duration-200">
-                  Get Started
+                <Link to="/how-it-works" className="hover:text-gold transition-colors duration-200">
+                  How It Works
                 </Link>
               </li>
               <li>
-                <Link to="/sponsors" className="hover:text-gold transition-colors duration-200">
-                  Sponsor
+                <Link to="/partners" className="hover:text-gold transition-colors duration-200">
+                  For Partners
                 </Link>
               </li>
               <li>
                 <Link to="/about" className="hover:text-gold transition-colors duration-200">
-                  About Us
+                  About
                 </Link>
               </li>
               <li>
-                <Link to="/live-feed" className="hover:text-gold transition-colors duration-200">
-                  Live Feed
+                <Link to="/start" className="hover:text-gold transition-colors duration-200">
+                  Start My NextUp
                 </Link>
               </li>
             </ul>
@@ -95,9 +95,16 @@ export default function Footer() {
                 <Linkedin className="w-5 h-5" />
               </a>
             </div>
-            <p className="text-sm text-gray-400 leading-relaxed">
+            <p className="text-sm text-gray-400 leading-relaxed mb-4">
               Follow us for updates on Memphis youth athletes, highlights, and community news.
             </p>
+            <Link
+              to="/privacy"
+              className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gold transition-colors"
+            >
+              <Shield className="w-4 h-4" />
+              Privacy &amp; Trust
+            </Link>
           </div>
         </div>
 
@@ -107,8 +114,8 @@ export default function Footer() {
               © 2025 NextUp Memphis. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm">
-              <a href="#" className="hover:text-gold transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-gold transition-colors">Terms of Service</a>
+              <Link to="/privacy" className="hover:text-gold transition-colors">Privacy &amp; Trust</Link>
+              <Link to="/contact" className="hover:text-gold transition-colors">Contact</Link>
             </div>
           </div>
         </div>

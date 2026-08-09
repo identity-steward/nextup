@@ -1,4 +1,4 @@
-import { Menu, X, LayoutDashboard, Radio } from 'lucide-react';
+import { Menu, X, LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -16,16 +16,16 @@ export default function Header() {
   const dashboardLabel = isAdmin ? 'Admin' : 'My Dashboard';
 
   const navItems = [
-    { path: '/', label: 'Home' },
-    { path: '/athletes', label: 'Athletes' },
-    { path: '/creators', label: 'Creators' },
-    { path: '/live-feed', label: 'Live Feed' },
-    { path: '/sponsors', label: 'Sponsors' },
+    { path: '/how-it-works', label: 'How It Works' },
+    { path: '/youth', label: 'Youth' },
+    { path: '/partners', label: 'Partners' },
     { path: '/about', label: 'About' },
+    { path: '/start', label: 'Start My NextUp' },
   ];
 
   const isActive = (path: string) => {
-    if (path === '/') return currentPath === '/';
+    if (path === '/youth') return currentPath === '/youth' || currentPath.startsWith('/athletes');
+    if (path === '/partners') return currentPath === '/partners' || currentPath === '/sponsors' || currentPath === '/support';
     return currentPath.startsWith(path);
   };
 
@@ -51,9 +51,6 @@ export default function Header() {
                     : 'text-gray-700 hover:text-gold'
                 }`}
               >
-                {item.path === '/live-feed' && (
-                  <Radio className="w-3.5 h-3.5 text-red-500" />
-                )}
                 {item.label}
               </Link>
             ))}
@@ -84,8 +81,8 @@ export default function Header() {
                 >
                   Sign In
                 </Link>
-                <Link to="/signup" className="btn-primary">
-                  Get Started
+                <Link to="/start" className="btn-primary">
+                  Start My NextUp
                 </Link>
               </>
             )}
@@ -117,9 +114,6 @@ export default function Header() {
                       : 'text-gray-700 hover:text-gold'
                   }`}
                 >
-                  {item.path === '/live-feed' && (
-                    <Radio className="w-3.5 h-3.5 text-red-500" />
-                  )}
                   {item.label}
                 </Link>
               ))}
@@ -150,8 +144,8 @@ export default function Header() {
                     >
                       Sign In
                     </Link>
-                    <Link to="/signup" onClick={close} className="btn-primary">
-                      Get Started
+                    <Link to="/start" onClick={close} className="btn-primary">
+                      Start My NextUp
                     </Link>
                   </>
                 )}

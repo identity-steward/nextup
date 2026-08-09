@@ -44,22 +44,22 @@ export interface FeatureFlags {
 }
 
 export const FEATURE_FLAGS: FeatureFlags = {
-  // V1 flags — off until explicitly enabled
-  NEXTUP_V1_PUBLIC_NAV: false,
-  NEXTUP_V1_START_FLOW: false,
-  NEXTUP_V1_PRIVATE_APP: false,
-  NEXTUP_V1_NAVIGATOR: false,
-  NEXTUP_V1_PATHWAYS: false,
-  NEXTUP_V1_TRUST: false,
-  NEXTUP_V1_OUTCOMES: false,
+  // V1 flags
+  NEXTUP_V1_PUBLIC_NAV: true,
+  NEXTUP_V1_START_FLOW: true,
+  NEXTUP_V1_PRIVATE_APP: true,
+  NEXTUP_V1_NAVIGATOR: true,
+  NEXTUP_V1_PATHWAYS: true,
+  NEXTUP_V1_TRUST: true,
+  NEXTUP_V1_OUTCOMES: true,
 
-  // Preservation flags — on until explicitly hidden
-  LIVE_FEED: true,
-  CREATORS: true,
-  SCHOOLS: true,
-  AGENT_OPS: true,
-  LIVE_ATHLETE_ADMIN: true,
-  PUBLIC_STRIPE_SUPPORT: true,
+  // Preservation flags — Phase 1 hides these from public nav
+  LIVE_FEED: false,
+  CREATORS: false,
+  SCHOOLS: false,
+  AGENT_OPS: false,
+  LIVE_ATHLETE_ADMIN: false,
+  PUBLIC_STRIPE_SUPPORT: false,
   YOUTH_MEDIA_UPLOADS: true,
 };
 

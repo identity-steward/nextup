@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Menu, X, Home, Users, Video, School, CreditCard, Heart, Settings, LogOut, Zap, CreditCard as Edit3, Camera, Tag, BookOpen } from 'lucide-react';
+import { Menu, X, Home, Users, Heart, Settings, LogOut, Zap, Edit3, Camera, Tag, BookOpen, MessageSquare, ShieldAlert, Compass, CheckCircle } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { FEATURE_FLAGS } from '../config/features';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -10,18 +11,18 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: 'Dashboard', icon: Home, path: '/admin' },
-  { name: 'Athletes', icon: Tag, path: '/admin/live-athletes' },
+  { name: 'Athletes', icon: Tag, path: '/admin/live-athletes', flag: 'LIVE_ATHLETE_ADMIN' },
   { name: 'Athlete Signups', icon: Users, path: '/admin/athletes' },
   { name: 'Parent Intake', icon: Heart, path: '/admin/intake' },
   { name: 'Profile Updates', icon: Edit3, path: '/admin/profile-updates' },
   { name: 'Journey Entries', icon: BookOpen, path: '/admin/journey' },
   { name: 'Media Review', icon: Camera, path: '/admin/media' },
-  { name: 'Creator Applications', icon: Video, path: '/admin/creators' },
-  { name: 'Team Inquiries', icon: School, path: '/admin/teams' },
-  { name: 'Media Pass Requests', icon: CreditCard, path: '/admin/media-passes' },
-  { name: 'Supporter Signups', icon: Heart, path: '/admin/supporters' },
-  { name: 'Agent Ops', icon: Zap, path: '/admin/agent-ops' },
-];
+  { name: 'Narration Review', icon: MessageSquare, path: '/admin/narration' },
+  { name: 'Trust Review', icon: ShieldAlert, path: '/admin/trust' },
+  { name: 'Pathway Review', icon: Compass, path: '/admin/pathways' },
+  { name: 'Outcome Review', icon: CheckCircle, path: '/admin/outcomes' },
+  { name: 'Agent Ops', icon: Zap, path: '/admin/agent-ops', flag: 'AGENT_OPS' },
+].filter((item) => !('flag' in item) || FEATURE_FLAGS[item.flag as keyof typeof FEATURE_FLAGS]);
 
 export function DashboardLayout({ children, title }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);

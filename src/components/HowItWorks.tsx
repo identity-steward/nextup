@@ -1,23 +1,33 @@
-import { UserPlus, Camera, TrendingUp } from 'lucide-react';
+import { MessageCircle, Brain, Compass, BookOpen } from 'lucide-react';
 
 const steps = [
   {
     number: '01',
-    icon: UserPlus,
-    title: 'Create Your Profile',
-    description: 'Build a parent-managed athlete profile with bio, sport, school, and grade. Your story starts here — on your terms.',
+    icon: MessageCircle,
+    title: 'Tell',
+    description:
+      'Start with what\u2019s happening in your own words. You don\u2019t need to know the name of a program, a form number, or which office to call.',
   },
   {
     number: '02',
-    icon: Camera,
-    title: 'Capture the Moments',
-    description: 'NextUp creators document your athlete at games and tournaments — leadership, composure, hustle, and growth. Real moments, real context.',
+    icon: Brain,
+    title: 'Understand',
+    description:
+      'NextUp helps organize what it heard so you can confirm or correct it. You see the picture before anyone else does.',
   },
   {
     number: '03',
-    icon: TrendingUp,
-    title: 'Build Your Journey',
-    description: 'Every documented moment adds to your athlete\'s Journey — a longitudinal record of development that grows with them over time.',
+    icon: Compass,
+    title: 'Navigate',
+    description:
+      'See possible next steps and who actually controls them. NextUp shows you the doors \u2014 not just the forms.',
+  },
+  {
+    number: '04',
+    icon: BookOpen,
+    title: 'Learn',
+    description:
+      'Keep track of what happened and what comes next. Your record grows with you, not instead of you.',
   },
 ];
 
@@ -33,12 +43,12 @@ export default function HowItWorks() {
             How It Works
           </h2>
           <p className="text-gray-500 text-lg">
-            From first profile to documented legacy — three steps.
+            You don\u2019t have to know the system. Start with what\u2019s happening.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-          <div className="hidden md:block absolute top-14 left-[calc(33%+1rem)] right-[calc(33%+1rem)] h-px bg-gradient-to-r from-gold/40 via-gold to-gold/40" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+          <div className="hidden lg:block absolute top-14 left-[calc(25%+1rem)] right-[calc(25%+1rem)] h-px bg-gradient-to-r from-gold/40 via-gold to-gold/40" />
 
           {steps.map((step) => {
             const Icon = step.icon;
@@ -57,6 +67,14 @@ export default function HowItWorks() {
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-16 text-center">
+          <div className="inline-block bg-navy rounded-2xl px-8 py-6">
+            <p className="text-white text-lg leading-relaxed font-medium">
+              People narrate.{'  '}NextUp translates.{'  '}Authorities determine.
+            </p>
+          </div>
         </div>
       </div>
     </section>

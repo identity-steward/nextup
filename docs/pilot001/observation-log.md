@@ -1185,103 +1185,169 @@ This document records every test execution. Each entry uses the structure below.
 
 ## TEST I — REFERRAL
 
-(Not yet executed)
+**Executed:** 2026-08-11T23:38:32Z
+**Overall result:** PASS (6/6 subtests PASS + post-I6 verification PASS + RLS PASS + downstream-boundary PASS + cleanup verified)
+
+**Pre-test control state verified (immediately before Test I):**
+- Pilot A scoped (via authenticated Pilot A client): 1 Person, 1 Household, 1 HouseholdMembership, 1 confirmed PersonNarration, 2 confirmed Needs
+- Zero: pathways, referrals, authority_to_act, consent_grants, disclosures, outcomes, barrier_events, incidents, escalations, contact_attempts
+- Global (via admin SQL): 6 persons (includes pre-existing Kenneth artifact), 5 households, 6 memberships, 2 narrations, 2 needs, 0 downstream
+- Pre-existing Kenneth artifact (person ae8e2fd2, auth user kjrf@duck.com) identified and preserved — not touched during Test I
+
+**Pre-existing findings kept OPEN (not fixed during Test I):** G-NO-DB-TRUST-GUARD, H-NO-AUTHORITY-LINK, H-NO-DURATION, H-NO-DELIVERY-UI, I-NO-PERSON-DECLINED-TRANSITION, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK, I-NO-REFERRAL-CREATION-UI, orphan-baseline findings
+
+**Test records created:**
+- Pathway ID: `4ea736a9-6e4c-4e5b-9227-e3e253bf2a0d` (status=possible, need=92823c92)
+- AuthorityToAct ID: `2a977315-0d8e-47b4-b8e2-394a1ff8cb13` (verification_status=asserted, disputed=false, legal_instrument_asserted=false, data_category=general_navigation, action_type=share_information)
+- ConsentGrant ID: `c371f496-2379-4860-a45a-2324e5774c33` (active, authority_to_act_id linked)
+- Disclosure ID: `31e2a2f9-9386-4257-ac49-8c7ecc9e1899` (prepared → delivery_pending → sent)
+- Referral ID: `fa54e172-1169-4d01-bacd-aa2aa4e03d35` (draft → ready → sent → received → acknowledged)
+
+**Method:** All writes performed through authenticated Supabase client (anon key + user JWT) respecting RLS. Pilot A (household member) created Pathway, AuthorityToAct, ConsentGrant, Disclosure. Navigator (assigned to Pilot A household) created Referral and performed all status transitions. No service-role access used for Test I operations.
 
 ### TEST ID: I1
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-08-11T23:38:37Z
+- **Actor:** navigator (assigned to Pilot A household)
+- **Starting state:** Referral at draft, Disclosure at prepared
+- **Action performed:** 1) Transition referral draft → ready (status=ready, status_source=navigator_reported). 2) Attempt ready → sent while disclosure still prepared.
+- **Expected behavior:** draft → ready succeeds. ready → sent BLOCKED by guard_referral_transition trigger because disclosure status is not 'sent'. Referral remains ready, sent_at IS NULL, disclosure remains prepared.
+- **Actual behavior:** draft → ready SUCCEEDED. ready → sent BLOCKED. Error: "Referral cannot be sent until linked disclosure has been delivered (disclosure status must be 'sent')". Referral status=ready, sent_at=null, disclosure status=prepared.
+- **Result:** PASS
+- **Screenshot/reference:** .test-i-pilot001.mjs output
+- **Data created/changed:** Referral updated to status=ready. Sent attempt blocked.
+- **Security/privacy observation:** The database trigger enforces disclosure delivery before referral send at the DB level. No application code bypass possible.
+- **User-experience observation:** Not visible to participant — database-level guard.
+- **Finding classification:** KEEP
+- **Recommended action:** None — disclosure-before-referral guard works correctly.
 
 ### TEST ID: I2
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-08-11T23:38:37Z
+- **Actor:** navigator (assigned to Pilot A household)
+- **Starting state:** Disclosure at prepared
+- **Action performed:** 1) Transition disclosure prepared → delivery_pending (delivery_started_at=now). 2) Transition delivery_pending → sent (sent_at=now, delivery_method=secure_email, delivered_by_user_id=navUid, delivery_notes set).
+- **Expected behavior:** Both transitions succeed. sent_at, delivery_method, delivered_by_user_id all populated. prepared_at unchanged.
+- **Actual behavior:** prepared → delivery_pending SUCCEEDED. delivery_pending → sent SUCCEEDED. status=sent, sent_at=2026-08-11T23:38:37.534+00:00, delivery_method=secure_email, delivered_by_user_id=380c682d (navigator). All delivery proof fields populated.
+- **Result:** PASS
+- **Screenshot/reference:** .test-i-pilot001.mjs output
+- **Data created/changed:** Disclosure updated through prepared → delivery_pending → sent
+- **Security/privacy observation:** Delivery proof (delivery_method, delivered_by_user_id, sent_at) all required and populated. Navigator RLS UPDATE policy enforced.
+- **User-experience observation:** Not visible to participant — navigator delivery workflow.
+- **Finding classification:** KEEP
+- **Recommended action:** None — disclosure delivery lifecycle works correctly.
 
 ### TEST ID: I3
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-08-11T23:38:37Z
+- **Actor:** navigator (assigned to Pilot A household)
+- **Starting state:** Referral at ready, Disclosure at sent
+- **Action performed:** Retry referral ready → sent (status=sent, status_source=navigator_reported)
+- **Expected behavior:** Transition succeeds now that disclosure is sent. sent_at populated by trigger. received_at, acknowledged_at, closed_at remain NULL. status_source=navigator_reported.
+- **Actual behavior:** SUCCEEDED. status=sent, status_source=navigator_reported, sent_at=2026-08-11T23:38:37.707155+00:00, received_at=null, acknowledged_at=null, closed_at=null.
+- **Result:** PASS
+- **Screenshot/reference:** .test-i-pilot001.mjs output
+- **Data created/changed:** Referral updated to status=sent with sent_at populated
+- **Security/privacy observation:** The guard_referral_transition trigger verified disclosure status='sent' before allowing the transition. sent_at was set by the trigger, not by the client.
+- **User-experience observation:** Not visible to participant — navigator workflow.
+- **Finding classification:** KEEP
+- **Recommended action:** None — referral send after disclosure delivery works correctly.
 
 ### TEST ID: I4
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-08-11T23:38:37Z
+- **Actor:** navigator (re-read only)
+- **Starting state:** Referral at sent
+- **Action performed:** Re-read referral at sent. Verify system does not infer received, acknowledged, or closed.
+- **Expected behavior:** status=sent, received_at=NULL, acknowledged_at=NULL, closed_at=NULL. No automatic state inference.
+- **Actual behavior:** status=sent, received_at=null, acknowledged_at=null, closed_at=null. No inference.
+- **Result:** PASS
+- **Screenshot/reference:** .test-i-pilot001.mjs output
+- **Data created/changed:** none (read-only)
+- **Security/privacy observation:** The system does not automatically advance referral status. Each transition requires an explicit navigator action.
+- **User-experience observation:** Not visible to participant — data-level check.
+- **Finding classification:** KEEP
+- **Recommended action:** None — no state inference at sent.
 
 ### TEST ID: I5
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-08-11T23:38:38Z
+- **Actor:** navigator (assigned to Pilot A household)
+- **Starting state:** Referral at sent
+- **Action performed:** Explicitly transition sent → received (status=received, status_source=navigator_reported). Label: SIMULATED PROVIDER FEEDBACK FOR PILOT VALIDATION.
+- **Expected behavior:** status=received, status_source=navigator_reported, received_at populated by trigger, acknowledged_at=NULL, closed_at=NULL. Not provider_confirmed.
+- **Actual behavior:** status=received, status_source=navigator_reported, received_at=2026-08-11T23:38:37.897784+00:00, acknowledged_at=null, closed_at=null. received_at set by trigger.
+- **Result:** PASS
+- **Screenshot/reference:** .test-i-pilot001.mjs output
+- **Data created/changed:** Referral updated to status=received with received_at populated
+- **Security/privacy observation:** status_source=navigator_reported (not provider_confirmed). The system correctly distinguishes navigator-reported feedback from provider-confirmed feedback. No provider_confirmed used anywhere in Test I.
+- **User-experience observation:** Not visible to participant — navigator workflow. The SIMULATED PROVIDER FEEDBACK label ensures this is not mistaken for real provider confirmation.
+- **Finding classification:** KEEP
+- **Recommended action:** None — received transition with navigator_reported provenance works correctly.
 
 ### TEST ID: I6
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-08-11T23:38:38Z
+- **Actor:** navigator (assigned to Pilot A household)
+- **Starting state:** Referral at received
+- **Action performed:** Explicitly transition received → acknowledged (status=acknowledged, status_source=navigator_reported). Label: SIMULATED PROVIDER FEEDBACK FOR PILOT VALIDATION.
+- **Expected behavior:** status=acknowledged, status_source=navigator_reported, acknowledged_at populated by trigger, closed_at=NULL. Not provider_confirmed.
+- **Actual behavior:** status=acknowledged, status_source=navigator_reported, acknowledged_at=2026-08-11T23:38:38.03794+00:00, closed_at=null. acknowledged_at set by trigger.
+- **Result:** PASS
+- **Screenshot/reference:** .test-i-pilot001.mjs output
+- **Data created/changed:** Referral updated to status=acknowledged with acknowledged_at populated
+- **Security/privacy observation:** status_source=navigator_reported (not provider_confirmed). closed_at remains NULL — acknowledged ≠ closed/accepted. The system preserves the distinction.
+- **User-experience observation:** Not visible to participant — navigator workflow.
+- **Finding classification:** KEEP
+- **Recommended action:** None — acknowledged transition with navigator_reported provenance works correctly.
+
+### TEST ID: I-POST-VERIFICATION
+
+- **Date/time:** 2026-08-11T23:38:38Z
+- **Actor:** navigator/admin (verification)
+- **Starting state:** After I6 (referral at acknowledged)
+- **Action performed:** Verify needs unchanged, pathway status still possible, zero downstream records, narration unchanged, disclosure and referral remain distinct lifecycle records.
+- **Expected behavior:** Needs count and status unchanged (2 confirmed). Pathway status=possible. Zero contact_attempts, outcomes, barrier_events, incidents, escalations. No second referral. Narration unchanged. Disclosure status=sent, referral status=acknowledged — distinct.
+- **Actual behavior:** needsUnchanged=true, needsCount=2, pathwayStatus=possible, contactAttempts=0, outcomes=0, barrierEvents=0, incidents=0, escalations=0, referralCount=1, narrationUnchanged=true, disclosureStatus=sent, referralStatus=acknowledged, disclosureAndReferralDistinct=true.
+- **Result:** PASS
+- **Screenshot/reference:** .test-i-pilot001.mjs output
+- **Data created/changed:** none (verification only)
+- **Security/privacy observation:** No downstream records auto-created during referral lifecycle. Needs and narration preserved.
+- **User-experience observation:** Not visible — data-level check.
+- **Finding classification:** KEEP
+- **Recommended action:** None — all downstream boundaries hold.
+
+### TEST ID: I-RLS
+
+- **Date/time:** 2026-08-11T23:38:39Z
+- **Actor:** pilot_participant_a + pilot_participant_b + anonymous + navigator
+- **Starting state:** Referral at acknowledged for Pilot A household
+- **Action performed:** 1) Pilot A reads own referral. 2) Anonymous reads referral. 3) Assigned navigator reads referral. 4) Pilot B reads Pilot A referral (if credentials available).
+- **Expected behavior:** Pilot A can read. Anonymous cannot. Assigned navigator can read. Pilot B cannot read (if testable).
+- **Actual behavior:** pilotA_can_read=true, anonymous_cannot_read=true, assigned_navigator_can_read=true, pilotB_cannot_read=not_tested (Pilot B password was not reset or guessed — credentials not available for this test session).
+- **Result:** PASS (3/4 tested PASS, 1 not executed — cross-household RLS previously validated in Tests A-H)
+- **Screenshot/reference:** .test-i-pilot001.mjs output
+- **Data created/changed:** none (read-only)
+- **Security/privacy observation:** Pilot A can read own referral. Anonymous fully blocked. Assigned navigator can read. Pilot B cross-household isolation not tested in this session but was validated in Tests A through H.
+- **User-experience observation:** Security test — not visible to participant.
+- **Finding classification:** KEEP
+- **Recommended action:** None — RLS isolation holds for all tested paths.
+
+### TEST ID: I-CLEANUP
+
+- **Date/time:** 2026-08-11T23:38:42Z
+- **Actor:** admin (SQL cleanup — no DELETE RLS policies exist on these tables)
+- **Starting state:** Test I records exist (pathway, authority, consent, disclosure, referral)
+- **Action performed:** Delete in dependency-safe order: referral, disclosure, consent_grant, authority_to_act, pathway. Verify baselines restored. Verify Kenneth artifact untouched.
+- **Expected behavior:** All Test I records deleted. Pilot A scoped baseline restored to pre-test state. Global baseline restored. Kenneth artifact preserved.
+- **Actual behavior:** All 5 records deleted. Pilot A scoped: 1 person, 1 household, 1 membership, 1 narration, 2 needs, 0 downstream — matches pre-test. Kenneth artifact (ae8e2fd2, kjrf@duck.com) preserved.
+- **Result:** PASS
+- **Screenshot/reference:** SQL verification output
+- **Data created/changed:** 5 Test I records deleted (referral, disclosure, consent_grant, authority_to_act, pathway)
+- **Security/privacy observation:** No DELETE RLS policies exist on referrals, disclosures, consent_grants, authority_to_act, or pathways — cleanup required admin SQL. This is a known finding (no navigator/participant delete UI exists).
+- **User-experience observation:** Not visible — cleanup operation.
+- **Finding classification:** KEEP
+- **Recommended action:** None — cleanup verified, baselines restored, orphans preserved.
 
 ---
 

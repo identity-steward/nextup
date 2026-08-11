@@ -1,7 +1,7 @@
 # Pilot 001 — Defect Tracker
 
 **Date started:** 2026-08-09
-**Status:** 1 defect recorded (P0 — FIXED). Test B: 0 defects. Test C: 0 defects. Test D: 0 defects. Test E: 0 defects. Test F: 0 defects introduced. 1 pre-existing P2 finding recorded (F-NO-FUNDING-GUARD, OPEN). Test G: 1 P1 finding recorded (G-NO-DB-TRUST-GUARD, OPEN). Test H: 4 findings recorded (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN).
+**Status:** 1 defect recorded (P0 — FIXED). Test B: 0 defects. Test C: 0 defects. Test D: 0 defects. Test E: 0 defects. Test F: 0 defects introduced. 1 pre-existing P2 finding recorded (F-NO-FUNDING-GUARD, OPEN). Test G: 1 P1 finding recorded (G-NO-DB-TRUST-GUARD, OPEN). Test H: 4 findings recorded (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). Test I: 0 defects introduced. 3 findings recorded (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN).
 
 ---
 
@@ -161,3 +161,55 @@ P0 findings stop Pilot 001 immediately.
 - **Status:** OPEN — do not fix during Test H.
 - **Required before:** No hard requirement. Consider refactoring before Pilot 002.
 - **Why this matters:** If a different UI client uses `buildDisclosurePreview()` without recomputing `willNotShare`, it will display an empty WILL NOT SHARE list. The service should be the single source of truth.
+
+### FINDING ID: I-NO-PERSON-DECLINED-TRANSITION
+
+- **Severity:** P2
+- **Test ID:** I (identified during Test I preparation)
+- **Description:** The `guard_referral_transition()` trigger allows `person_declined` as a status but the only valid transition FROM it is to `unknown`. There is no UI or service function that transitions a referral to `person_declined` — it exists in the trigger's allowed transitions but has no creation path. The status `declined` (provider declined) is reachable via `screening → declined`, but `person_declined` (the participant declined the referral) has no entry point in the transition graph except from `unknown`.
+- **Reproduction steps:**
+  1. Inspect `guard_referral_transition()` — `person_declined` appears only as a source status with transition to `unknown`
+  2. No transition INTO `person_declined` exists in the CASE statement
+  3. No service function or UI creates a referral with `status = 'person_declined'`
+- **Expected:** A path should exist for the participant to decline a referral (e.g., `received → person_declined` or `acknowledged → person_declined`).
+- **Actual:** `person_declined` is unreachable through normal transitions. The only way to set it is via `unknown → person_declined`, but `unknown → person_declined` is not in the allowed transitions either.
+- **Privacy/security impact:** None — this is a missing workflow state, not a data leak.
+- **Workaround:** None — the status cannot be reached through the referral lifecycle.
+- **Status:** OPEN — do not fix during Test I.
+- **Required before:** Pilot 002. Add a transition path for participant decline (e.g., `received → person_declined` or `acknowledged → person_declined`).
+- **Why this matters:** A participant who does not want a referral should be able to decline it explicitly. The status exists in the schema but is unreachable.
+
+### FINDING ID: I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK
+
+- **Severity:** P2
+- **Test ID:** I (identified during Test I execution)
+- **Description:** The `guard_referral_transition()` trigger checks that the linked disclosure has `status = 'sent'` before allowing `ready → sent`, but it does not verify that the consent_grant and disclosure belong to the same household as the referral. A referral could theoretically link to a disclosure or consent from a different household. RLS prevents cross-household INSERT, but a navigator assigned to multiple households could create a referral in household A linking to a disclosure in household B. The trigger does not check household_id consistency across the linked records.
+- **Reproduction steps:**
+  1. Navigator assigned to households A and B
+  2. Create disclosure in household A, consent in household B
+  3. Create referral in household A with disclosure_id pointing to household A's disclosure and consent_grant_id pointing to household B's consent
+  4. The INSERT succeeds — no trigger checks household_id consistency
+- **Expected:** The referral's consent_grant_id and disclosure_id should be verified to belong to the same household as the referral.
+- **Actual:** No cross-record household_id consistency check exists in the trigger or application layer.
+- **Privacy/security impact:** Low — RLS prevents cross-household access for non-assigned navigators. But a multi-assigned navigator could mix records across households. This is a data integrity issue, not a direct data leak.
+- **Workaround:** None — the trigger only checks disclosure status, not household consistency.
+- **Status:** OPEN — do not fix during Test I.
+- **Required before:** Pilot 002. Add household_id consistency check in the referral transition guard or INSERT trigger.
+- **Why this matters:** A referral's linked consent and disclosure should belong to the same household. Without this check, cross-household record mixing is possible through the API.
+
+### FINDING ID: I-NO-REFERRAL-CREATION-UI
+
+- **Severity:** P2
+- **Test ID:** I (identified during Test I execution)
+- **Description:** No navigator/admin UI exists to create a referral. The `referrals` table has INSERT RLS for assigned navigators, but no UI component calls the insert. No service function wraps referral creation. No admin page exposes referral management. This is the same class of finding as E-NO-CREATION-UI, F-NO-FUNDING-UI, G-NO-TRUST-UI, and H-NO-DELIVERY-UI.
+- **Reproduction steps:**
+  1. Search for any UI component that creates a referral — none found
+  2. Search for any service function that wraps referral INSERT — none found
+  3. The `referrals` table is writable by assigned navigators via RLS but no application path exercises this
+- **Expected:** A navigator workflow should exist to create referrals from confirmed needs with linked pathways, consents, and disclosures.
+- **Actual:** Referral creation is only possible through direct API calls. No navigator UI exists.
+- **Privacy/security impact:** None — this is a missing workflow, not a data leak.
+- **Workaround:** Direct API calls or SQL can create referrals for testing.
+- **Status:** OPEN — do not fix during Test I.
+- **Required before:** Pilot 002. Build navigator referral creation workflow.
+- **Why this matters:** Without a referral creation UI, the entire referral lifecycle is unreachable through normal application use. The database and RLS are ready, but no UI exercises them.

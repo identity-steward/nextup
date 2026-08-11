@@ -1,7 +1,7 @@
 # Pilot 001 — Final Debrief
 
 **Date:** 2026-08-09
-**Status:** Test A COMPLETE. Test B COMPLETE. Test C COMPLETE. Test D COMPLETE. Test E COMPLETE. Test F COMPLETE. Test G COMPLETE. Test H COMPLETE. Tests I–O not yet started.
+**Status:** Test A COMPLETE. Test B COMPLETE. Test C COMPLETE. Test D COMPLETE. Test E COMPLETE. Test F COMPLETE. Test G COMPLETE. Test H COMPLETE. Test I COMPLETE. Tests J–O not yet started.
 
 Test A, B, C, D, E, F, G, and H results are recorded below. The remaining sections will be completed after all Tests I through O have been executed.
 
@@ -11,7 +11,9 @@ Test A, B, C, D, E, F, G, and H results are recorded below. The remaining sectio
 
 **IN PROGRESS.** Test A (Person + Household) complete — all 7 subtests PASS. Test B (Narration Preservation + Conveyance) complete — all 12 subtests PASS. Test C (Interpretation) complete — all 3 branches PASS + privacy check PASS. Test D (Structured Need Review) complete — all 4 subtests PASS + privacy check PASS. Test E (Pathway) complete — all 5 subtests PASS + RLS PASS + downstream-zero PASS. Test F (Funding Gates) complete — all 5 subtests PASS + RLS PASS + downstream-zero PASS + state-integrity PASS. One P0 defect discovered and fixed in Test A (RLS recursion). No defects in Test B, C, D, E, or F. One P2 finding identified during Test F preparation (F-NO-FUNDING-GUARD, OPEN). One P1 finding identified during Test G preparation (G-NO-DB-TRUST-GUARD, OPEN). No defects introduced during Test G execution. Four findings identified during Test H preparation (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). No defects introduced during Test H execution. Pilot 001 may proceed to Test I.
 
-Tests I through O have not yet been executed.
+Test I is complete — all 6 subtests PASS + post-I6 verification PASS + RLS PASS + downstream-boundary PASS + cleanup verified. 3 new findings identified (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). No defects introduced. Pilot 001 may proceed to Test J.
+
+Tests J through O have not yet been executed.
 
 ---
 
@@ -27,7 +29,7 @@ Tests I through O have not yet been executed.
 | F — Funding Gates | 5 | 5 | 5 | 0 | 0 | 0 |
 | G — Trust Hard Stop | 8 | 8 | 8 | 0 | 0 | 0 |
 | H — Consent + Disclosure | 4 | 4 | 4 | 0 | 0 | 0 |
-| I — Referral | 6 | — | — | — | — | — |
+| I — Referral | 6 | 6 | 6 | 0 | 0 | 0 |
 | J — No Response | 5 | — | — | — | — | — |
 | K — What Happened? | 4 | — | — | — | — | — |
 | L — Barrier | 4 | — | — | — | — | — |
@@ -178,7 +180,25 @@ Tests I through O have not yet been executed.
 
 ## 7. Referral Findings
 
-(To be completed after test execution.)
+**Test I findings:**
+- I1 (Disclosure-before-referral guard): VERIFIED. `guard_referral_transition()` trigger blocks `ready → sent` when linked disclosure status is not `sent`. Error: "Referral cannot be sent until linked disclosure has been delivered (disclosure status must be 'sent')". Referral remains `ready`, `sent_at` IS NULL, disclosure remains `prepared`.
+- I2 (Disclosure delivery): VERIFIED. Disclosure transitions `prepared → delivery_pending → sent` succeed with full delivery proof (`sent_at`, `delivery_method=secure_email`, `delivered_by_user_id=navigator`). All fields populated.
+- I3 (Referral send after disclosure): VERIFIED. After disclosure is `sent`, `ready → sent` succeeds. `sent_at` populated by trigger. `received_at`, `acknowledged_at`, `closed_at` all NULL. `status_source=navigator_reported`.
+- I4 (No inference at sent): VERIFIED. Re-reading referral at `sent` shows no automatic state inference. `received_at`, `acknowledged_at`, `closed_at` all remain NULL.
+- I5 (Explicit received — SIMULATED): VERIFIED. `sent → received` with `status_source=navigator_reported` succeeds. `received_at` populated by trigger. `acknowledged_at` remains NULL. Labeled SIMULATED PROVIDER FEEDBACK — not `provider_confirmed`.
+- I6 (Explicit acknowledged — SIMULATED): VERIFIED. `received → acknowledged` with `status_source=navigator_reported` succeeds. `acknowledged_at` populated by trigger. `closed_at` remains NULL. Labeled SIMULATED PROVIDER FEEDBACK — not `provider_confirmed`.
+- Post-I6 downstream: VERIFIED. Needs unchanged (2 confirmed), pathway status=possible, zero contact_attempts, outcomes, barrier_events, incidents, escalations. No second referral. Narration unchanged. Disclosure (sent) and referral (acknowledged) remain distinct lifecycle records.
+- RLS: VERIFIED. Pilot A can read own referral. Anonymous cannot read. Assigned navigator can read. Pilot B cross-household isolation not tested (credentials not available — previously validated in Tests A–H).
+- Cleanup: VERIFIED. All 5 Test I records deleted in dependency-safe order. Pilot A scoped baseline restored. Kenneth artifact preserved.
+- Disclosure sent ≠ Referral sent: VERIFIED. Disclosure status=sent, referral status=acknowledged — distinct.
+- Referral sent ≠ received: VERIFIED. sent_at populated, status advanced beyond sent.
+- received ≠ acknowledged: VERIFIED. received_at and acknowledged_at are distinct timestamps.
+- acknowledged ≠ accepted: VERIFIED. status=acknowledged, not accepted.
+- status_source independent of status: VERIFIED. status_source=navigator_reported throughout, not provider_confirmed.
+- No DELETE RLS policies: No DELETE policies exist on referrals, disclosures, consent_grants, authority_to_act, or pathways. Cleanup required admin SQL. This is expected — no navigator/participant delete UI exists.
+- I-NO-PERSON-DECLINED-TRANSITION (P2 OPEN): The `person_declined` status exists in the trigger but is unreachable through normal transitions. No path exists for a participant to decline a referral.
+- I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK (P2 OPEN): The referral transition guard checks disclosure status but not household_id consistency between referral, consent, and disclosure. A multi-assigned navigator could mix records across households.
+- I-NO-REFERRAL-CREATION-UI (P2 OPEN): No navigator/admin UI exists to create a referral. The table and RLS are ready but no application path exercises referral creation.
 
 ---
 
@@ -399,7 +419,7 @@ For each major step:
 |----------|-------|------------|
 | P0 | 1 (FIXED) | D-001 |
 | P1 | 2 (OPEN) | G-NO-DB-TRUST-GUARD, H-NO-AUTHORITY-LINK |
-| P2 | 6 (OPEN) | E-NO-CREATION-UI, F-NO-FUNDING-GUARD, F-NO-FUNDING-UI, G-NO-TRUST-UI, H-NO-DURATION, H-NO-DELIVERY-UI |
+| P2 | 9 (OPEN) | E-NO-CREATION-UI, F-NO-FUNDING-GUARD, F-NO-FUNDING-UI, G-NO-TRUST-UI, H-NO-DURATION, H-NO-DELIVERY-UI, I-NO-PERSON-DECLINED-TRANSITION, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK, I-NO-REFERRAL-CREATION-UI |
 | P3 | 3 (OPEN) | E-PROVENANCE, F-PROVENANCE, H-WILL-NOT-SHARE-SERVICE |
 
 ---

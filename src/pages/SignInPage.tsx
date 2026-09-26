@@ -1,119 +1,44 @@
-import { useState, FormEvent } from 'react';
-import { LogIn, UserPlus } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-export default function SignInPage() {
+export function SignInPage() {
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-
-    const appRole = data.user?.app_metadata?.role;
-    if (appRole === 'admin') {
-      navigate('/admin');
-      return;
-    }
-
-    const { data: profileData } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', data.user.id)
-      .maybeSingle();
-
-    if (profileData?.role === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/dashboard');
-    }
+    setError('');
+    const { error } = await signIn(email, password);
+    setLoading(false);
+    if (error) setError(error);
+    else navigate('/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-navy via-navy-light to-navy pt-32 pb-24">
-      <div className="max-w-md mx-auto px-6">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gold/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <LogIn className="w-8 h-8 text-gold" />
-            </div>
-            <h1 className="text-3xl font-bold text-navy mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to your NextUp account</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 max-w-md w-full">
+        <h1 className="text-2xl font-bold text-[#1a1f3a] mb-6">Sign In</h1>
+        {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none text-sm" />
           </div>
-
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-semibold text-navy mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-gold focus:outline-none transition-colors"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-navy mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-gold focus:outline-none transition-colors"
-                placeholder="Enter your password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-3 text-lg disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
-
-          <div className="mt-8 pt-6 border-t border-gray-200 space-y-3 text-center">
-            <p className="text-gray-500 text-sm">
-              Are you an athlete or parent?{' '}
-              <Link
-                to="/signup"
-                className="text-gold font-semibold hover:text-gold-dark transition-colors inline-flex items-center gap-1"
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                Get started free
-              </Link>
-            </p>
-            <p className="text-gray-400 text-xs">
-              Once your profile is approved, we'll send your login credentials.
-            </p>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none text-sm" />
           </div>
-        </div>
+          <button type="submit" disabled={loading} className="w-full bg-[#1a1f3a] hover:bg-[#2a2f4a] text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50">
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+        <p className="text-sm text-gray-500 mt-4 text-center">Need an account? <Link to="/start" className="text-amber-600 font-semibold">Get started</Link></p>
       </div>
     </div>
   );

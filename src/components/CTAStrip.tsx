@@ -1,13 +1,14 @@
 import { ArrowRight, Share2 } from 'lucide-react';
 import type { Athlete } from '../types/athlete';
 import { STRIPE_LINKS } from '../config/stripeLinks';
+import { safePaymentLink } from '../lib/safeLinks';
 
 interface CTAStripProps {
   athlete: Athlete;
 }
 
 export default function CTAStrip({ athlete }: CTAStripProps) {
-  const supportLink = athlete.stripe_payment_link || STRIPE_LINKS.SUPPORT_JACOB_5;
+  const supportLink = safePaymentLink(athlete.stripe_payment_link) || STRIPE_LINKS.SUPPORT_JACOB_5;
 
   return (
     <section className="py-20 bg-gradient-to-r from-navy via-navy-light to-navy text-white">

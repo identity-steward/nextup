@@ -55,7 +55,8 @@ export default function NeedReview({ proposedNeeds, onConfirm, onBack }: NeedRev
     try {
       await onConfirm(needs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      console.error(err);
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

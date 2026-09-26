@@ -3,24 +3,34 @@ import { useState } from 'react';
 
 const faqs = [
   {
-    question: "Is this safe for my child?",
-    answer: "Yes. This hub is managed by a parent/guardian. Only approved photos and clips are shared.",
+    question: "What is NextUp?",
+    answer:
+      "NextUp is recognition and conveyance infrastructure. It helps people start with what's happening in their own words, understand possible next steps, and move the right information to the right destination at the right time.",
   },
   {
-    question: "Where does the money go?",
-    answer: "Directly toward real costs—fees, travel, equipment, and training.",
+    question: "Is NextUp a resource directory or eligibility screener?",
+    answer:
+      "No. NextUp is not a resource directory, case-management system, eligibility screener, or referral platform. It helps people understand what's happening and navigate what comes next \u2014 without pretending to determine what they qualify for.",
   },
   {
-    question: "Can I cancel anytime?",
-    answer: "Absolutely. One click.",
+    question: "Do I need to know which program I need before I start?",
+    answer:
+      "No. You start with what you're experiencing in your own words. You don't need to know the name of a program, a form number, or which office to call.",
   },
   {
-    question: "Can I share this page?",
-    answer: "Yes—sharing is one of the best ways to support.",
+    question: "Who controls my information?",
+    answer:
+      "You do. Your story is yours. NextUp helps you decide what to share, with whom, and when. Nothing moves without your say-so.",
   },
   {
-    question: "Is this tax-deductible?",
-    answer: "Gifts are personal support and not tax-deductible at this time.",
+    question: "Does NextUp decide if I qualify for something?",
+    answer:
+      "No. People narrate. NextUp translates. Authorities determine. NextUp helps you see possible pathways and reach the right destination \u2014 but the people and institutions with authority make the decisions.",
+  },
+  {
+    question: "Is this only for athletes?",
+    answer:
+      "NextUp started as a youth athlete visibility platform, but it is evolving into something broader: a way to help people navigate what's happening and connect to what's next \u2014 for youth, families, and communities across Memphis.",
   },
 ];
 
@@ -33,7 +43,7 @@ export default function FAQ() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-gold/20 text-gold-dark px-4 py-2 rounded-full text-sm font-semibold mb-6 border border-gold/30">
             <HelpCircle className="w-4 h-4" />
-            Questions Parents Ask
+            Common Questions
           </div>
 
           <h2 className="text-4xl md:text-5xl font-bold text-navy leading-tight">

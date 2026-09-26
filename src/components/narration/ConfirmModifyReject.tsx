@@ -26,7 +26,8 @@ export default function ConfirmModifyReject({
     try {
       await onConfirm(narration.proposed_interpretation ?? '');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      console.error(err);
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -38,7 +39,8 @@ export default function ConfirmModifyReject({
     try {
       await onModify(modifiedText);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      console.error(err);
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -50,7 +52,8 @@ export default function ConfirmModifyReject({
     try {
       await onReject();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      console.error(err);
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

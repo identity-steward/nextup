@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Athlete } from '../types/athlete';
 import { STRIPE_LINKS } from '../config/stripeLinks';
+import { safePaymentLink } from '../lib/safeLinks';
 
 interface StickyСTAProps {
   athlete: Athlete;
@@ -9,6 +10,7 @@ interface StickyСTAProps {
 
 export default function StickyCTA({ athlete }: StickyСTAProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const supportLink = safePaymentLink(athlete.stripe_payment_link) || STRIPE_LINKS.SUPPORT_JACOB_5;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,9 +39,9 @@ export default function StickyCTA({ athlete }: StickyСTAProps) {
               Help cover fees, travel & training
             </p>
           </div>
-          {(athlete.stripe_payment_link || STRIPE_LINKS.SUPPORT_JACOB_5) ? (
+          {supportLink ? (
             <a
-              href={athlete.stripe_payment_link || STRIPE_LINKS.SUPPORT_JACOB_5!}
+              href={supportLink}
               className="group btn-primary px-4 md:px-6 py-2.5 text-sm md:text-base flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               Support Now

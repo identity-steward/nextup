@@ -9,6 +9,8 @@ export type EntryType =
   | 'creative'
   | 'challenge';
 
+export type SourceType = 'youth' | 'family' | 'navigator' | 'partner' | 'system' | 'admin';
+
 export interface JourneyEntry {
   id: string;
   athlete_id: string;
@@ -24,6 +26,7 @@ export interface JourneyEntry {
   admin_notes: string | null;
   created_by: string | null;
   created_by_role: 'admin' | 'parent' | 'athlete' | null;
+  source_type: SourceType | null;
   evidence_media_id: string | null;
   evidence_tag_id: string | null;
   reviewed_at: string | null;

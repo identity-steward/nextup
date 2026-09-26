@@ -42,6 +42,13 @@ export interface Athlete {
   profile_tier?: 'basic' | 'premium';
   event_code_used?: string;
   auth_user_id?: string;
+  created_by_user_id?: string;
+  managed_by_parent_id?: string;
+  person_id?: string | null;
+  identity_confirmed_at?: string | null;
+  identity_confirmed_by?: string | null;
+  identity_confirmation_method?: string | null;
+  source_type?: string;
   created_at: string;
   updated_at: string;
 }
@@ -62,22 +69,8 @@ export interface AthleteInput {
   years_playing?: number;
   image_url?: string;
   highlight_video_url?: string;
-  supporters_count?: number;
-  views_count?: number;
-  followers_count?: number;
-  monthly_funding?: number;
-  is_featured?: boolean;
-  is_active?: boolean;
   slug: string;
   team_name?: string;
-  team_circuit?: string;
-  competition_status?: string;
-  social_proof?: string;
   season_goal_amount?: number;
   season_amount_raised?: number;
-  next_goal_description?: string;
-  stripe_payment_link?: string;
-  highlight_video_embed_url?: string;
-  instagram_handle?: string;
-  twitter_handle?: string;
 }

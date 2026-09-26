@@ -3,6 +3,8 @@ import { MapPin, Award, Heart, Share2, Copy, CheckCircle, Play, Users, Eye, Star
 import type { Athlete } from '../types/athlete';
 import TraitSection from './TraitSection';
 import type { AthleteTag as TraitAthleteTag } from '../types/traits';
+import { safePaymentLink, safeVideoEmbedUrl } from '../lib/safeLinks';
+import ProfileUpdates from './jacob/ProfileUpdates';
 
 interface ApprovedMedia {
   id: string;
@@ -17,6 +19,7 @@ interface AthleteProfileTemplateProps {
   onBack?: () => void;
   approvedMedia?: ApprovedMedia[];
   athleteTags?: TraitAthleteTag[];
+  showJourney?: boolean;
 }
 
 const CHECK_ICON = (
@@ -89,20 +92,10 @@ const SUPPORT_TIERS = [
 ];
 
 function getVideoEmbedUrl(url: string) {
-  if (url.includes('youtube.com') || url.includes('youtu.be')) {
-    const videoId = url.includes('youtu.be')
-      ? url.split('youtu.be/')[1]?.split('?')[0]
-      : url.split('v=')[1]?.split('&')[0];
-    return `https://www.youtube.com/embed/${videoId}`;
-  }
-  if (url.includes('vimeo.com')) {
-    const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
-    return `https://player.vimeo.com/video/${videoId}`;
-  }
-  return url;
+  return safeVideoEmbedUrl(url);
 }
 
-export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia = [], athleteTags = [] }: AthleteProfileTemplateProps) {
+export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia = [], athleteTags = [], showJourney = false }: AthleteProfileTemplateProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopyLink = () => {
@@ -115,7 +108,7 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
     ? Math.round((athlete.season_amount_raised / athlete.season_goal_amount) * 100)
     : 0;
 
-  const supportLink = athlete.stripe_payment_link || undefined;
+  const supportLink = safePaymentLink(athlete.stripe_payment_link);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -332,6 +325,10 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
             <p className="text-lg text-gray-700 leading-relaxed whitespace-pre-line">{athlete.goal}</p>
           </div>
         </section>
+      )}
+
+      {showJourney && (
+        <ProfileUpdates athleteId={athlete.id} athleteName={athlete.first_name} limit={3} />
       )}
 
       <TraitSection athleteTags={athleteTags} />

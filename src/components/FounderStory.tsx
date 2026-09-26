@@ -16,10 +16,18 @@ export default function FounderStory() {
 
         <div className="bg-white rounded-3xl shadow-lg p-8 md:p-12 border-2 border-gray-100">
           <p className="text-xl text-gray-700 leading-relaxed mb-6">
-            Too many young athletes are putting in real work — developing character, leadership, and resilience — and none of it gets documented.
+            Life doesn't happen one program at a time. Housing affects
+            school. School affects transportation. Transportation affects
+            work. But the systems meant to help often ask people to know which
+            door to knock on before they've even been heard.
           </p>
           <p className="text-xl text-gray-700 leading-relaxed">
-            NextUp Memphis was built to change that. Through developmental storytelling, creator documentation, and athlete-owned profiles, every player has a record of who they were becoming — not just what they scored.
+            NextUp Memphis was built to change that. It starts with what
+            someone is experiencing in their own words, helps them understand
+            what might come next, and moves the right information to the right
+            destination at the right time. Not a directory. Not a screener.
+            Recognition and conveyance infrastructure for the people and
+            systems that need it most.
           </p>
         </div>
       </div>

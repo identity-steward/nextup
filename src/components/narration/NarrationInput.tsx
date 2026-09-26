@@ -43,7 +43,8 @@ export default function NarrationInput({
       setStatus('draft');
       onDraftSaved(narration);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save draft');
+      console.error(err);
+      setError('Could not save draft. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -65,7 +66,8 @@ export default function NarrationInput({
       setStatus('submitted');
       onSubmitted(submitted);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not submit story');
+      console.error(err);
+      setError('Could not submit story. Please try again.');
     } finally {
       setSubmitting(false);
     }

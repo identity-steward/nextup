@@ -25,21 +25,22 @@ export default function Hero() {
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-[0.92] tracking-tight mb-7">
-            You don't have to
+            You know what's
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold to-amber-400">
-              know the system.
+              happening.
             </span>
           </h1>
 
           <p className="text-2xl md:text-3xl text-gray-200 leading-relaxed mb-5 max-w-xl font-medium">
-            Start with what's happening.
+            NextUp helps you understand what happens next.
           </p>
 
           <p className="text-sm text-gray-400 leading-relaxed mb-10 max-w-xl border-l-2 border-gold/50 pl-4">
-            NextUp helps people understand what's happening, identify possible
-            next steps, connect with the systems and opportunities that can
-            help, and keep track of what happens next.
+            Tell your story once. NextUp helps turn what you're experiencing
+            into understandable next steps, connects you to the people and
+            systems positioned to respond, and helps you keep track of what
+            happens along the way.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">

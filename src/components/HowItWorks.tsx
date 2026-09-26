@@ -1,33 +1,37 @@
-import { MessageCircle, Brain, Compass, BookOpen } from 'lucide-react';
+import { Eye, Compass, Send, BookOpen } from 'lucide-react';
 
 const steps = [
   {
     number: '01',
-    icon: MessageCircle,
-    title: 'Tell',
+    icon: Eye,
+    title: 'Recognition',
+    question: 'What is happening?',
     description:
-      'Start with what\u2019s happening in your own words. You don\u2019t need to know the name of a program, a form number, or which office to call.',
+      'Start with the person\u2019s own words. You don\u2019t need to know the name of a program, a form number, or which office to call.',
   },
   {
     number: '02',
-    icon: Brain,
-    title: 'Understand',
+    icon: Compass,
+    title: 'Navigation',
+    question: 'Where could we go next?',
     description:
-      'NextUp helps organize what it heard so you can confirm or correct it. You see the picture before anyone else does.',
+      'Identify possible pathways without pretending to determine eligibility. NextUp shows you the doors \u2014 not just the forms.',
   },
   {
     number: '03',
-    icon: Compass,
-    title: 'Navigate',
+    icon: Send,
+    title: 'Conveyance',
+    question: 'How do we get there?',
     description:
-      'See possible next steps and who actually controls them. NextUp shows you the doors \u2014 not just the forms.',
+      'Move the right question or information to the right destination. NextUp helps you reach the people and systems positioned to respond.',
   },
   {
     number: '04',
     icon: BookOpen,
-    title: 'Learn',
+    title: 'Learning',
+    question: 'What happened along the way?',
     description:
-      'Keep track of what happened and what comes next. Your record grows with you, not instead of you.',
+      'Track progress, barriers, outcomes, and what remains unknown. Your record grows with you, not instead of you.',
   },
 ];
 
@@ -40,10 +44,10 @@ export default function HowItWorks() {
             How It Works
           </div>
           <h2 className="text-4xl md:text-5xl font-black text-navy mb-5 leading-tight">
-            How It Works
+            The Four-Part Model
           </h2>
           <p className="text-gray-500 text-lg">
-            You don\u2019t have to know the system. Start with what\u2019s happening.
+            The right information. The right destination. The right time.
           </p>
         </div>
 
@@ -62,7 +66,8 @@ export default function HowItWorks() {
                     {step.number.replace('0', '')}
                   </span>
                 </div>
-                <h3 className="text-xl font-black text-navy mb-3">{step.title}</h3>
+                <h3 className="text-xl font-black text-navy mb-1">{step.title}</h3>
+                <p className="text-gold font-semibold text-sm mb-3 italic">{step.question}</p>
                 <p className="text-gray-500 leading-relaxed text-sm max-w-xs">{step.description}</p>
               </div>
             );

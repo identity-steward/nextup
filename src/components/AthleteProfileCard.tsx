@@ -1,4 +1,5 @@
 import { MapPin, Award, Target, Trophy, Instagram, Youtube, Mail } from 'lucide-react';
+import { safeVideoEmbedUrl } from '../lib/safeLinks';
 
 export interface AthleteProfileCardProps {
   athleteName: string;
@@ -118,7 +119,7 @@ export default function AthleteProfileCard({
           </div>
           <div className="relative w-full rounded-xl overflow-hidden shadow-xl" style={{ paddingBottom: '56.25%' }}>
             <iframe
-              src={highlightVideoUrl}
+              src={safeVideoEmbedUrl(highlightVideoUrl)}
               className="absolute top-0 left-0 w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen

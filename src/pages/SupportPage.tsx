@@ -60,7 +60,8 @@ export default function SupportPage() {
     } catch (err) {
       console.error('SupportPage sponsorship submission error:', err);
       setShowError(true);
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to submit. Please try again.');
+      console.error(err);
+      setErrorMessage('Failed to submit. Please try again.');
       setTimeout(() => setShowError(false), 6000);
     } finally {
       setSubmitting(false);

@@ -1,4 +1,18 @@
-# PILOT 002 — IMPLEMENTATION PLAN v1
+# PILOT 002 — IMPLEMENTATION PLAN v2
+
+---
+
+## 0. v1 to v2 Correction Ledger
+
+- **v1 stated "service layer is fully built"** → v2 replaces with property-by-property service assessment (SATISFIES / PARTIAL / GAP / NOT APPLICABLE) citing concrete code evidence.
+- **v1 prescribed specific mechanisms (CHECK, trigger) as requirements** → v2 separates required properties from candidate remediations throughout. Mechanisms are candidates, not frozen requirements.
+- **v1 did not distinguish authority-integrity sub-properties** → v2 separates: authority_to_act_id populated, referenced authority exists, authority valid/active, authority belongs to correct household, authority applies to correct person/pathway. Maps each to the frozen tests that verify it.
+- **v1 implied non-null + FK proves W1** → v2 explicitly states W1 is a composite property that non-null + FK alone does not prove.
+- **v1 made getPrivacyHistory aggregation service mandatory** → v2 derives a minimum privacy-history data contract from V2-V10 first, then identifies smallest implementation. getPrivacyHistory is a candidate, not a requirement.
+- **v1 closed findings implicitly** → v2 states all 8 findings remain OPEN until implementation is separately completed and verified against frozen tests.
+- **v1 did not emphasize the consent+disclosure transaction checkpoint** → v2 explicitly preserves REQUIRED BEFORE EXECUTION classification.
+- **v1 traceability was finding→property→tests but did not include current evidence, exact gap, and implementation-complete evidence per finding** → v2 provides full 7-column traceability.
+- **Denominator, scope, professional/domain classifications, and test ordering unchanged.** Zero denominator impact.
 
 ---
 
@@ -8,286 +22,341 @@ Build the minimum Pilot 002 workflow through the application UI:
 
 **confirmed need → pathway → authority → participant sharing approval → disclosure delivery → referral sent → participant privacy/sharing-history understanding**
 
-The service layer (`trustService.ts`, `pathwayService.ts`) and database schema (trust, disclosure, navigation migrations) are substantially complete. The implementation gap is concentrated in two areas:
-
-1. **Two P1 database-level integrity gaps** (consent-authority enforcement, cross-household reference checks)
-2. **Six P2 UI gaps** (all four target pages plus PrivacyPage are 1–9 line stubs)
-
-Routing is already wired for all target pages. No new routes are needed.
+The frozen Pilot 002 Authoritative Test Design v4 defines 32 authoritative test cases across 11 groups (Q, R, S, T, U, V, W, X, Y, Z, AA). This plan identifies what must be implemented for those tests to be executable. It does not execute tests, create test records, or modify frozen artifacts.
 
 ---
 
-## 2. Current-Gap Map
+## 2. Property-by-Property Service Assessment
 
-### What Exists (Pilot 001 + service layer)
+The previous plan's conclusion that "the service layer is fully built" is replaced with the following property-by-property assessment. Existing functions are evidence of implementation, not proof that Pilot 002 requirements are satisfied.
 
-| Layer | Status | Details |
-|-------|--------|---------|
-| Database schema | Complete | `authority_to_act`, `youth_assent`, `consent_grants`, `disclosures` (Phase 3 + 3.1), `pathways`, `referrals` (Phase 4) all exist with RLS policies |
-| Disclosure delivery proof | Enforced | CHECK constraint `disclosures_sent_requires_delivery` blocks `status='sent'` without `delivery_method + sent_at + delivered_by_user_id` |
-| Referral transition guard | Enforced | Trigger `guard_referral_transition` blocks referral → `sent` unless linked disclosure is `sent` |
-| Pathway confirmed-need guard | Enforced | Trigger `guard_pathway_confirmed_need` blocks pathway INSERT unless need is `confirmed` |
-| RLS household isolation | Enforced | All navigator-mediated tables scope SELECT/INSERT/UPDATE by `household_id` via household membership or navigator assignment subqueries |
-| Service layer — trust | Complete (726 lines) | `createAuthority`, `createConsentGrant` (accepts `authorityToActId`), `prepareDisclosure`, `startDelivery`, `confirmDelivery`, `buildDisclosurePreview`, `checkAuthorityHardStops` |
-| Service layer — pathway | Complete (660 lines) | `createPathway`, `getEligibilityPathways`, `createReferralDraft`, `updateReferralStatus`, `linkReferralToDisclosure` |
-| Type layer | Complete | `ConsentGrant.authority_to_act_id`, `Disclosure` delivery fields, `Referral.disclosure_id` + `consent_grant_id` all typed |
-| Routing | Complete | `/app/share`, `/app/pathways`, `/app/privacy`, `/admin/trust`, `/admin/pathways` all registered and protected |
+### 2a. Consent Grant Creation — `createConsentGrant` (trustService.ts lines 279-311)
 
-### What Is Missing
+| Property | Assessment | Evidence |
+|----------|------------|---------|
+| authority_to_act_id is populated | PARTIAL | Service accepts `opts?.authorityToActId` and passes it to INSERT (line 303). But the parameter is optional and defaults to `null` (line 303). The service sets `status: 'active'` unconditionally (line 304). Nothing in the service requires authorityToActId to be non-null when status is active. |
+| Referenced authority exists | GAP | No validation in `createConsentGrant` that `authority_to_act_id` references an existing record. FK constraint at DB level prevents dangling references but does not prevent null. |
+| Authority is valid/active (not disputed, not expired) | GAP in service; PARTIAL in `buildDisclosurePreview` | `createConsentGrant` does not call `checkAuthorityHardStops` or validate the authority's verification_status. `buildDisclosurePreview` (lines 445-504) does check authority hard stops but is a separate function called before consent creation, not during it. |
+| Authority belongs to correct household | GAP | `createConsentGrant` accepts `householdId` and `authorityToActId` as independent parameters. No check that the authority's `household_id` matches the consent's `household_id`. A caller could pass mismatched IDs. |
+| Authority applies to correct person/pathway | NOT APPLICABLE for minimum Pilot 002 | The frozen test design does not require authority-to-pathway linkage as a separate test property. S3 verifies the link exists; Y2 verifies household match. Person/pathway consistency is not an authoritative test. |
 
-| Gap | Finding | Layer | Description |
-|-----|---------|-------|-------------|
-| Consent-authority DB enforcement | G-NO-DB-TRUST-GUARD (P1) | Database | `consent_grants.authority_to_act_id` is nullable; no CHECK or trigger requires it to be non-null or to match the same household. A navigator can INSERT a consent_grant with null authority via direct API. |
-| Cross-household reference check | I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK (P2) | Database | No check that `referrals.disclosure_id` belongs to the same `household_id` as the referral, or that `consent_grants.authority_to_act_id` belongs to the same household. RLS scopes each row independently but does not validate cross-row household consistency. |
-| Navigator pathway creation UI | E-NO-CREATION-UI (P2) | UI | `PathwaysPage.tsx` is a 1-line stub. No UI to view confirmed needs, select a service/provider from the catalog, or create a pathway. |
-| Navigator authority creation UI | G-NO-TRUST-UI (P2) | UI | `AdminTrustPage.tsx` is a 9-line stub. No UI to create authority-to-act records. |
-| Participant sharing approval UI | G-NO-TRUST-UI (P2) | UI | `SharePage.tsx` is a 1-line stub. No UI for participant to view sharing proposal, see authority is satisfied, and approve sharing (creating consent grant with authority link). |
-| Disclosure delivery UI | H-NO-DELIVERY-UI (P2) | UI | `SharePage.tsx` (same stub). No UI for navigator to prepare disclosure, start delivery, confirm delivery with proof. |
-| Referral creation UI | I-NO-REFERRAL-CREATION-UI (P2) | UI | `PathwaysPage.tsx` (same stub). No UI for navigator to create a referral after disclosure is sent, or for UI to prevent referral creation before disclosure is sent (U2 transition guard). |
-| Privacy history UI | N-NO-PRIVACY-HISTORY-UI (P2) | UI | `PrivacyPage.tsx` is a 1-line stub. No UI for participant to view sharing history with who/why/what/what-not/status/timestamps/recorder/active-revoked. |
+**Summary**: `createConsentGrant` PARTIALLY satisfies the consent-authority link property (the parameter exists) but has GAPs in authority existence, validity, and household consistency. The W1 invariant (cannot create consent without valid applicable authority through authenticated UI-bypass) is NOT satisfied by the service alone.
+
+### 2b. Disclosure Delivery Transitions — `prepareDisclosure`, `startDelivery`, `confirmDelivery` (trustService.ts lines 346-419)
+
+| Property | Assessment | Evidence |
+|----------|------------|---------|
+| Disclosure created with status='prepared' | SATISFIES FROZEN PROPERTY | `prepareDisclosure` sets `status: 'prepared'`, `prepared_at: now()`, `sent_at: null` (lines 358-362). DB default is also 'prepared' (migration phase31). |
+| Transition prepared → delivery_pending | SATISFIES FROZEN PROPERTY | `startDelivery` sets `status: 'delivery_pending'`, `delivery_started_at: now()` (lines 382-384). No DB CHECK restricts this transition. |
+| Transition to 'sent' requires delivery proof | SATISFIES FROZEN PROPERTY (DB-level) | `confirmDelivery` validates `deliveryMethod` and `deliveredByUserId` in application code (lines 401-406). DB CHECK `disclosures_sent_requires_delivery` enforces `delivery_method IS NOT NULL AND sent_at IS NOT NULL AND delivered_by_user_id IS NOT NULL` when `status='sent'` (migration phase31). The DB constraint is the enforcement that satisfies W2; the service validation is supporting evidence. |
+| Delivery proof fields populated | SATISFIES FROZEN PROPERTY | `confirmDelivery` sets `sent_at`, `delivery_method`, `delivered_by_user_id`, `delivery_notes`, `delivery_reference` (lines 409-416). |
+| Disclosure household consistency | NOT APPLICABLE | Disclosures are created with a single `household_id`. No cross-row household reference exists within disclosures. |
+
+### 2c. Referral Creation and Disclosure Consistency — `createReferralDraft`, `updateReferralStatus`, `linkReferralToDisclosure` (pathwayService.ts lines 408-501)
+
+| Property | Assessment | Evidence |
+|----------|------------|---------|
+| Referral created with status='draft' | SATISFIES FROZEN PROPERTY | `createReferralDraft` sets `status: 'draft'`, `status_source: 'navigator_reported'` (lines 429-430). DB default is also 'draft' (migration phase4). |
+| Referral → 'sent' requires linked disclosure with status='sent' | SATISFIES FROZEN PROPERTY (DB + service) | `updateReferralStatus` checks disclosure status before allowing transition to 'sent' (lines 460-473). DB trigger `guard_referral_transition` also enforces this (migration phase4). Dual enforcement: service + DB. |
+| Referral-disclosure household consistency | GAP | `updateReferralStatus` accepts `disclosureId` and links it (line 479). `linkReferralToDisclosure` sets `disclosure_id` without any household check (lines 495-501). Neither function verifies that `disclosures.household_id = referrals.household_id`. The DB trigger `guard_referral_transition` checks disclosure status but NOT household match. A navigator assigned to both households could link a Household A referral to a Household B disclosure. |
+| Referral transition validation | SATISFIES FROZEN PROPERTY | `isValidReferralTransition` (lines 45-47) mirrors the DB trigger's state machine. Service validates before attempting DB update. |
+
+### 2d. Pathway Creation — `createPathway` (pathwayService.ts lines 200-238)
+
+| Property | Assessment | Evidence |
+|----------|------------|---------|
+| Pathway created only from confirmed need | SATISFIES FROZEN PROPERTY (service + DB) | `createPathway` queries `needs.status` and throws if not 'confirmed' (lines 211-219). DB trigger `guard_pathway_confirmed_need` also enforces (migration phase4 integrity hardening). |
+| Pathway household/person consistency | NOT APPLICABLE for minimum Pilot 002 | No frozen test verifies person-household consistency for pathways. RLS scopes by household. |
+
+### 2e. Authority Creation — `createAuthority` (trustService.ts lines 93-133)
+
+| Property | Assessment | Evidence |
+|----------|------------|---------|
+| Authority created with household_id | SATISFIES FROZEN PROPERTY | `createAuthority` accepts `householdId` and sets it on the record (line 114). RLS policies scope by household. |
+| Authority hard-stop logic | SATISFIES FROZEN PROPERTY | `checkAuthorityHardStops` (lines 135-169) checks disputed, unverified legal instrument, expired, and review-due conditions. Returns `HardStopResult` with reason and escalation trigger. |
+
+### 2f. Authority-Consent Household Consistency
+
+| Property | Assessment | Evidence |
+|----------|------------|---------|
+| consent_grants.authority_to_act_id belongs to same household | GAP | No service or DB check. `createConsentGrant` accepts both `householdId` and `authorityToActId` independently. No cross-row validation. DB has no trigger or CHECK verifying `authority_to_act.household_id = consent_grants.household_id`. |
+
+### 2g. Privacy History Data Availability
+
+| Property | Assessment | Evidence |
+|----------|------------|---------|
+| Who was shared with (recipient_name) | SATISFIES FROZEN PROPERTY (data exists) | `consent_grants.recipient_name` and `disclosures.recipient_name` are populated on creation. `getConsentGrants` and `getDisclosures` return these fields. |
+| Why sharing was approved (purpose) | SATISFIES FROZEN PROPERTY (data exists) | `consent_grants.purpose` and `disclosures.purpose` are populated. |
+| What was shared (data_categories / data_fields) | SATISFIES FROZEN PROPERTY (data exists) | `consent_grants.data_categories` (jsonb) and `disclosures.data_fields` (jsonb) are populated. |
+| What was NOT shared (willNotShare) | PARTIAL | `buildDisclosurePreview` hardcodes `willNotShare: []` (line 498). No field in the DB stores excluded items. The V5 test requires the UI to display something meaningful when the list is empty. Data exists as empty; UI must compensate. |
+| Prepared vs sent (disclosure status) | SATISFIES FROZEN PROPERTY (data exists) | `disclosures.status` is one of prepared/delivery_pending/sent/failed/cancelled. `getDisclosures` returns status. |
+| Delivery time (delivered_at / sent_at) | SATISFIES FROZEN PROPERTY (data exists) | `disclosures.sent_at` is populated when status='sent'. |
+| Who recorded delivery (delivered_by_user_id) | PARTIAL | `disclosures.delivered_by_user_id` is a UUID. Resolving it to a human-readable name requires a join to `auth.users` or `persons`. No existing service function resolves this. |
+| Active vs revoked (consent status) | SATISFIES FROZEN PROPERTY (data exists) | `consent_grants.status` is one of draft/active/revoked/expired. `getConsentGrants` returns status. |
+
+### 2h. Assessment Summary
+
+| Service Property | Classification |
+|-----------------|----------------|
+| Disclosure delivery proof enforcement | SATISFIES FROZEN PROPERTY |
+| Referral → sent requires sent disclosure | SATISFIES FROZEN PROPERTY |
+| Pathway requires confirmed need | SATISFIES FROZEN PROPERTY |
+| Authority hard-stop logic | SATISFIES FROZEN PROPERTY |
+| Consent-authority link parameter exists | PARTIAL |
+| Consent authority existence validation | GAP |
+| Consent authority validity validation | GAP (in createConsentGrant; PARTIAL in buildDisclosurePreview) |
+| Consent-authority household consistency | GAP |
+| Referral-disclosure household consistency | GAP |
+| willNotShare data | PARTIAL |
+| delivered_by user name resolution | PARTIAL |
+| All privacy history data fields | SATISFIES FROZEN PROPERTY (data exists; UI rendering is the gap) |
 
 ---
 
-## 3. Finding → Test-Case → Implementation Traceability
+## 3. Authority-Integrity Property Analysis
 
-| Finding | Severity | Affected Test Cases | Required Property (from frozen test design) | Implementation Surface | Smallest Change Sufficient |
-|---------|----------|--------------------|----------------------------------------------|------------------------|---------------------------|
-| G-NO-DB-TRUST-GUARD | P1 | W1, W2 | W1: prohibited state (consent without authority) cannot be created through authenticated UI-bypass access. W2: prohibited state (disclosure `sent` without delivery proof) cannot be created through authenticated UI-bypass access. | Database (consent_grants table). Disclosures already enforced by CHECK constraint. | Add a CHECK constraint or trigger on `consent_grants` requiring `authority_to_act_id IS NOT NULL` when `status='active'`. The test design permits any enforcement mechanism (CHECK, trigger, RLS, SECURITY DEFINER). The disclosure delivery-proof property is already satisfied by `disclosures_sent_requires_delivery` CHECK. |
-| H-NO-AUTHORITY-LINK | P1 | S3, AA1 | Consent grant must have populated `authority_to_act_id` referencing a valid authority in the same household. | Database (consent_grants table) + UI (SharePage). | DB: same CHECK/trigger as above ensures the field is populated. UI: SharePage must pass the authority ID when calling `createConsentGrant`. The service function already accepts `authorityToActId` — no service change needed. |
-| I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK | P2 | Y1, Y2, Y3 | Cross-household referral (A referral referencing B disclosure) cannot be created. Cross-household consent (A consent referencing B authority) cannot be created. | Database (referrals + consent_grants tables). | Add a trigger or CHECK constraint on `referrals` verifying `disclosures.household_id = referrals.household_id` when `disclosure_id` is set. Add same on `consent_grants` verifying `authority_to_act.household_id = consent_grants.household_id` when `authority_to_act_id` is set. |
-| E-NO-CREATION-UI | P2 | Q1, Q2 | Navigator views confirmed needs and creates pathway through UI. | UI (PathwaysPage). Service: `createPathway` exists. | Build PathwaysPage with: confirmed needs list, pathway creation form (service/provider/eligibility from catalog), submission calling `createPathway`. |
-| G-NO-TRUST-UI | P2 | R1, S1 | Navigator creates authority-to-act through UI. SharePage recognizes authority and permits sharing. | UI (AdminTrustPage or navigator workflow area, SharePage). Service: `createAuthority`, `checkAuthorityHardStops`, `buildDisclosurePreview` exist. | Build authority creation UI in the navigator workflow. Build SharePage to call `buildDisclosurePreview` and render the sharing proposal when authority is satisfied. |
-| H-NO-DELIVERY-UI | P2 | T1, T2, T3 | Navigator prepares, starts, confirms delivery through UI. | UI (SharePage or navigator disclosure area). Service: `prepareDisclosure`, `startDelivery`, `confirmDelivery` exist. | Build disclosure delivery UI with three steps: prepare (content + recipient), start (delivery method), confirm (delivery proof). |
-| I-NO-REFERRAL-CREATION-UI | P2 | U1, U2 | Navigator creates referral through UI after disclosure sent. UI prevents referral before disclosure sent. | UI (PathwaysPage or navigator referral area). Service: `createReferralDraft`, `updateReferralStatus`, `linkReferralToDisclosure` exist. DB: `guard_referral_transition` trigger enforces disclosure-sent gate. | Build referral creation UI. For U2, check disclosure status in the UI before allowing referral creation attempt; the DB trigger is the backstop. |
-| N-NO-PRIVACY-HISTORY-UI | P2 | V1–V10, AA1 | Participant views privacy history showing who/why/what/what-not/prepared-vs-sent/when/who-recorded/active-vs-revoked. Answers 8 questions without navigator assistance. | UI (PrivacyPage). Service: `getDisclosures`, `getConsentGrants` (or a new aggregation function) exist. | Build PrivacyPage aggregating consent grants + disclosures + referrals into a human-readable sharing history. Must display all 8 data points from the V10 comprehension questions. |
+The frozen test design verifies authority integrity through multiple tests. Each tests a distinct sub-property. No single mechanism satisfies all of them.
+
+### 3a. Sub-Properties and Their Test Coverage
+
+| Sub-Property | Description | Frozen Tests That Verify It |
+|-------------|-------------|----------------------------|
+| authority_to_act_id is populated | The consent_grants record has a non-null authority_to_act_id | S3 (consent-authority link), AA1 (linkage verification in end-to-end) |
+| Referenced authority exists | authority_to_act_id references an actual authority_to_act row | S3 (queries the authority record), AA1 |
+| Authority is valid/active | The referenced authority is not disputed, expired, or under review | W1 (navigator cannot create consent without valid applicable authority — "valid applicable" includes not disputed/expired), S1 (SharePage recognizes authority and permits sharing — hard-stop logic checks validity) |
+| Authority belongs to correct household | authority_to_act.household_id = consent_grants.household_id | Y2 (navigator cannot create cross-household consent referencing Household B authority) |
+| Authority applies to correct person/pathway | authority applies to the subject person and action being authorized | NOT APPLICABLE for minimum Pilot 002 — no frozen test explicitly verifies person/pathway match between authority and consent |
+
+### 3b. What W1 Actually Tests
+
+W1 tests: "an authenticated navigator bypassing the UI cannot create a consent grant without valid applicable authority."
+
+This is a composite property. "Valid applicable authority" means:
+1. authority_to_act_id is non-null
+2. The referenced authority exists
+3. The authority is not disputed, expired, or otherwise hard-stopped
+4. The authority belongs to the same household
+
+Non-null + FK alone proves only sub-properties 1 and 2. It does NOT prove sub-properties 3 (validity) or 4 (household match). Therefore, a CHECK constraint requiring `authority_to_act_id IS NOT NULL` is evidence toward W1 but does not alone satisfy the complete invariant.
+
+The frozen test design explicitly permits W1 to be enforced through "authorization, RLS, a trust/state guard, database constraint, or another effective mechanism." The test records which enforcement layer prevents the prohibited state; it does not prescribe the architecture.
+
+### 3c. What W2 Actually Tests
+
+W2 tests: "an authenticated navigator bypassing the UI cannot send a disclosure without delivery proof."
+
+Current evidence: DB CHECK constraint `disclosures_sent_requires_delivery` blocks `status='sent'` without `delivery_method + sent_at + delivered_by_user_id` (migration phase31). This is a database-level constraint that survives UI bypass.
+
+Assessment: W2's required property is SATISFIED at the database level. No additional DB work is needed for W2. The UI must populate the delivery proof fields when confirming delivery (Track A UI work).
 
 ---
 
-## 4. Ordered Implementation Phases
+## 4. Finding → Property → Tests → Evidence → Gap → Candidate Remediation → Completion Evidence
+
+All 8 findings remain OPEN. A finding is closed only when implementation is separately completed and verified against the frozen tests.
+
+### Finding 1: G-NO-DB-TRUST-GUARD (P1)
+
+| Field | Value |
+|-------|-------|
+| Frozen property | An authenticated navigator bypassing the UI cannot create a consent grant without valid applicable authority (W1). An authenticated navigator bypassing the UI cannot send a disclosure without delivery proof (W2). |
+| Authoritative tests | W1, W2 |
+| Current evidence | W2: DB CHECK `disclosures_sent_requires_delivery` enforces delivery proof at the database level (migration phase31, confirmed in schema). W1: `consent_grants.authority_to_act_id` is nullable (migration phase3). RLS allows household members and navigators to INSERT. No CHECK or trigger requires authority_to_act_id to be non-null. No check validates authority existence, validity, or household match at the DB level. Service `createConsentGrant` (trustService.ts line 303) passes `authorityToActId ?? null` — the parameter is optional and defaults to null. |
+| Exact gap | W1: No database-level enforcement prevents creation of an active consent grant with null or invalid authority_to_act_id through authenticated UI-bypass (direct API INSERT). The service does not enforce it either. W2: No gap at DB level. |
+| Candidate remediation | Add a database-level constraint or trigger on consent_grants that prevents `status='active'` when `authority_to_act_id IS NULL`. A CHECK constraint is the smallest mechanism for the non-null sub-property. For the household-match sub-property (also part of W1's composite invariant), a trigger that queries `authority_to_act.household_id` and compares it to `NEW.household_id` is a candidate. For the validity sub-property, a trigger that calls the same logic as `checkAuthorityHardStops` is a candidate. Alternatively, a SECURITY DEFINER function as the sole INSERT path (with direct INSERT revoked) could enforce all sub-properties. The frozen test design permits any effective mechanism. The smallest sufficient remediation depends on which sub-properties the team chooses to enforce at DB level vs. service level. At minimum, the non-null and household-match sub-properties should be DB-enforced to survive UI bypass; validity may be enforced at service level if the DB ensures non-null + household match (making the authority resolvable and scoped). |
+| Implementation-complete evidence | An authenticated INSERT into consent_grants with `status='active'` and null `authority_to_act_id` is rejected. An authenticated INSERT with `authority_to_act_id` referencing an authority from a different household is rejected. The enforcement layer is recorded. |
+
+### Finding 2: H-NO-AUTHORITY-LINK (P1)
+
+| Field | Value |
+|-------|-------|
+| Frozen property | Every consent grant links to an authority-to-act record (S3). The consent-authority audit trail is complete and navigable. |
+| Authoritative tests | S3, AA1 |
+| Current evidence | `consent_grants.authority_to_act_id` is a nullable FK column (migration phase3). `createConsentGrant` (trustService.ts line 303) accepts an optional `authorityToActId` parameter. The parameter exists but is not required. The service sets `status: 'active'` unconditionally (line 304). No UI calls this function yet (SharePage is a stub). |
+| Exact gap | The data model supports the link (column exists, type defined), and the service function accepts the parameter, but nothing requires the link to be populated. The UI does not yet pass the authority ID when creating consent. No DB constraint enforces non-null for active consents. |
+| Candidate remediation | DB: same constraint as Finding 1 (CHECK or trigger requiring authority_to_act_id for active status). UI: SharePage must call `createConsentGrant` with the matched authority's ID from `findAuthority` or `getAuthorityRecords`. The service function already accepts the parameter — no service change needed if the UI passes it. |
+| Implementation-complete evidence | A consent_grants record created through the SharePage UI has a populated authority_to_act_id referencing a valid authority in the same household. A database query confirms the link. |
+
+### Finding 3: I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK (P2)
+
+| Field | Value |
+|-------|-------|
+| Frozen property | Cross-household referral (A referral referencing B disclosure) cannot be created (Y1). Cross-household consent (A consent referencing B authority) cannot be created (Y2). Records for Household A contain only Household A references (Y3). |
+| Authoritative tests | Y1, Y2, Y3 |
+| Current evidence | RLS policies scope each table by household_id independently (migrations phase3, phase4). No cross-row household validation exists. `linkReferralToDisclosure` (pathwayService.ts lines 495-501) sets disclosure_id with no household check. `createConsentGrant` (trustService.ts line 303) accepts authorityToActId and householdId independently. DB trigger `guard_referral_transition` checks disclosure status but not household match. No trigger on consent_grants checks authority household. |
+| Exact gap | A navigator assigned to both Household A and Household B can create a Household A referral referencing a Household B disclosure, and a Household A consent referencing a Household B authority. RLS allows the navigator to see both households' records but does not validate that cross-row references stay within one household. |
+| Candidate remediation | Option A: Add triggers on consent_grants and referrals (BEFORE INSERT/UPDATE) that query the referenced record's household_id and reject mismatch. Triggers must be SECURITY DEFINER with search_path = public, EXECUTE revoked from anon/authenticated (same pattern as existing guard functions). Option B: Revoke direct INSERT/UPDATE from RLS and require a SECURITY DEFINER function as the sole write path, with household validation inside the function. Option C: Add application-level validation in the service functions. Option C alone does not survive UI bypass and therefore does not satisfy Y1/Y2 (which are security invariant tests). Options A or B survive UI bypass. The smallest mechanism that survives UI bypass is Option A (triggers). The frozen test design permits any effective mechanism. |
+| Implementation-complete evidence | An authenticated INSERT/UPDATE into referrals with disclosure_id referencing a different household's disclosure is rejected. An authenticated INSERT/UPDATE into consent_grants with authority_to_act_id referencing a different household's authority is rejected. Y3 query confirms all Household A records reference only Household A records. |
+
+### Finding 4: E-NO-CREATION-UI (P2)
+
+| Field | Value |
+|-------|-------|
+| Frozen property | Navigator views confirmed needs for assigned household through UI (Q1). Navigator creates pathway from confirmed need through UI (Q2). |
+| Authoritative tests | Q1, Q2 |
+| Current evidence | `pathwayService.createPathway` (lines 200-238) exists and validates confirmed need. `getServices`, `getProviders`, `getEligibilityPathways` exist for catalog display. `PathwaysPage.tsx` is a 1-line stub rendering "Pathways" heading. No UI to list confirmed needs, select services/providers, or create pathways. `PathwayDetail`, `PathwayCard` components exist but are display-only. |
+| Exact gap | No UI for navigator to view confirmed needs and create pathways. |
+| Candidate remediation | Build PathwaysPage with: confirmed needs list (filtered by navigator's assigned households), pathway creation form (service/provider/eligibility selection from catalog), submission calling `createPathway`. Use existing `PathwayCard`/`PathwayDetail` for display after creation. |
+| Implementation-complete evidence | Navigator signs in, navigates to PathwaysPage, sees confirmed needs for assigned households, selects a need, selects service/provider, creates pathway. Database confirms pathway record with correct household_id, need_id, and created_by. |
+
+### Finding 5: G-NO-TRUST-UI (P2)
+
+| Field | Value |
+|-------|-------|
+| Frozen property | Navigator creates authority-to-act record through UI (R1). SharePage recognizes navigator-created authority and permits sharing (S1). Participant approves sharing; consent grant created through SharePage (S2). |
+| Authoritative tests | R1, S1, S2 |
+| Current evidence | `trustService.createAuthority` (lines 93-133) exists. `buildDisclosurePreview` (lines 445-504) checks authority hard stops and returns `authorityValid`. `checkAuthorityHardStops` (lines 135-169) validates disputed/expired/review conditions. `AdminTrustPage.tsx` is a 9-line stub. `SharePage.tsx` is a 1-line stub. No UI to create authority records, view disclosure preview, or approve sharing. |
+| Exact gap | No UI for navigator to create authority-to-act records. No UI for participant to view sharing proposal, see authority is satisfied, and approve sharing (creating consent with authority link). |
+| Candidate remediation | Build authority creation UI in navigator workflow area (form with subject person, data category, action type, authority basis, verification status). Build SharePage participant mode: call `buildDisclosurePreview`, render sharing proposal (what/who/why), show authority satisfied (no hard-stop) or hard-stop message, and approve sharing button calling `createConsentGrant` with the matched authority's ID. |
+| Implementation-complete evidence | Navigator creates authority through UI; database confirms record. Participant views SharePage, sees no hard-stop, approves sharing; database confirms consent_grant with status='active' and populated authority_to_act_id. SharePage shows hard-stop when authority is absent (Pilot 001 G1-G8 behavior preserved). |
+
+### Finding 6: H-NO-DELIVERY-UI (P2)
+
+| Field | Value |
+|-------|-------|
+| Frozen property | Navigator prepares disclosure through UI (T1). Navigator starts delivery through UI (T2). Navigator confirms delivery through UI; disclosure transitions to 'sent' (T3). |
+| Authoritative tests | T1, T2, T3 |
+| Current evidence | `prepareDisclosure` (lines 346-367), `startDelivery` (lines 379-388), `confirmDelivery` (lines 397-419) all exist with correct field handling. `getDisclosures` (lines 325-333) retrieves disclosures by household. `SharePage.tsx` is a 1-line stub — no disclosure delivery UI exists. |
+| Exact gap | No UI for navigator to prepare, start, or confirm disclosure delivery. |
+| Candidate remediation | Build navigator disclosure delivery UI (within SharePage navigator mode or a dedicated disclosure view): three-step flow — prepare (content summary, recipient, purpose, data fields), start (delivery method selection), confirm (delivery proof: method, timestamp, delivered_by). Call existing service functions. |
+| Implementation-complete evidence | Navigator prepares disclosure through UI; DB confirms status='prepared'. Navigator starts delivery; DB confirms status='delivery_pending'. Navigator confirms delivery; DB confirms status='sent' with delivered_at, delivered_by_user_id, delivery_method populated. |
+
+### Finding 7: I-NO-REFERRAL-CREATION-UI (P2)
+
+| Field | Value |
+|-------|-------|
+| Frozen property | Navigator creates referral through UI after disclosure sent (U1). UI prevents referral creation before disclosure sent (U2). |
+| Authoritative tests | U1, U2 |
+| Current evidence | `createReferralDraft` (pathwayService.ts lines 408-436), `updateReferralStatus` (lines 438-493), `linkReferralToDisclosure` (lines 495-501) exist. `updateReferralStatus` checks disclosure status='sent' before allowing referral → sent (lines 460-473). DB trigger `guard_referral_transition` also enforces. `PathwaysPage.tsx` is a 1-line stub — no referral creation UI. `ReferralStatusCard` component exists for display. |
+| Exact gap | No UI for navigator to create a referral, link it to a sent disclosure, and update status to sent. No UI-level guard preventing referral creation before disclosure is sent (U2). |
+| Candidate remediation | Build referral creation UI within PathwaysPage: create referral draft (selecting pathway, recipient), link to sent disclosure, update status to sent. For U2, check disclosure status in the UI before allowing the "send referral" action; disable or show message if disclosure is not 'sent'. The DB trigger is the backstop. |
+| Implementation-complete evidence | Navigator creates referral through UI after disclosure sent; DB confirms referral with correct disclosure_id, pathway_id, household_id, status='sent'. Navigator attempts referral creation before disclosure sent; UI prevents it. |
+
+### Finding 8: N-NO-PRIVACY-HISTORY-UI (P2)
+
+| Field | Value |
+|-------|-------|
+| Frozen property | Participant can access privacy history page through UI (V1). Privacy history shows who was shared with (V2), why (V3), what was shared (V4), what was NOT shared (V5), prepared vs sent (V6), delivery time (V7), who recorded delivery (V8), active vs revoked (V9). Participant answers 8 of 8 questions correctly without navigator assistance (V10). |
+| Authoritative tests | V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, AA1 (comprehension) |
+| Current evidence | `getConsentGrants` (trustService.ts lines 258-266) and `getDisclosures` (lines 325-333) return raw records by household. All data fields exist in the schema: recipient_name, purpose, data_categories/data_fields, status, sent_at, delivered_by_user_id, consent status. `willNotShare` is hardcoded to `[]` in `buildDisclosurePreview` (line 498) — no DB field stores excluded items. `delivered_by_user_id` is a UUID requiring name resolution. `PrivacyPage.tsx` is a 1-line stub. No privacy history aggregation or display UI exists. |
+| Exact gap | No UI for participant to view sharing history. No aggregation function joins consent + disclosure + referral into a unified view. `delivered_by_user_id` requires name resolution (no existing function). `willNotShare` is always empty (P3 accepted limitation — UI must compensate). |
+| Candidate remediation | See Section 5 (Privacy History Data Contract). Build PrivacyPage displaying sharing history entries with all 8 data points. The page must be navigable and understandable by a participant without navigator assistance. A new aggregation function (`getPrivacyHistory`) is a candidate implementation but not a requirement — the UI could call `getConsentGrants` and `getDisclosures` directly and join in the component. The smallest implementation is whatever supplies the 8 data points to the UI in human-readable form. |
+| Implementation-complete evidence | Participant navigates to PrivacyPage, sees sharing history entries. Each entry displays: recipient name (not UUID), purpose (not code), what was shared, what was NOT shared (or "No items were explicitly excluded"), prepared vs sent status, delivery timestamp (human-readable), who recorded delivery (human-readable name), active vs revoked status. A test participant can answer all 8 V10 questions using only the UI. |
+
+---
+
+## 5. Privacy History: Data Contract Before Architecture
+
+### 5a. Minimum Privacy-History Data Contract (derived from V2-V10)
+
+| # | V-Test | Data Point | Source Field | Human-Readable Requirement |
+|---|--------|-----------|-------------|---------------------------|
+| 1 | V2 | Who was shared with | `consent_grants.recipient_name` or `disclosures.recipient_name` | Display as organization/person name, not UUID |
+| 2 | V3 | Why sharing was approved | `consent_grants.purpose` or `disclosures.purpose` | Display as plain-language purpose, not code |
+| 3 | V4 | What was shared | `consent_grants.data_categories` (jsonb) or `disclosures.data_fields` (jsonb) | Display as readable list of data categories |
+| 4 | V5 | What was NOT shared | `buildDisclosurePreview.willNotShare` (currently `[]`) | Display excluded items or "No items were explicitly excluded" when empty |
+| 5 | V6 | Prepared vs sent | `disclosures.status` | Display as "Prepared but not sent" or "Sent" in plain language |
+| 6 | V7 | Delivery time | `disclosures.sent_at` | Display as human-readable date/time, not raw ISO string |
+| 7 | V8 | Who recorded delivery | `disclosures.delivered_by_user_id` (UUID) | Resolve to navigator name, not UUID |
+| 8 | V9 | Active vs revoked | `consent_grants.status` | Display as "Active" or "Revoked" in plain language |
+
+### 5b. Smallest Implementation Capable of Supplying the Contract
+
+The data for all 8 points exists in the database except:
+- Point 4 (willNotShare): always empty — UI must display "No items were explicitly excluded"
+- Point 7 (delivered_by): UUID requiring name resolution
+
+**Candidate implementation A (smallest)**: PrivacyPage component calls `getConsentGrants(householdId)` and `getDisclosures(householdId)` directly. Joins them in the component by `consent_grant_id`. Resolves `delivered_by_user_id` by querying `persons` table for the matching `auth_user_id`. Renders all 8 data points. No new service function needed.
+
+**Candidate implementation B (cleaner separation)**: Add `getPrivacyHistory(householdId)` to trustService that performs the join and name resolution server-side, returning a unified array. PrivacyPage calls this single function.
+
+Both candidates satisfy the data contract. Candidate A is smaller (no new service function). Candidate B is cleaner but adds a service function that is not strictly required. The frozen test design does not prescribe either approach.
+
+**Critical preservation**: The participant — not the database query, not the navigator — must be able to answer all 8 questions correctly through the UI alone (V10, AA1). The implementation must render data in human-readable form (names not UUIDs, purposes not codes, dates not ISO strings). This is a UI rendering requirement, not a service architecture requirement.
+
+---
+
+## 6. Ordered Implementation Phases
 
 ### Phase 1 — Database Integrity (P1 + P2 integrity gaps)
 
-**Rationale**: The two P1 findings (G-NO-DB-TRUST-GUARD, H-NO-AUTHORITY-LINK) and the P2 cross-household check (I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK) are database-level constraints. They must be in place before UI work because the UI relies on the service layer, which relies on the schema. Building UI on top of an unenforced schema would mean the security tests (W1, W2, Y1, Y2) fail regardless of UI quality.
+**Rationale**: The P1 findings (G-NO-DB-TRUST-GUARD, H-NO-AUTHORITY-LINK) and the P2 cross-household check (I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK) require database-level enforcement to survive UI bypass (W1, W2, Y1, Y2 are security invariant tests). UI work depends on the schema being correct.
 
-**Work items**:
-
-| Item | Finding | Description | Migration approach |
-|------|---------|-------------|-------------------|
-| 1a | G-NO-DB-TRUST-GUARD, H-NO-AUTHORITY-LINK | Add enforcement that `consent_grants.authority_to_act_id` must be non-null when `status='active'`. | Add a CHECK constraint: `CHECK (status != 'active' OR authority_to_act_id IS NOT NULL)`. This is the smallest change. A trigger that also validates the authority belongs to the same household is an alternative but CHECK is simpler. The test design permits any enforcement mechanism. |
-| 1b | I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK | Add cross-household validation for consent→authority and referral→disclosure. | Add a trigger on `consent_grants` (BEFORE INSERT/UPDATE) that checks `authority_to_act.household_id = consent_grants.household_id` when `authority_to_act_id` is set. Add a trigger on `referrals` (BEFORE INSERT/UPDATE) that checks `disclosures.household_id = referrals.household_id` when `disclosure_id` is set. Both raise `check_violation` on mismatch. |
+| Item | Finding | Required Property | Candidate Remediation |
+|------|---------|-------------------|----------------------|
+| 1a | G-NO-DB-TRUST-GUARD, H-NO-AUTHORITY-LINK | Active consent grant cannot exist without valid applicable authority in the same household | Add DB-level enforcement. Candidate: CHECK constraint for non-null (`status='active'` requires `authority_to_act_id IS NOT NULL`) + trigger for household match (query `authority_to_act.household_id`, reject mismatch). Alternative: SECURITY DEFINER function as sole INSERT path. The test design permits any effective mechanism. The non-null and household-match sub-properties should be DB-enforced to survive UI bypass. Validity (not disputed/expired) may be enforced at DB or service level — the test records the enforcement layer. |
+| 1b | I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK | Cross-household referral and consent references cannot be created | Add DB-level enforcement. Candidate: triggers on `referrals` and `consent_grants` (BEFORE INSERT/UPDATE) that query the referenced record's household_id and reject mismatch. Triggers must be SECURITY DEFINER, search_path = public, EXECUTE revoked from anon/authenticated. Alternative: SECURITY DEFINER function as sole write path. |
+| 1c | (none — already enforced) | Disclosure sent requires delivery proof | No work needed. DB CHECK `disclosures_sent_requires_delivery` already enforces (migration phase31). |
 
 **Security/integrity considerations**:
-- Item 1a: The CHECK constraint must allow `status='draft'` with null authority (drafts may not yet have authority linked). Only `status='active'` requires the link. This matches the frozen workflow: authority is created first, then sharing is approved (creating active consent with the link).
-- Item 1b: Triggers must be SECURITY DEFINER (to query the referenced table regardless of caller RLS) with `search_path = public`. EXECUTE should be revoked from `anon`/`authenticated` (trigger-only use, same pattern as existing `guard_referral_transition` and `guard_pathway_confirmed_need`).
-- Neither item drops columns, changes column types, or renames tables. Both are additive constraints.
+- Item 1a: The constraint must allow `status='draft'` with null authority (drafts are pre-approval). Only `status='active'` requires the link. This matches the frozen workflow.
+- Item 1a/1b: Any trigger must be SECURITY DEFINER with `search_path = public` and EXECUTE revoked from `anon`/`authenticated` (same pattern as existing `guard_referral_transition`, `guard_pathway_confirmed_need`).
+- Both items are additive constraints/triggers. No column drops, type changes, or renames.
 
-**Evidence of completion**:
-- `consent_grants` INSERT with `status='active'` and null `authority_to_act_id` is rejected.
-- `consent_grants` INSERT with `authority_to_act_id` referencing a different household is rejected.
-- `referrals` INSERT with `disclosure_id` referencing a different household is rejected.
-- Existing Pilot 001 records are not affected (no Pilot 001 records exist in these tables per the Pilot 001 debrief).
+**Professional/domain decision checkpoint**: None blocks this phase.
 
-**Professional/domain decision checkpoint**: None. The frozen classification says the consent+disclosure transaction decision is REQUIRED BEFORE EXECUTION, not before implementation. The self-authorization and guardian/parent decisions are NOT REQUIRED. Implementation can proceed.
+### Phase 2 — Navigator Workflow UI (Track A) and Participant UI (Track B)
 
----
+Tracks A and B can be developed in parallel. They call independent service functions and render different pages.
 
-### Phase 2 — Navigator Workflow UI (parallelizable)
+#### Track A — Navigator Workflow (serial within track)
 
-**Rationale**: Once the database enforces integrity, the UI layer can be built. The navigator workflow UI (pathway creation, authority creation, disclosure delivery, referral creation) and the participant UI (SharePage, PrivacyPage) can be developed in parallel because they call independent service functions and render different pages.
+| Item | Finding | Page | Description |
+|------|---------|------|-------------|
+| 2a | E-NO-CREATION-UI | PathwaysPage | Navigator sees confirmed needs for assigned households, selects service/provider/eligibility from catalog, creates pathway. |
+| 2b | G-NO-TRUST-UI | Navigator trust area | Navigator creates authority-to-act for a household/person. |
+| 2c | H-NO-DELIVERY-UI | Navigator disclosure area | Navigator prepares, starts, confirms disclosure delivery. |
+| 2d | I-NO-REFERRAL-CREATION-UI | Navigator referral area (PathwaysPage) | Navigator creates referral, links to sent disclosure, updates status to sent. UI checks disclosure status before allowing creation (U2). |
 
-**Work items** (can be parallelized across 2 tracks):
+**Serial order**: 2a → 2b → 2c → 2d (each depends on the previous step's records for end-to-end testing).
 
-#### Track A — Navigator Workflow (E-NO-CREATION-UI, G-NO-TRUST-UI, H-NO-DELIVERY-UI, I-NO-REFERRAL-CREATION-UI)
+#### Track B — Participant UI (parallel within track)
 
-| Item | Finding | Page | Description | Service calls |
-|------|---------|------|-------------|---------------|
-| 2a | E-NO-CREATION-UI | PathwaysPage | Navigator sees confirmed needs for assigned households; selects a need; selects service/provider/eligibility from catalog; creates pathway. | `getNeeds` (narrationService), `getServices`, `getProviders`, `getEligibilityPathways`, `createPathway` |
-| 2b | G-NO-TRUST-UI | Navigator trust area (within PathwaysPage or AdminTrustPage) | Navigator creates authority-to-act for a household/person/pathway. | `createAuthority`, `getAuthorityRecords` |
-| 2c | H-NO-DELIVERY-UI | Navigator disclosure area (within SharePage or a dedicated navigator view) | Navigator prepares disclosure (content + recipient), starts delivery (method), confirms delivery (proof). | `prepareDisclosure`, `startDelivery`, `confirmDelivery`, `getDisclosures` |
-| 2d | I-NO-REFERRAL-CREATION-UI | Navigator referral area (within PathwaysPage) | Navigator creates referral draft, links to sent disclosure, updates status to sent. UI checks disclosure status before allowing creation (U2). | `createReferralDraft`, `linkReferralToDisclosure`, `updateReferralStatus`, `getDisclosures` |
+| Item | Finding | Page | Description |
+|------|---------|------|-------------|
+| 2e | G-NO-TRUST-UI | SharePage | Participant views sharing proposal, sees authority satisfied, approves sharing (creates consent with authority link). |
+| 2f | N-NO-PRIVACY-HISTORY-UI | PrivacyPage | Participant views sharing history with all 8 V10 data points in human-readable form. |
 
-**Dependencies within Track A**:
-- 2a (pathway) must be built first — 2b (authority) references a pathway, 2d (referral) references a pathway.
-- 2b (authority) must be built before 2c (disclosure) can be fully tested — `buildDisclosurePreview` checks for authority.
-- 2c (disclosure) must be built before 2d (referral) — referral requires sent disclosure.
-- **Serial order within track**: 2a → 2b → 2c → 2d
+**Parallel**: 2e and 2f can be built simultaneously. 2e depends on 2b (authority exists) for end-to-end testing but not for UI construction.
 
-#### Track B — Participant UI (G-NO-TRUST-UI [SharePage portion], N-NO-PRIVACY-HISTORY-UI)
-
-| Item | Finding | Page | Description | Service calls |
-|------|---------|------|-------------|---------------|
-| 2e | G-NO-TRUST-UI | SharePage | Participant views sharing proposal (what/who/why), sees authority is satisfied (no hard-stop), approves sharing (creates consent grant with authority link). | `buildDisclosurePreview`, `checkAuthorityHardStops`, `createConsentGrant` (with `authorityToActId`), `getAuthorityRecords` |
-| 2f | N-NO-PRIVACY-HISTORY-UI | PrivacyPage | Participant views sharing history: who shared with, why, what shared, what NOT shared, prepared-vs-sent, delivery timestamp, who recorded delivery, active-vs-revoked. | `getConsentGrants`, `getDisclosures`, plus a new aggregation function or inline join to produce the privacy history view |
-
-**Dependencies within Track B**:
-- 2e (SharePage) depends on 2b (authority) existing in the navigator track — the participant can only approve sharing after the navigator has created authority. But the UI can be built independently; it just can't be tested end-to-end until authority exists.
-- 2f (PrivacyPage) depends on the full workflow producing records — but the UI can be built independently and tested with pre-existing records.
-- **Parallel order**: 2e and 2f can be built simultaneously.
-
-**Cross-track parallelization**: Track A and Track B can proceed in parallel. The only cross-track dependency is for end-to-end testing (AA1), which requires both tracks complete.
-
----
-
-### Phase 3 — Privacy History Aggregation Service
-
-**Rationale**: PrivacyPage (2f) needs a service function that aggregates consent grants, disclosures, and referrals into a unified privacy history view. The existing `getConsentGrants` and `getDisclosures` return raw records; the UI needs a joined, human-readable view.
-
-| Item | Description | Service calls |
-|------|-------------|---------------|
-| 3a | Create `getPrivacyHistory(householdId)` in trustService (or a new privacyService). Joins consent_grants → disclosures → referrals by household. Returns an array of privacy history entries with all 8 V10 data points: recipient name, purpose, data categories (what shared), willNotShare (what NOT shared), disclosure status (prepared vs sent), delivered_at, delivered_by user name, consent status (active vs revoked). | `getConsentGrants`, `getDisclosures`, plus user name resolution for `delivered_by_user_id` |
-
-**Dependencies**: 3a is a prerequisite for 2f (PrivacyPage UI). It can be built in parallel with Phase 1 and Track A.
-
----
-
-### Phase 4 — Integration and AA1 Readiness
-
-**Rationale**: After all UI components and service functions are built, verify the full workflow can execute continuously. This is not a test execution — it is implementation completeness verification.
+### Phase 3 — Integration and AA1 Readiness
 
 | Item | Description |
 |------|-------------|
-| 4a | Verify the workflow can be executed end-to-end through the UI: navigator creates pathway → authority → participant approves sharing → navigator prepares/starts/confirms delivery → navigator creates referral → participant views privacy history. |
-| 4b | Verify the UI prevents referral creation before disclosure is sent (U2 property). |
-| 4c | Verify SharePage passes `authorityToActId` when creating consent (S3 property). |
-| 4d | Verify PrivacyPage displays all 8 V10 data points. |
+| 3a | Verify the full workflow executes end-to-end through UI: pathway → authority → sharing approval → disclosure prepare/start/confirm → referral creation → privacy history view. |
+| 3b | Verify SharePage passes authorityToActId when creating consent (S3 property). |
+| 3c | Verify PrivacyPage displays all 8 data points in human-readable form. |
+| 3d | Verify UI prevents referral creation before disclosure is sent (U2 property). |
 
 ---
 
-## 5. Parallelizable Work Summary
+## 7. Parallelizable Work Summary
 
 | Work | Can Parallelize With | Rationale |
 |------|---------------------|-----------|
-| Phase 1 (DB integrity) | Nothing — must be first | UI depends on schema being correct |
-| Track A (navigator UI) | Track B (participant UI), Phase 3 (privacy service) | Independent pages, independent service calls |
-| Track B (participant UI) | Track A (navigator UI), Phase 3 (privacy service) | Independent pages |
-| Phase 3 (privacy aggregation) | Track A, Track B | New service function, no dependency on UI |
-| Phase 4 (integration) | Nothing — must be last | Requires all prior phases complete |
+| Phase 1 (DB integrity) | Nothing — must be first | UI depends on schema enforcement |
+| Track A item 2a (pathway UI) | Track B (2e, 2f) | Independent pages and service calls |
+| Track A item 2b (authority UI) | Track B (2e, 2f) | Independent pages |
+| Track A item 2c (disclosure UI) | Track B (2f) | 2c and 2e both involve SharePage — coordinate if sharing the same component |
+| Track A item 2d (referral UI) | Track B (2f) | Independent pages |
+| Track B item 2e (SharePage) | Track A items 2a, 2b, 2d | But 2e and 2c may share the SharePage component — coordinate |
+| Track B item 2f (PrivacyPage) | All Track A items | Fully independent page |
+| Phase 3 (integration) | Nothing — must be last | Requires all prior phases |
 
-**Recommended implementation order**: Phase 1 → (Track A + Track B + Phase 3 in parallel) → Phase 4
-
----
-
-## 6. Security/Integrity Work Detail
-
-### 6a. Consent-Authority Enforcement (G-NO-DB-TRUST-GUARD, H-NO-AUTHORITY-LINK)
-
-**Current state**: `consent_grants.authority_to_act_id` is a nullable FK. RLS allows household members and navigators to INSERT. No CHECK or trigger requires the field to be populated.
-
-**Required property**: A navigator cannot create an active consent grant without a valid authority reference through direct API access (W1). Every active consent grant links to an authority-to-act record (S3).
-
-**Smallest change**: Add a CHECK constraint:
-```sql
-ALTER TABLE consent_grants
-  ADD CONSTRAINT consent_grants_active_requires_authority
-  CHECK (status != 'active' OR authority_to_act_id IS NOT NULL);
-```
-
-This allows `status='draft'` with null authority (drafts are pre-approval) but blocks `status='active'` without authority. The test design permits any enforcement mechanism — this CHECK is the simplest.
-
-**What this does NOT prescribe**: The test design explicitly does not require a specific trigger, RLS policy, or SECURITY DEFINER function. A CHECK constraint is sufficient. If the team prefers a trigger that also validates household match, that is also acceptable but not required by the test design.
-
-### 6b. Cross-Household Reference Check (I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK)
-
-**Current state**: RLS policies scope each table by `household_id` independently. No check validates that cross-row references (referral→disclosure, consent→authority) stay within the same household. A navigator assigned to both households could create a Household A referral referencing a Household B disclosure.
-
-**Required property**: Cross-household referral (Y1) and cross-household consent (Y2) cannot be created.
-
-**Smallest change**: Add two triggers:
-
-1. On `consent_grants` (BEFORE INSERT/UPDATE): when `authority_to_act_id` is set, query `authority_to_act.household_id` and verify it matches `NEW.household_id`. Raise `check_violation` on mismatch.
-
-2. On `referrals` (BEFORE INSERT/UPDATE): when `disclosure_id` is set, query `disclosures.household_id` and verify it matches `NEW.household_id`. Raise `check_violation` on mismatch.
-
-Both triggers must be SECURITY DEFINER with `search_path = public` and EXECUTE revoked from `anon`/`authenticated` (same pattern as existing guard functions).
-
-**What this does NOT prescribe**: The test design does not prescribe triggers specifically. A CHECK constraint with a subquery is not possible in Postgres (CHECK constraints cannot reference other tables). A trigger is the natural mechanism. An alternative is a SECURITY DEFINER function that is the only path to INSERT/UPDATE these tables (revoking direct INSERT/UPDATE from RLS). Both approaches satisfy the test property.
-
-### 6c. Disclosure Delivery Proof (already enforced)
-
-**Current state**: The CHECK constraint `disclosures_sent_requires_delivery` already blocks `status='sent'` without `delivery_method + sent_at + delivered_by_user_id`. This satisfies W2's required property.
-
-**No additional work needed** for W2 at the database level. The UI must populate these fields when confirming delivery (Track A item 2c).
-
----
-
-## 7. UI Work Detail
-
-### 7a. PathwaysPage (E-NO-CREATION-UI, I-NO-REFERRAL-CREATION-UI)
-
-**Current**: 1-line stub.
-
-**Required**: Two distinct views within the page (or separate sections):
-1. **Confirmed needs → Pathway creation**: Navigator sees confirmed needs for assigned households, selects one, picks service/provider/eligibility from the seed catalog, creates pathway.
-2. **Referral creation**: After disclosure is sent, navigator creates a referral linked to the pathway and sent disclosure. UI checks disclosure status and prevents creation if disclosure is not sent (U2).
-
-**Service calls**: `getNeeds`, `getServices`, `getProviders`, `getEligibilityPathways`, `createPathway`, `getDisclosures`, `createReferralDraft`, `linkReferralToDisclosure`, `updateReferralStatus`
-
-**Design considerations**:
-- Use existing `PathwayDetail`, `PathwayCard`, `ReferralStatusCard` components for display.
-- Pathway creation form should show service name, provider name, eligibility criteria in plain language (not UUIDs).
-- Referral creation should show the disclosure recipient and status, and disable the "Create referral" button if disclosure is not `sent`.
-- Match the visual style of existing admin pages (DashboardLayout, card-based layout, Tailwind).
-
-### 7b. SharePage (G-NO-TRUST-UI, H-NO-DELIVERY-UI)
-
-**Current**: 1-line stub.
-
-**Required**: Two modes based on user role:
-1. **Participant mode** (P1): Views sharing proposal, sees authority is satisfied (no hard-stop), approves sharing. Calls `buildDisclosurePreview` to check authority status. Calls `createConsentGrant` with the `authorityToActId` from the matched authority record.
-2. **Navigator mode** (N1): Prepares disclosure, starts delivery, confirms delivery. Three-step flow calling `prepareDisclosure` → `startDelivery` → `confirmDelivery`.
-
-**Service calls**: `buildDisclosurePreview`, `checkAuthorityHardStops`, `getAuthorityRecords`, `createConsentGrant`, `prepareDisclosure`, `startDelivery`, `confirmDelivery`, `getDisclosures`
-
-**Design considerations**:
-- Participant mode must show: what will be shared (data categories), who it will be shared with (recipient name), why (purpose), and whether authority is satisfied.
-- If authority is NOT satisfied, show the trust hard-stop (Pilot 001 G1-G8 behavior).
-- Navigator mode must show: disclosure content summary, delivery method selector, delivery confirmation with timestamp and delivered-by attribution.
-- The `willNotShare` field is currently hardcoded to `[]` in `buildDisclosurePreview` (H-WILL-NOT-SHARE-SERVICE P3 accepted limitation). The UI must display "No items were explicitly excluded" when the list is empty (V5 requirement).
-
-### 7c. AdminTrustPage (G-NO-TRUST-UI)
-
-**Current**: 9-line stub.
-
-**Required**: Navigator authority creation form. Navigator selects a household/person/pathway, specifies authority basis, action type, data category, and creates the authority record.
-
-**Service calls**: `createAuthority`, `getAuthorityRecords`, `getNavigatorAssignments`
-
-**Design considerations**:
-- May be better placed in a navigator workflow area rather than admin area, since navigators (not admins) create authority records. However, the route `/admin/trust` is already wired. If the navigator role is separate from admin, a new route may be needed. For minimum Pilot 002, using the existing admin route with role check is sufficient.
-- Show existing authority records for the selected household.
-- Form fields: subject person, action type, data category, authority basis, verification status.
-
-### 7d. PrivacyPage (N-NO-PRIVACY-HISTORY-UI)
-
-**Current**: 1-line stub.
-
-**Required**: Participant views sharing history with all 8 V10 data points visible and understandable without navigator assistance.
-
-**Service calls**: `getPrivacyHistory` (new, Phase 3a) or inline calls to `getConsentGrants` + `getDisclosures`
-
-**Design considerations**:
-- Each sharing history entry must display:
-  1. Who was shared with (recipient name — not UUID)
-  2. Why sharing was approved (purpose — not code)
-  3. What was shared (data categories / claim content summary)
-  4. What was NOT shared (willNotShare or "No items were explicitly excluded")
-  5. Prepared vs sent (disclosure status in plain language)
-  6. When delivery occurred (delivered_at in human-readable date/time)
-  7. Who recorded delivery (delivered_by user name — not UUID)
-  8. Active vs revoked (consent status in plain language)
-- Layout should be a timeline or card list, readable by a non-technical person.
-- Must be navigable without navigator assistance (V10/AA1 comprehension requirement).
+**Recommended order**: Phase 1 → (Track A + Track B in parallel) → Phase 3
 
 ---
 
 ## 8. Professional/Domain Decision Checkpoints
 
-| Decision | Frozen Classification | When It Matters | Implementation Impact |
-|----------|----------------------|-----------------|----------------------|
-| Self-authorization for adults | NOT REQUIRED FOR MINIMUM PILOT 002 | Does not affect implementation. The authority record's `actor_person_id` / `actor_user_id` fields are set by the UI. Whether the participant's own person ID is the authorizing actor is a domain decision that does not change the implementation — the field accepts any person ID. | None — implement without resolving. |
-| Guardian/parent actor for youth | NOT REQUIRED FOR MINIMUM PILOT 002 | Only matters if R2/W3 are activated (youth participant). Adult-only topology means this is not exercised. | None — do not implement youth-assent UI. |
-| Consent + disclosure transaction | REQUIRED BEFORE EXECUTION | If a partial failure occurs during test execution (consent created but disclosure preparation fails), the team must decide whether to treat it as a defect or accepted limitation. This does not affect implementation — the current code creates consent and disclosure as separate operations. | None for implementation. Flag for test execution team. |
-| Claim attribution adequacy | NOT REQUIRED FOR MINIMUM PILOT 002 | The provenance language "Family's own description. Not verified by NextUp." is already in the disclosure content. The test verifies content is displayed, not legal adequacy. | None — use existing provenance language. |
+All four frozen classifications are preserved unchanged. No decision is silently resolved.
+
+| Decision | Frozen Classification | Impact on Implementation | Impact on Execution |
+|----------|----------------------|------------------------|-------------------|
+| Self-authorization for adults (is participant's own person ID as authorizing_actor_id correct?) | NOT REQUIRED FOR MINIMUM PILOT 002 | None. The authority record's `actor_person_id` / `actor_user_id` fields are set by the UI. The field accepts any person ID. | None |
+| Guardian/parent actor for youth | NOT REQUIRED FOR MINIMUM PILOT 002 | None. Youth-assent UI is not implemented. R2/W3 remain conditional. | None |
+| Consent + disclosure transaction (should createConsentGrant and prepareDisclosure be wrapped in a single transaction?) | REQUIRED BEFORE EXECUTION | None for implementation. The current code creates consent and disclosure as separate operations. Implementation proceeds without this decision. | If a partial failure occurs during test execution (consent created but disclosure preparation fails), the team must decide whether to treat it as a defect or an accepted limitation BEFORE determining the test result. Execution must not silently pass this checkpoint. The underlying professional/domain question is NOT answered by this plan. |
+| Claim attribution adequacy (is "Family's own description. Not verified by NextUp." adequate provenance language?) | NOT REQUIRED FOR MINIMUM PILOT 002 | None. Existing provenance language is used. V4 and AA1 verify content is displayed, not legal adequacy. | None |
 
 **No implementation step requires resolving any professional/domain decision before proceeding.**
 
@@ -295,92 +364,92 @@ Both triggers must be SECURITY DEFINER with `search_path = public` and EXECUTE r
 
 ## 9. Implementation-Complete Entry Criteria for Test Execution
 
-Before Pilot 002 test execution may begin, ALL of the following must be true:
+Before Pilot 002 test execution may begin, ALL of the following must be true.
 
 ### Database Integrity (Phase 1)
 
-| Criterion | Verification |
-|-----------|-------------|
-| `consent_grants` INSERT with `status='active'` and null `authority_to_act_id` is rejected | Execute SQL: `INSERT INTO consent_grants (...status='active', authority_to_act_id=NULL...)` → expect constraint violation |
-| `consent_grants` INSERT with `authority_to_act_id` referencing a different household is rejected | Execute SQL with mismatched household IDs → expect trigger violation |
-| `referrals` INSERT with `disclosure_id` referencing a different household is rejected | Execute SQL with mismatched household IDs → expect trigger violation |
-| Existing `disclosures_sent_requires_delivery` CHECK still functions | Execute SQL: `UPDATE disclosures SET status='sent' WHERE delivery_method IS NULL` → expect constraint violation |
+| Criterion | Verification Method |
+|-----------|-------------------|
+| Active consent grant with null authority_to_act_id is rejected at DB level | SQL INSERT with `status='active'`, `authority_to_act_id=NULL` → expect rejection |
+| Consent grant with authority_to_act_id from different household is rejected at DB level | SQL INSERT with mismatched household IDs → expect rejection |
+| Referral with disclosure_id from different household is rejected at DB level | SQL INSERT/UPDATE with mismatched household IDs → expect rejection |
+| Disclosure sent without delivery proof remains rejected | SQL UPDATE `status='sent'` without delivery_method/sent_at/delivered_by_user_id → expect rejection (already enforced) |
 | Pilot 001 records unchanged | Compare record counts before and after migration |
 
 ### Navigator UI (Track A)
 
-| Criterion | Verification |
-|-----------|-------------|
-| Navigator can sign in and see confirmed needs for assigned households | Navigate to PathwaysPage as N1, verify needs are displayed |
-| Navigator can create a pathway from a confirmed need through UI | Complete pathway creation form, verify record in database |
-| Navigator can create authority-to-act through UI | Complete authority creation form, verify record in database |
-| Navigator can prepare a disclosure through UI | Complete disclosure preparation, verify `status='prepared'` in database |
-| Navigator can start delivery through UI | Complete delivery start, verify `status='delivery_pending'` in database |
-| Navigator can confirm delivery through UI | Complete delivery confirmation, verify `status='sent'` + delivery proof fields in database |
-| Navigator can create a referral through UI after disclosure sent | Complete referral creation, verify record with correct `disclosure_id` and `pathway_id` |
-| UI prevents referral creation before disclosure is sent | Attempt referral creation with `status='prepared'` disclosure → UI blocks or displays message |
+| Criterion | Verification Method |
+|-----------|-------------------|
+| Navigator can sign in and see confirmed needs for assigned households | Navigate to PathwaysPage as N1, verify needs displayed |
+| Navigator can create a pathway from a confirmed need through UI | Complete form, verify DB record |
+| Navigator can create authority-to-act through UI | Complete form, verify DB record |
+| Navigator can prepare disclosure through UI | Complete preparation, verify `status='prepared'` |
+| Navigator can start delivery through UI | Complete start, verify `status='delivery_pending'` |
+| Navigator can confirm delivery through UI | Complete confirmation, verify `status='sent'` + delivery proof |
+| Navigator can create referral through UI after disclosure sent | Complete creation, verify DB record with correct disclosure_id |
+| UI prevents referral creation before disclosure is sent | Attempt with `status='prepared'` disclosure → UI blocks |
 
 ### Participant UI (Track B)
 
-| Criterion | Verification |
-|-----------|-------------|
-| Participant can sign in and view SharePage | Navigate to SharePage as P1, verify sharing proposal is displayed |
-| SharePage shows authority is satisfied (no hard-stop) when authority exists | Verify no hard-stop message when authority record exists |
-| Participant can approve sharing through SharePage | Complete sharing approval, verify `consent_grants` record with `authority_to_act_id` populated and `status='active'` |
-| Participant can access PrivacyPage | Navigate to PrivacyPage as P1, verify sharing history is displayed |
-| PrivacyPage shows all 8 V10 data points | Verify recipient, purpose, what shared, what NOT shared, prepared-vs-sent, delivery timestamp, who recorded delivery, active-vs-revoked are all displayed |
-
-### Privacy History Service (Phase 3)
-
-| Criterion | Verification |
-|-----------|-------------|
-| `getPrivacyHistory(householdId)` returns entries with all 8 data points | Call function, verify output shape |
+| Criterion | Verification Method |
+|-----------|-------------------|
+| Participant can sign in and view SharePage | Navigate to SharePage as P1, verify proposal displayed |
+| SharePage shows authority satisfied (no hard-stop) when authority exists | Verify no hard-stop message when authority record exists |
+| SharePage shows hard-stop when authority is absent | Verify hard-stop message (Pilot 001 G1-G8 behavior preserved) |
+| Participant can approve sharing through SharePage | Complete approval, verify consent_grant with `authority_to_act_id` populated and `status='active'` |
+| Participant can access PrivacyPage | Navigate to PrivacyPage, verify sharing history displayed |
+| PrivacyPage shows all 8 V10 data points in human-readable form | Verify: recipient name, purpose, what shared, what NOT shared, prepared-vs-sent, delivery time, who recorded delivery, active-vs-revoked |
 
 ### Application Build
 
-| Criterion | Verification |
-|-----------|-------------|
-| `npm run build` succeeds | No TypeScript errors, no build failures |
+| Criterion | Verification Method |
+|-----------|-------------------|
+| `npm run build` succeeds | No errors |
 | `npm run typecheck` succeeds | No type errors |
-| Application loads without console errors | Navigate to sign-in page, verify no errors |
+| Application loads without console errors | Navigate to sign-in page |
 
 ---
 
 ## 10. Explicit Non-Goals
 
-The following are explicitly excluded from this implementation plan. They must not be built, implemented, or scaffolded:
-
 | Non-Goal | Rationale |
 |----------|-----------|
-| Funding management UI | Excluded by frozen scope. F-NO-FUNDING-UI and F-NO-FUNDING-GUARD do not intersect minimum Pilot 002. |
-| Outcome reporting UI | Excluded by frozen scope. K-NO-OUTCOME-UI does not intersect minimum Pilot 002. |
-| Barrier reporting UI | Excluded by frozen scope. L-NO-BARRIER-UI does not intersect minimum Pilot 002. |
-| Contact-attempt recording UI | Excluded by frozen scope. Not in the minimum workflow. |
-| Participant declines referral | Excluded by frozen scope. I-NO-PERSON-DECLINED-TRANSITION does not intersect minimum Pilot 002. |
+| Funding management UI | Excluded by frozen scope |
+| Outcome reporting UI | Excluded by frozen scope |
+| Barrier reporting UI | Excluded by frozen scope |
+| Contact-attempt recording UI | Excluded by frozen scope |
+| Participant declines referral | Excluded by frozen scope |
 | Consent revocation | Excluded by frozen scope. Not an entry or exit condition for minimum Pilot 002. |
-| Full consent-duration semantics | Excluded by frozen scope. H-NO-DURATION does not intersect minimum Pilot 002. |
-| Youth-assent implementation | Excluded by adult-only topology. R2/W3 are conditional and not exercised. Do not build youth-assent UI or bypass protection unless separately activated. |
-| Pilot 001 modifications | Do not modify any Pilot 001 frozen records, test artifacts, or baseline data. |
-| Service/provider catalog creation UI | Not needed for minimum Pilot 002. The seed catalog from Pilot 001 has eligible services. Catalog creation is admin tooling, not navigator workflow. |
-| New routing | All routes are already wired. Do not add new routes. |
-| Performance optimization | N+1 query patterns in existing services are noted but not in scope for minimum Pilot 002. |
-| Automated interpretation generation | Interpretation remains navigator-proposed (Pilot 001 baseline). |
+| Full consent-duration semantics | Excluded by frozen scope |
+| Youth-assent implementation | Excluded by adult-only topology. R2/W3 remain conditional/outside denominator. |
+| Pilot 001 modifications | Do not modify frozen Pilot 001 records, artifacts, or baseline |
+| Service/provider catalog creation UI | Not needed. Seed catalog has eligible services. |
+| New routing | All routes already wired |
+| Performance optimization | N+1 patterns noted but not in scope |
+| Automated interpretation generation | Interpretation remains navigator-proposed |
+| Answering the consent+disclosure transaction professional/domain question | The plan preserves the REQUIRED BEFORE EXECUTION classification. It does not resolve the question. |
+| Closing any of the 8 findings | All findings remain OPEN until implementation is separately completed and verified against frozen tests |
 
 ---
 
-## 11. Finding → Phase → Dependency Summary
+## 11. Finding Status
 
-| Finding | Severity | Phase | Depends On | Test Cases |
-|---------|----------|-------|------------|------------|
-| G-NO-DB-TRUST-GUARD | P1 | Phase 1 (1a) | Nothing | W1, W2 |
-| H-NO-AUTHORITY-LINK | P1 | Phase 1 (1a) + Phase 2 (2e) | 1a for DB; 2b for authority UI | S3, AA1 |
-| I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK | P2 | Phase 1 (1b) | Nothing | Y1, Y2, Y3 |
-| E-NO-CREATION-UI | P2 | Phase 2 (2a) | Phase 1 | Q1, Q2 |
-| G-NO-TRUST-UI | P2 | Phase 2 (2b, 2e) | 2a for pathway; Phase 1 for DB | R1, S1 |
-| H-NO-DELIVERY-UI | P2 | Phase 2 (2c) | 2b for authority; 2e for consent | T1, T2, T3 |
-| I-NO-REFERRAL-CREATION-UI | P2 | Phase 2 (2d) | 2c for disclosure | U1, U2 |
-| N-NO-PRIVACY-HISTORY-UI | P2 | Phase 2 (2f) + Phase 3 (3a) | Phase 3 service; workflow records for testing | V1–V10, AA1 |
+All 8 findings remain OPEN. This plan identifies gaps and candidate remediations. A finding is closed only when:
+1. Implementation is completed
+2. The implementation is verified against the frozen authoritative tests
+3. The verification results are recorded
+
+| Finding | Severity | Status |
+|---------|----------|--------|
+| G-NO-DB-TRUST-GUARD | P1 | OPEN |
+| H-NO-AUTHORITY-LINK | P1 | OPEN |
+| I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK | P2 | OPEN |
+| E-NO-CREATION-UI | P2 | OPEN |
+| G-NO-TRUST-UI | P2 | OPEN |
+| H-NO-DELIVERY-UI | P2 | OPEN |
+| I-NO-REFERRAL-CREATION-UI | P2 | OPEN |
+| N-NO-PRIVACY-HISTORY-UI | P2 | OPEN |
 
 ---
 
-PILOT 002 IMPLEMENTATION PLAN v1 — AWAITING REVIEW
+PILOT 002 IMPLEMENTATION PLAN v2 — AWAITING REVIEW

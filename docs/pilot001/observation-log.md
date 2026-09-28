@@ -2114,7 +2114,7 @@ Live identity verification confirmed:
 - Active navigator assignment: 1
 - Kenneth: `ae8e2fd2-fc3b-4130-8a02-45253effb2f9` confirmed present
 
-Pre-test baselines (13 metrics): confirmed_needs=2, pathways=0, referrals=0, outcomes=0, barrier_events=0, incidents=0, contact_attempts=0, escalations=0, persons=6, households=5, authority_to_act=0, consent_grants=0, disclosures=0, active_nav=1.
+Pre-test baselines (14 metrics): confirmed_needs=2, pathways=0, referrals=0, outcomes=0, barrier_events=0, incidents=0, contact_attempts=0, escalations=0, persons=6, households=5, authority_to_act=0, consent_grants=0, disclosures=0, active_nav=1.
 
 **Production-service invocation method:** All fixture creation and retrieval was performed by importing and invoking actual production functions from `src/services/trustService.ts` via a Vite SSR build. Functions invoked: `createAuthority()`, `createConsentGrant()`, `getConsentGrants()`, `getActiveConsentGrants()`, `prepareDisclosure()`, `startDelivery()`, `confirmDelivery()`, `getDisclosures()`, `revokeConsentGrant()`. Authentication was via the shared `supabase` client singleton as Pilot A.
 
@@ -2315,7 +2315,7 @@ Post-cleanup verification: outcomes=0, disclosures=0, consent_grants=0, authorit
 
 ### BASELINE COMPARISON
 
-All 13 pre-test metrics matched exactly post-cleanup. No baseline drift.
+All 14 pre-test metrics matched exactly post-cleanup. No baseline drift.
 
 | Metric | Pre-test | Post-cleanup |
 |--------|----------|-------------|
@@ -2380,100 +2380,242 @@ All 8 authoritative N cases are BLOCKED at the participant UI level. Service/dat
 
 ## TEST O — ISOLATION ATTACK
 
-(Not yet executed)
+**Date:** 2026-09-28
+
+**A/B interpretation:** Household A = Pilot A (Maria), person_id=`b38e7879-2fc9-4534-9cc2-2afc762d3733`, auth_user_id=`7c73b09c-766b-45eb-bef8-8aaf9fd1fb8f`, household_id=`0bb28561-436a-4d0d-922a-71f4ac3f2713`. Household B = Pilot B (James), person_id=`788ae94d-ab6b-4221-a71e-38f639ee8afc`, auth_user_id=`bed6444f-ec5d-4ad1-9be0-deaa55e9664d`, household_id=`9aa80e8c-fd89-4e4c-9e23-a2fcf2dc1171`. The test script does not explicitly define A/B beyond the O cases; this interpretation follows the consistent Pilot 001 convention where Pilot A is the primary household and Pilot B is the isolated secondary household.
+
+### PHASE 0
+
+**Date/time:** 2026-09-28T20:15Z
+
+- Pilot A: Maria, person_id=`b38e7879-2fc9-4534-9cc2-2afc762d3733`, auth_user_id=`7c73b09c-766b-45eb-bef8-8aaf9fd1fb8f`, household_id=`0bb28561-436a-4d0d-922a-71f4ac3f2713`, email=`pilot001.a.1786247800479@nextup-test.local`
+- Pilot B: James, person_id=`788ae94d-ab6b-4221-a71e-38f639ee8afc`, auth_user_id=`bed6444f-ec5d-4ad1-9be0-deaa55e9664d`, household_id=`9aa80e8c-fd89-4e4c-9e23-a2fcf2dc1171`, email=`pilot001.b.1786247764433@nextup-test.local`
+- Pilot B existing data: 0 narrations, 0 needs, 0 pathways, 0 referrals, 0 outcomes
+- Navigator: auth_user_id=`380c682d-bfee-4df8-ac4d-760d53d26cde`, email=`pilot001.nav@nextup-test.local`, person_id=NULL
+- Navigator assignments: 1 active assignment to Pilot A household (`0bb28561-436a-4d0d-922a-71f4ac3f2713`). No assignment to Pilot B household (`9aa80e8c-fd89-4e4c-9e23-a2fcf2dc1171`).
+- Pilot A confirmed needs: `92823c92-8106-4306-896b-bc09f8ca2457` (After-school program for Marcus), `bc4cbf8e-70f7-4782-b567-65a9deb2fcae` (Emotional support for Marcus)
+- Kenneth: `ae8e2fd2-fc3b-4130-8a02-45253effb2f9` confirmed present
+
+Pre-test baselines (14 metrics): confirmed_needs=2, pathways=0, referrals=0, outcomes=0, barrier_events=0, incidents=0, contact_attempts=0, escalations=0, persons=6, households=5, authority_to_act=0, consent_grants=0, disclosures=0, active_nav=1.
+
+### TEST N DOCUMENTATION CORRECTION
+
+Corrected "13 metrics" to "14 metrics" in the Test N observation log (line 2117: "Pre-test baselines" and line 2318: "All pre-test metrics matched exactly post-cleanup"). Test N was not rerun.
+
+### FIXTURE CREATION
+
+5 fixtures created via admin SQL in Pilot B's household in dependency order:
+
+1. Narration: `5965b35a-6351-4661-afd3-ad3633541b8b` — person_narrations, person_id=788ae94d, status='draft'
+2. Need: `1e6fe4ae-be3f-4871-b104-2b5c45c7a997` — needs, person_id=788ae94d, household_id=9aa80e8c, narration_id=5965b35a, status='confirmed'
+3. Pathway: `0de3a0bc-e15d-4a76-b60b-18924b1337f6` — pathways, household_id=9aa80e8c, person_id=788ae94d, need_id=1e6fe4ae, status='possible'
+4. Referral: `c2328ab3-60c3-4905-b468-a7560a1d418f` — referrals, household_id=9aa80e8c, person_id=788ae94d, pathway_id=0de3a0bc, status='draft'
+5. Outcome: `04905680-5e80-4b55-8888-b37edfcdeb51` — outcomes, household_id=9aa80e8c, person_id=788ae94d, referral_id=c2328ab3
+
+### POSITIVE EXISTENCE CONTROLS
+
+All 5 fixtures verified via admin SQL before attack tests:
+
+| Fixture | UUID | Rows |
+|---------|------|------|
+| Narration | 5965b35a-6351-4661-afd3-ad3633541b8b | 1 |
+| Need | 1e6fe4ae-be3f-4871-b104-2b5c45c7a997 | 1 |
+| Pathway | 0de3a0bc-e15d-4a76-b60b-18924b1337f6 | 1 |
+| Referral | c2328ab3-60c3-4905-b468-a7560a1d418f | 1 |
+| Outcome | 04905680-5e80-4b55-8888-b37edfcdeb51 | 1 |
+
+Administrative existence verification is fixture-control evidence only and is not RLS evidence.
+
+### CREDENTIALS
+
+- Pilot A: temporary password set (`TestO_PilotA_2026!`) for O1-O4 authentication. Rotated to random (gen_random_bytes) after execution.
+- Navigator: temporary password set (`TestO_Nav_2026!`) for O5 authentication. Rotated to random (gen_random_bytes) after execution.
+- Pilot B: credentials NOT touched. Pilot B was not authenticated during Test O.
+
+### EXECUTION METHOD
+
+Vite SSR entry point (`src/test-o-pilot001-entry.ts`) built with `vite build --ssr`, executed via `node`. The runner authenticated as Pilot A (O1-O4), signed out, authenticated as navigator (O5), signed out, then used a fresh unauthenticated client (O6). Each query used the Supabase JS client with anon key + user JWT (or no JWT for anonymous), exercising actual RLS policies.
 
 ### TEST ID: O1
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:17Z
+- **Actor:** Pilot A (Maria), authenticated — auth_user_id=7c73b09c
+- **Starting state:** Pilot B narration fixture 5965b35a positively verified to exist
+- **Action performed:** Authenticated as Pilot A. Queried `person_narrations.select('*').eq('person_id', '788ae94d-ab6b-4221-a71e-38f639ee8afc')` via Supabase client under RLS.
+- **Expected behavior:** BLOCKED — zero target rows, no narration body, no protected metadata
+- **Actual behavior:** rows=0, count=0, data=[]. RLS-filtered zero rows (no query error, target positively verified to exist).
+- **Result:** PASS — BLOCKED. Household A cannot access Household B narration.
+- **Screenshot/reference:** Test O runner output (`[O1-O4_PilotA] narration: rows=0, count=0, data=[]`)
+- **Data created/changed:** none (read-only)
+- **Security/privacy observation:** RLS policy `select_own_narrations` blocks Pilot A from reading Pilot B's narration. Pilot A's auth.uid() does not match Pilot B's person_id.
+- **User-experience observation:** Security test — not visible to participant.
+- **Finding classification:** KEEP
+- **Recommended action:** None — isolation holds.
 
 ### TEST ID: O2
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:17Z
+- **Actor:** Pilot A (Maria), authenticated — auth_user_id=7c73b09c
+- **Starting state:** Pilot B pathway fixture 0de3a0bc positively verified to exist
+- **Action performed:** Queried `pathways.select('*').eq('household_id', '9aa80e8c-fd89-4e4c-9e23-a2fcf2dc1171')` via Supabase client under RLS.
+- **Expected behavior:** BLOCKED — zero target rows, no protected target data
+- **Actual behavior:** rows=0, count=0, data=[]. RLS-filtered zero rows.
+- **Result:** PASS — BLOCKED. Household A cannot access Household B pathway.
+- **Screenshot/reference:** Test O runner output (`[O1-O4_PilotA] pathway: rows=0, count=0, data=[]`)
+- **Data created/changed:** none (read-only)
+- **Security/privacy observation:** RLS policy `household_select_pathways` blocks Pilot A. Pilot A is not a member of Pilot B's household.
+- **User-experience observation:** Security test — not visible to participant.
+- **Finding classification:** KEEP
+- **Recommended action:** None — isolation holds.
 
 ### TEST ID: O3
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:17Z
+- **Actor:** Pilot A (Maria), authenticated — auth_user_id=7c73b09c
+- **Starting state:** Pilot B referral fixture c2328ab3 positively verified to exist
+- **Action performed:** Queried `referrals.select('*').eq('household_id', '9aa80e8c-fd89-4e4c-9e23-a2fcf2dc1171')` via Supabase client under RLS.
+- **Expected behavior:** BLOCKED — zero target rows, no protected target data
+- **Actual behavior:** rows=0, count=0, data=[]. RLS-filtered zero rows.
+- **Result:** PASS — BLOCKED. Household A cannot access Household B referral.
+- **Screenshot/reference:** Test O runner output (`[O1-O4_PilotA] referral: rows=0, count=0, data=[]`)
+- **Data created/changed:** none (read-only)
+- **Security/privacy observation:** RLS policy `household_select_referrals` blocks Pilot A. Pilot A is not a member of Pilot B's household.
+- **User-experience observation:** Security test — not visible to participant.
+- **Finding classification:** KEEP
+- **Recommended action:** None — isolation holds.
 
 ### TEST ID: O4
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:17Z
+- **Actor:** Pilot A (Maria), authenticated — auth_user_id=7c73b09c
+- **Starting state:** Pilot B outcome fixture 04905680 positively verified to exist
+- **Action performed:** Queried `outcomes.select('*').eq('household_id', '9aa80e8c-fd89-4e4c-9e23-a2fcf2dc1171')` via Supabase client under RLS.
+- **Expected behavior:** BLOCKED — zero target rows, no protected target data
+- **Actual behavior:** rows=0, count=0, data=[]. RLS-filtered zero rows.
+- **Result:** PASS — BLOCKED. Household A cannot access Household B outcome.
+- **Screenshot/reference:** Test O runner output (`[O1-O4_PilotA] outcome: rows=0, count=0, data=[]`)
+- **Data created/changed:** none (read-only)
+- **Security/privacy observation:** RLS policy `household_select_outcomes` blocks Pilot A. Pilot A is not a member of Pilot B's household.
+- **User-experience observation:** Security test — not visible to participant.
+- **Finding classification:** KEEP
+- **Recommended action:** None — isolation holds.
 
 ### TEST ID: O5
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:17Z
+- **Actor:** Actual navigator, authenticated — auth_user_id=380c682d-bfee-4df8-ac4d-760d53d26cde, email=pilot001.nav@nextup-test.local
+- **Starting state:** Navigator has 1 active assignment to Pilot A household (0bb28561). Navigator has NO active assignment to Pilot B household (9aa80e8c). All 4 Pilot B fixtures positively verified to exist.
+- **Action performed:** Authenticated as navigator. Reconfirmed assignments via `navigator_assignments.select('household_id, assignment_status').eq('navigator_user_id', '380c682d...')` — returned 1 row: household_id=0bb28561, assignment_status=active. NAV_ASSIGNED_TO_B=false. Then queried all 4 Pilot B target tables: person_narrations (by person_id), pathways (by household_id), referrals (by household_id), outcomes (by household_id).
+- **Expected behavior:** BLOCKED on all four tables — zero target rows, no protected target data
+- **Actual behavior:**
+  - narration: rows=0, count=0, data=[]
+  - pathway: rows=0, count=0, data=[]
+  - referral: rows=0, count=0, data=[]
+  - outcome: rows=0, count=0, data=[]
+  - All RLS-filtered zero rows (no query errors, targets positively verified to exist).
+- **Result:** PASS — BLOCKED (4/4). Unassigned navigator cannot access Household B data.
+- **Screenshot/reference:** Test O runner output (`[O5_Navigator]` lines + `NAV_ASSIGNMENTS` + `NAV_ASSIGNED_TO_B: false`)
+- **Data created/changed:** none (read-only)
+- **Security/privacy observation:** Navigator SELECT RLS policies require an active navigator_assignment for the target household. Navigator has no assignment for Pilot B's household. All four tables blocked. This is fresh evidence for the navigator-assignment isolation branch, distinct from O1-O4 household-member cross-household evidence.
+- **User-experience observation:** Security test — not visible to participant.
+- **Finding classification:** KEEP
+- **Recommended action:** None — navigator-assignment isolation holds.
 
 ### TEST ID: O6
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:17Z
+- **Actor:** Anonymous (fresh unauthenticated Supabase client — no signInWithPassword)
+- **Starting state:** All 4 Pilot B fixtures positively verified to exist
+- **Action performed:** Created a fresh Supabase client with anon key and no authentication. Queried all 4 Pilot B target tables: person_narrations (by person_id), pathways (by household_id), referrals (by household_id), outcomes (by household_id).
+- **Expected behavior:** BLOCKED on all four tables — zero target rows, no body/field data, no result exposing inaccessible private target records
+- **Actual behavior:**
+  - narration: rows=0, count=0, data=[]
+  - pathway: rows=0, count=0, data=[]
+  - referral: rows=0, count=0, data=[]
+  - outcome: rows=0, count=0, data=[]
+  - All RLS-filtered zero rows (no query errors, targets positively verified to exist).
+- **Result:** PASS — BLOCKED (4/4). Anonymous user cannot access any private Pilot data.
+- **Screenshot/reference:** Test O runner output (`[O6_Anonymous]` lines)
+- **Data created/changed:** none (read-only)
+- **Security/privacy observation:** Anonymous client has no auth.uid(). All household SELECT policies require auth.uid() match. All navigator SELECT policies require auth.uid() match. All four tables blocked.
+- **User-experience observation:** Security test — not visible to participant.
+- **Finding classification:** KEEP
+- **Recommended action:** None — anonymous isolation holds.
+
+### RESULT SEMANTICS
+
+All zero-row results are RLS-filtered zero rows — not query execution errors and not missing fixtures. Each target fixture was positively verified to exist via admin SQL before the attack tests. No query returned an error. No partial metadata leaked. The combination of positive existence control + RLS-filtered zero rows demonstrates the intended SELECT isolation behavior for every O case.
+
+### FINDINGS
+
+**No new findings.** All O1-O6 cases PASS. RLS isolation holds across all four target tables for cross-household (household-member branch), unassigned navigator (navigator-assignment branch), and anonymous access. No P0 stop event occurred.
+
+### CLEANUP
+
+All 5 temporary fixture records deleted in dependency-safe order via admin SQL:
+1. Outcome (04905680) — deleted
+2. Referral (c2328ab3) — deleted
+3. Pathway (0de3a0bc) — deleted
+4. Need (1e6fe4ae) — deleted
+5. Narration (5965b35a) — deleted
+
+Post-deletion verification: each UUID confirmed to return 0 rows.
+
+### BASELINE COMPARISON
+
+All 14 pre-test metrics matched exactly post-cleanup. No baseline drift.
+
+| Metric | Pre-test | Post-cleanup |
+|--------|----------|-------------|
+| confirmed_needs | 2 | 2 |
+| pathways | 0 | 0 |
+| referrals | 0 | 0 |
+| outcomes | 0 | 0 |
+| barrier_events | 0 | 0 |
+| incidents | 0 | 0 |
+| contact_attempts | 0 | 0 |
+| escalations | 0 | 0 |
+| persons | 6 | 6 |
+| households | 5 | 5 |
+| authority_to_act | 0 | 0 |
+| consent_grants | 0 | 0 |
+| disclosures | 0 | 0 |
+| active_nav | 1 | 1 |
+
+### KENNETH PRESERVATION
+
+persons.id = ae8e2fd2-fc3b-4130-8a02-45253effb2f9 confirmed present and untouched before and after Test O.
+
+### CREDENTIAL RESTORATION
+
+- Pilot A temporary password rotated to random (gen_random_bytes) after completion.
+- Navigator temporary password rotated to random (gen_random_bytes) after completion.
+- Pilot B credentials confirmed untouched — no password changes were made to Pilot B's auth user during Test O.
+
+### RUNNER/BUILD-ARTIFACT CLEANUP
+
+Ephemeral runner files deleted from disk:
+- `src/test-o-pilot001-entry.ts` (Vite SSR entry)
+- `.test-o-pilot001-build/` (SSR build artifacts)
+
+Source grep for temporary passwords, pilot test emails, and Test O runner markers: 0 matches.
+
+### RECORD ACCOUNTING
+
+- Total temporary record instances created: 5 (Narration + Need + Pathway + Referral + Outcome)
+- Maximum simultaneous records: 5
+- All 5 records deleted by exact UUID.
+
+### EVIDENCE CLASSIFICATION
+
+| Evidence | Classification |
+|---|---|
+| O1-O4 (Pilot A queries Pilot B data) | Fresh household-member cross-household RLS evidence — authenticated Supabase client under RLS |
+| O5 (navigator queries Pilot B data) | Fresh navigator-assignment RLS evidence — authenticated Supabase client under RLS, actual navigator identity |
+| O6 (anonymous queries all data) | Fresh anonymous RLS evidence — fresh unauthenticated Supabase client under RLS |
+| Positive existence controls | Administrative fixture evidence only — not RLS evidence |
+| Tests A-M RLS results | Historical supporting evidence only — frozen, not substituted for fresh Test O evidence |
+
+### TEST O OVERALL: PASS
+
+All 6 authoritative O cases are BLOCKED exactly as required. Cross-household isolation holds for narration, pathway, referral, and outcome tables. Unassigned navigator isolation holds for all four tables. Anonymous access is fully blocked. No P0 stop event occurred. No new findings. Tests A-O are now frozen.

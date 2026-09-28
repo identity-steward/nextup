@@ -1,7 +1,7 @@
 # Pilot 001 — Observation Log
 
 **Date started:** 2026-08-09
-**Status:** Test A COMPLETE — all subtests PASS. Test B COMPLETE — all subtests PASS. Test C COMPLETE — all subtests PASS. Test D COMPLETE — all subtests PASS. Test E COMPLETE — all subtests PASS. Test F COMPLETE — all subtests PASS. Test G COMPLETE — all subtests PASS. Test H COMPLETE — all subtests PASS. Test I COMPLETE — all subtests PASS. Test J COMPLETE — all subtests PASS.
+**Status:** Test A COMPLETE — all subtests PASS. Test B COMPLETE — all subtests PASS. Test C COMPLETE — all subtests PASS. Test D COMPLETE — all subtests PASS. Test E COMPLETE — all subtests PASS. Test F COMPLETE — all subtests PASS. Test G COMPLETE — all subtests PASS. Test H COMPLETE — all subtests PASS. Test I COMPLETE — all subtests PASS. Test J COMPLETE — all subtests PASS. Test K COMPLETE — all subtests PASS (4/4 K1–K4 PASS, 6/6 RLS checks PASS).
 
 This document records every test execution. Each entry uses the structure below. Copy the template for each test ID.
 
@@ -1552,73 +1552,102 @@ This document records every test execution. Each entry uses the structure below.
 
 ---
 
-## TEST K — WHAT HAPPENED?
+## TEST K — WHAT HAPPENED? (OUTCOME TRACKING)
 
-(Not yet executed)
+**Executed:** 2026-09-28T15:20:00Z
+**Overall result:** PASS (4/4 subtests PASS, 6/6 RLS checks PASS)
+
+**Prerequisite chain:** Pathway → AuthorityToAct → ConsentGrant → Disclosure (prepared → delivery_pending → sent) → Referral (draft → ready → sent → received → acknowledged → screening → accepted → service_initiated → completed)
+
+**Referral transition timeline:** All 8 transitions succeeded. `closed_at` populated at `completed`. `sent_at`, `received_at`, `acknowledged_at` populated at respective transitions.
+
+**Scenario isolation:** Each K scenario executed sequentially. Outcome created → verified → downstream checked → UUID captured → deleted via admin SQL. Outcome count returned to 0 between every scenario. No contradictory Outcomes coexisted.
+
+**Application-layer behavior tested:** Runner replicated `createOutcome()` service logic including `inferServiceReceived()` and `person_reported` provenance default.
+
+**Record accounting:** 10 total temporary record instances created (5 prerequisites + 4 K1–K4 Outcomes + 1 RLS fixture Outcome). Maximum simultaneous = 6. 5 Outcome UUIDs captured. All deleted by exact UUID.
+
+**Findings:** K-NO-OUTCOME-UI (P2 MISSING), K-NO-OUTCOME-DB-GUARD (PROFESSIONAL_REVIEW)
 
 ### TEST ID: K1
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T15:22:00Z
+- **Actor:** pilot_participant_a (Maria)
+- **Starting state:** Referral at `completed`. No outcomes exist.
+- **Action performed:** Created Outcome via application service with connected_status=yes, service_received_status=no. Omitted provenance to test application default. Omitted helpfulness_status.
+- **Expected behavior:** Outcome created. Provenance defaults to person_reported (NOT upgraded). Need stays confirmed. Pathway stays possible. No BarrierEvent. No status changes.
+- **Actual behavior:** Outcome UUID=f63982c0. connected=yes, service_received=no, helpfulness=unknown (app default), provenance=person_reported (app default, NOT provider_reported, NOT system_observed). next_action="Ask navigator to review". Both needs=confirmed. Pathway=possible. barrier_events=0. escalations=0. referrals=1 (status=completed unchanged).
+- **Result:** PASS
+- **Screenshot/reference:** .test-k-pilot001.mjs k1 phase output
+- **Data created/changed:** 1 outcome row (deleted after verification)
+- **Security/privacy observation:** Provenance preserved as person_reported — not auto-upgraded to provider_reported or system_observed. Person report did not manufacture a met need or a barrier.
+- **User-experience observation:** No UI exists for outcome creation (K-NO-OUTCOME-UI). Tested via service layer.
+- **Finding classification:** KEEP (behavior correct) + MISSING (K-NO-OUTCOME-UI)
+- **Recommended action:** Build participant-facing outcome reporting UI.
 
 ### TEST ID: K2
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T15:23:00Z
+- **Actor:** pilot_participant_a (Maria)
+- **Starting state:** Referral at `completed`. No outcomes exist (K1 deleted).
+- **Action performed:** Created Outcome with connected_status=yes, service_received_status=yes, helpfulness_status=no, provenance=person_reported.
+- **Expected behavior:** Outcome created. Service receipt does NOT imply helpfulness. Neither auto-means Need met. Need stays confirmed. Pathway stays possible.
+- **Actual behavior:** Outcome UUID=95d65ca2. connected=yes, service_received=yes, helpfulness=no, provenance=person_reported. next_action="Ask navigator to review other options". SIMULTANEOUS PROOF: service_received_status=yes AND helpfulness_status=no AND both needs=confirmed. Pathway=possible. barrier_events=0.
+- **Result:** PASS
+- **Screenshot/reference:** .test-k-pilot001.mjs k2 phase output
+- **Data created/changed:** 1 outcome row (deleted after verification)
+- **Security/privacy observation:** Service receipt and helpfulness are independently represented. Neither automatically resolves the Need.
+- **User-experience observation:** No UI exists for outcome creation.
+- **Finding classification:** KEEP (behavior correct)
+- **Recommended action:** None — independent state representation works correctly.
 
 ### TEST ID: K3
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T15:24:00Z
+- **Actor:** pilot_participant_a (Maria)
+- **Starting state:** Referral at `completed`. No outcomes exist (K2 deleted).
+- **Action performed:** Created Outcome with connected_status=not_yet. OMITTED service_received_status to test inferServiceReceived() application inference.
+- **Expected behavior:** Application infers service_received_status=still_waiting. Not treated as failure. Pathway stays possible. Need stays confirmed.
+- **Actual behavior:** Outcome UUID=ae0ed85c. connected=not_yet, service_received=still_waiting (INFERRED by application, not manually set), helpfulness=unknown, provenance=person_reported. next_action="Wait for response". Pathway=possible (NOT auto-changed to waiting or blocked). Both needs=confirmed. barrier_events=0.
+- **Result:** PASS
+- **Screenshot/reference:** .test-k-pilot001.mjs k3 phase output
+- **Data created/changed:** 1 outcome row (deleted after verification)
+- **Security/privacy observation:** "Not yet" is not treated as a failure. No BarrierEvent created. No need status change.
+- **User-experience observation:** No UI exists for outcome creation.
+- **Finding classification:** KEEP (behavior correct)
+- **Recommended action:** None — inference and non-failure handling work correctly.
 
 ### TEST ID: K4
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T15:25:00Z
+- **Actor:** pilot_participant_a (Maria)
+- **Starting state:** Referral at `completed`. No outcomes exist (K3 deleted).
+- **Action performed:** Created Outcome with connected_status=chose_differently. OMITTED service_received_status to test inferServiceReceived() application inference.
+- **Expected behavior:** Application infers service_received_status=not_applicable. Not treated as failure. No BarrierEvent. Pathway stays possible. Need stays confirmed.
+- **Actual behavior:** Outcome UUID=cd5c32ac. connected=chose_differently, service_received=not_applicable (INFERRED by application, not manually set), helpfulness=unknown, provenance=person_reported. next_action="Review another pathway". barrier_events=0 (no auto-created barrier — chose_differently is NOT a failure). Pathway=possible (NOT auto-changed to closed or completed). Both needs=confirmed (NOT auto-changed to chose_differently).
+- **Result:** PASS
+- **Screenshot/reference:** .test-k-pilot001.mjs k4 phase output
+- **Data created/changed:** 1 outcome row (deleted after verification)
+- **Security/privacy observation:** "Chose differently" does not manufacture a BarrierEvent or change Need/Pathway status. Participant choice is preserved without penalty.
+- **User-experience observation:** No UI exists for outcome creation.
+- **Finding classification:** KEEP (behavior correct)
+- **Recommended action:** None — non-failure handling and inference work correctly.
+
+### RLS CHECKS (K-RLS-1 through K-RLS-6)
+
+- **Date/time:** 2026-09-28T15:26:00Z
+- **Actor:** pilot_a, navigator, pilot_b, anonymous
+- **Starting state:** RLS fixture Outcome created (UUID=05815b6b). Pilot B verified as unassigned to Pilot A household.
+- **K-RLS-1:** Pilot A SELECT own outcomes → PASS (count=1)
+- **K-RLS-2:** Navigator SELECT outcomes for assigned household → PASS (count=1)
+- **K-RLS-3:** Anonymous SELECT outcomes → PASS (count=0, blocked)
+- **K-RLS-4:** Pilot B SELECT Pilot A outcomes → PASS (count=0, blocked)
+- **K-RLS-5:** Pilot B INSERT outcome against Pilot A referral → PASS (blocked: "new row violates row-level security policy")
+- **K-RLS-6:** Pilot B SELECT Pilot A referral → PASS (count=0, blocked)
+- **Result:** PASS (6/6)
+- **Security/privacy observation:** Cross-household isolation fully enforced. Anonymous blocked. Pilot B cannot read or write Pilot A's outcomes or referral.
+- **Finding classification:** KEEP
+- **Recommended action:** None — RLS isolation works correctly.
 
 ---
 

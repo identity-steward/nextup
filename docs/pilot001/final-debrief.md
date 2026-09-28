@@ -13,6 +13,8 @@ Test A, B, C, D, E, F, G, and H results are recorded below. The remaining sectio
 
 Test I is complete — all 6 subtests PASS + post-I6 verification PASS + RLS PASS + downstream-boundary PASS + cleanup verified. 3 new findings identified (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). No defects introduced. Pilot 001 may proceed to Test J.
 
+Test K is complete — all 4 subtests PASS (K1–K4) + 6/6 RLS checks PASS + downstream-boundary PASS after each scenario + cleanup verified + baselines matched. 2 new findings identified (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN). No defects introduced. Referral lifecycle and person-level Outcome are independent — no false inference from referral completion to outcome state. Provenance preserved as person_reported — not auto-upgraded. Service receipt does not imply helpfulness. Neither automatically means Need met. Application inference (inferServiceReceived) correctly maps not_yet→still_waiting and chose_differently→not_applicable. Pilot 001 may proceed to Test L.
+
 Tests J through O have not yet been executed.
 
 ---
@@ -204,7 +206,16 @@ Tests J through O have not yet been executed.
 
 ## 8. Outcome/Barrier Findings
 
-(To be completed after test execution.)
+**Test K — Outcome Tracking:**
+- K1 (PASS): Referral completed, person reports service NOT received. Outcome created with connected=yes, service_received=no. Need stayed confirmed. Pathway stayed possible. No BarrierEvent. Provenance defaulted to person_reported (NOT upgraded to provider_reported or system_observed).
+- K2 (PASS): Service received, person reports NOT helpful. Outcome created with connected=yes, service_received=yes, helpfulness=no. SIMULTANEOUS PROOF: service_received=yes AND helpfulness=no AND both needs=confirmed. Service receipt does not imply helpfulness. Neither automatically means Need met.
+- K3 (PASS): Person chooses "Not yet". Application inferred service_received=still_waiting (not manually set). Pathway stayed possible (NOT auto-changed to waiting or blocked). Need stayed confirmed. Not treated as failure.
+- K4 (PASS): Person chooses "Chose differently". Application inferred service_received=not_applicable (not manually set). No BarrierEvent auto-created. Pathway stayed possible (NOT auto-changed to closed). Need stayed confirmed (NOT auto-changed to chose_differently). Not treated as failure.
+- K-RLS (6/6 PASS): Pilot A sees own outcomes. Navigator sees assigned household outcomes. Anonymous blocked. Pilot B blocked from SELECT and INSERT. Pilot B cannot see Pilot A's referral.
+- K-NO-OUTCOME-UI (P2 OPEN): No participant or navigator UI exists to create or view outcomes. Same class as I-NO-REFERRAL-CREATION-UI.
+- K-NO-OUTCOME-DB-GUARD (PROFESSIONAL_REVIEW OPEN): No DB cross-field validation on outcome status combinations. May be intentional (preserve person-reported state as-is) or a gap requiring domain-expert review.
+- Referral lifecycle ≠ person-level Outcome: No trigger or function links the two. Referral completion does not auto-create an outcome, auto-set need to met, or auto-change pathway status. Outcome creation does not auto-change referral status.
+- Provenance preservation: person_reported is not auto-upgraded to provider_reported or system_observed through any mechanism.
 
 ---
 
@@ -393,6 +404,7 @@ For each major step:
 - F-NO-FUNDING-UI: No navigator/admin UI form exists to create or manage funding options or gates. createFundingOption(), createFundingGate(), updateFundingOption(), updateFundingGateStatus() are service functions not wired to any UI component. AdminPathwaysPage only shows gates needing verification in a read-only list. A funding management form is needed for navigator workflow.
 - G-NO-TRUST-UI: No navigator/admin UI form exists to create or manage AuthorityToAct, YouthAssent, or ConsentGrant records. createAuthority(), createYouthAssent(), createConsentGrant() are service functions not wired to any UI component. AdminTrustPage only displays escalations, disputed authorities, declined assents, and revoked consents in read-only lists. A trust management form is needed for navigator workflow.
 - H-NO-DELIVERY-UI-MISSING: No navigator/admin UI form exists to manage the disclosure delivery lifecycle. startDelivery(), confirmDelivery(), failDelivery(), and cancelDisclosure() are service functions not wired to any UI component. A delivery management workflow is needed for navigator operations.
+- K-NO-OUTCOME-UI: No participant or navigator UI exists to create or view outcomes. OutcomePage.tsx is a 1-line stub. AdminOutcomesPage.tsx is a placeholder. createOutcome() is a service function not wired to any UI component. An outcome reporting UI is needed for participant and navigator workflow.
 
 ---
 
@@ -410,6 +422,9 @@ For each major step:
 - Whether "Approve Sharing" language implies delivery rather than preparation
 - Whether the participant's authorizing_actor_id being their own person ID is correct (self-authorization) vs. requiring a separate guardian/parent actor
 - Whether createConsentGrant + prepareDisclosure should be wrapped in a single transaction to prevent orphaned consents
+- Whether the absence of cross-field DB guards on outcome status combinations (connected/service_received/helpfulness) is intentional or a semantic-integrity gap (K-NO-OUTCOME-DB-GUARD)
+- Whether person_reported provenance is sufficient for outcome reporting or whether provider confirmation should be required before representing certain outcome states
+- Whether referral completion should trigger any outcome-related process or remain fully independent
 
 ---
 
@@ -419,7 +434,7 @@ For each major step:
 |----------|-------|------------|
 | P0 | 1 (FIXED) | D-001 |
 | P1 | 2 (OPEN) | G-NO-DB-TRUST-GUARD, H-NO-AUTHORITY-LINK |
-| P2 | 9 (OPEN) | E-NO-CREATION-UI, F-NO-FUNDING-GUARD, F-NO-FUNDING-UI, G-NO-TRUST-UI, H-NO-DURATION, H-NO-DELIVERY-UI, I-NO-PERSON-DECLINED-TRANSITION, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK, I-NO-REFERRAL-CREATION-UI |
+| P2 | 10 (OPEN) | E-NO-CREATION-UI, F-NO-FUNDING-GUARD, F-NO-FUNDING-UI, G-NO-TRUST-UI, H-NO-DURATION, H-NO-DELIVERY-UI, I-NO-PERSON-DECLINED-TRANSITION, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK, I-NO-REFERRAL-CREATION-UI, K-NO-OUTCOME-UI |
 | P3 | 3 (OPEN) | E-PROVENANCE, F-PROVENANCE, H-WILL-NOT-SHARE-SERVICE |
 
 ---
@@ -437,6 +452,7 @@ For each major step:
 - H-NO-DELIVERY-UI (P2): Navigator/admin UI should expose startDelivery, confirmDelivery, failDelivery, cancelDisclosure.
 - H-WILL-NOT-SHARE-SERVICE (P3): buildDisclosurePreview should return computed willNotShare, not empty array.
 - H-PARTIAL-FAILURE (PROFESSIONAL_REVIEW): Consider wrapping createConsentGrant + prepareDisclosure in a transaction.
+- K-NO-OUTCOME-DB-GUARD (PROFESSIONAL_REVIEW): Consider whether cross-field DB guards on outcome status combinations are needed or whether independent dimensions are intentional.
 
 ---
 

@@ -1,7 +1,7 @@
 # Pilot 001 — Defect Tracker
 
 **Date started:** 2026-08-09
-**Status:** 1 defect recorded (P0 — FIXED). Test B: 0 defects. Test C: 0 defects. Test D: 0 defects. Test E: 0 defects. Test F: 0 defects introduced. 1 pre-existing P2 finding recorded (F-NO-FUNDING-GUARD, OPEN). Test G: 1 P1 finding recorded (G-NO-DB-TRUST-GUARD, OPEN). Test H: 4 findings recorded (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). Test I: 0 defects introduced. 3 findings recorded (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN).
+**Status:** 1 defect recorded (P0 — FIXED). Test B: 0 defects. Test C: 0 defects. Test D: 0 defects. Test E: 0 defects. Test F: 0 defects introduced. 1 pre-existing P2 finding recorded (F-NO-FUNDING-GUARD, OPEN). Test G: 1 P1 finding recorded (G-NO-DB-TRUST-GUARD, OPEN). Test H: 4 findings recorded (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). Test I: 0 defects introduced. 3 findings recorded (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). Test J: 0 defects introduced. Test K: 0 defects introduced. 2 findings recorded (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN).
 
 ---
 
@@ -213,3 +213,35 @@ P0 findings stop Pilot 001 immediately.
 - **Status:** OPEN — do not fix during Test I.
 - **Required before:** Pilot 002. Build navigator referral creation workflow.
 - **Why this matters:** Without a referral creation UI, the entire referral lifecycle is unreachable through normal application use. The database and RLS are ready, but no UI exercises them.
+
+### FINDING ID: K-NO-OUTCOME-UI
+
+- **Severity:** P2
+- **Test ID:** K (identified during Test K execution)
+- **Description:** No participant or navigator UI exists to create or view outcomes. OutcomePage.tsx is a 1-line stub. AdminOutcomesPage.tsx is a placeholder. createOutcome() is a service function not wired to any UI component. Same class as I-NO-REFERRAL-CREATION-UI, E-NO-CREATION-UI, etc.
+- **Reproduction steps:**
+  1. Search for any UI component that creates an outcome — none found
+  2. Search for any service function that wraps outcome INSERT — createOutcome() exists but is not called from any UI
+  3. OutcomePage.tsx renders a single div; AdminOutcomesPage.tsx shows placeholder text
+- **Expected:** A participant-facing outcome reporting UI and a navigator-facing outcome management UI should exist.
+- **Actual:** Outcome creation is only possible through direct API calls. No UI exercises the outcome service.
+- **Privacy/security impact:** None — this is a missing workflow, not a data leak.
+- **Workaround:** Direct API calls or SQL can create outcomes for testing.
+- **Status:** OPEN — do not fix during Test K.
+- **Required before:** Pilot 002. Build participant-facing outcome reporting UI and navigator outcome management UI.
+- **Why this matters:** Without an outcome UI, the system cannot capture person-reported outcomes through normal application use. The independent state representation (connected / service_received / helpfulness) is ready but no UI exercises it.
+
+### FINDING ID: K-NO-OUTCOME-DB-GUARD
+
+- **Severity:** PROFESSIONAL_REVIEW
+- **Test ID:** K (identified during Test K execution)
+- **Description:** No DB trigger or cross-field CHECK constraint prevents logically inconsistent outcome combinations (e.g., connected=no with service_received=yes). The three status dimensions are fully independent at the database level. This may be intentional — the system preserves person-reported state as-is without judging consistency — or it may be a gap requiring domain-expert review.
+- **Examples of permitted combinations:**
+  - connected=no + service_received=yes (person says they didn't connect but says they received service)
+  - connected=chose_differently + helpfulness=yes (person chose differently but says it was helpful)
+  - provenance=provider_reported + connected=yes + service_received=no (provider reports an outcome where the person didn't receive service)
+- **Expected:** Domain expert should determine whether any combinations should be prohibited at the DB or application level.
+- **Actual:** All combinations permitted by CHECK constraints. No cross-field validation.
+- **Privacy/security impact:** None directly. Potential semantic-integrity concern if inconsistent combinations are used for reporting.
+- **Status:** OPEN — PROFESSIONAL_REVIEW. Not classified as a defect. Do not fix during Test K.
+- **Why this matters:** Whether these combinations should be prohibited is a domain question, not a mechanical finding. The system may intentionally preserve person-reported state without judging internal consistency.

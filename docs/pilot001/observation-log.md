@@ -1684,16 +1684,18 @@ Pre-test baselines (25 metrics captured): pilot_a_persons=6, confirmed_needs=2, 
 
 These are separate Test L scenario fixtures sharing the same Pathway/AuthorityToAct/ConsentGrant/Disclosure (schema permits shared disclosure_id and pathway_id across referrals). Their simultaneous existence is not four real-world referrals; it is controlled test state.
 
-**Service function defaults:** The runner replicated createBarrierEvent() defaults: when omitted, locus='undetermined', provenance='person_reported', verification_status='self_reported', remediability='unknown'. These are application-layer defaults set by the service function, not raw DB column defaults (which are 'unknown' and 'unverified').
+**Service function defaults — methodology note:** The initial L1–L4 runner (`.test-l-pilot001.mjs`) replicated `createBarrierEvent()` defaulting logic via an `applyServiceDefaults()` helper rather than importing and invoking the production function. This was corrected via a separate corrective verification (see "L1 Corrective Verification" below) that imported and invoked the actual production `createBarrierEvent()` from `outcomeService.ts` via a Vite SSR build. The corrective test proved all four application defaults through real production code execution.
+
+**Database column defaults (distinct from application defaults):** When a raw Supabase client insert omits these fields, the database column defaults are: locus='undetermined', provenance='unknown', verification_status='unverified', remediability='unknown'. The application service function overrides these with: provenance='person_reported', verification_status='self_reported'. This distinction was verified during the corrective test — the initial raw insert produced provenance='unknown' and verification_status='unverified' (DB defaults), while the production service function produced provenance='person_reported' and verification_status='self_reported' (application defaults).
 
 ### TEST ID: L1
 
 - **Date/time:** 2026-09-28T16:32Z
 - **Actor:** Pilot A (Maria) via authenticated Supabase client
 - **Starting state:** Referral-A at accepted. 0 barrier_events. 0 incidents, 0 outcomes, 0 contact_attempts, 0 escalations. 2 confirmed needs. Pathway=possible.
-- **Action performed:** createBarrierEvent with barrier_type='transportation', access_stage='attendance', referral_id=Referral-A. OMITTED locus, provenance, verification_status, remediability (testing application defaults).
+- **Action performed:** createBarrierEvent with barrier_type='transportation', access_stage='attendance', referral_id=Referral-A. OMITTED locus, provenance, verification_status, remediability (testing application defaults). Initial run used replicated defaulting logic; corrective run invoked the actual production createBarrierEvent() function.
 - **Expected behavior:** BarrierEvent created with defaults: locus=undetermined, provenance=person_reported, verification_status=self_reported, remediability=unknown. No Incident auto-created. No Outcome. No status changes.
-- **Actual behavior:** BarrierEvent `5202af21-c4b4-4c46-ae93-ef3120470e93` created. All 7 assertions PASS:
+- **Actual behavior:** BarrierEvent `5202af21-c4b4-4c46-ae93-ef3120470e93` created (initial run, replicated defaults). Corrective BarrierEvent `5a4b1c20-e308-4e8c-91aa-607fe5c16858` created (production createBarrierEvent() invoked). All 7 assertions PASS on both runs:
   - barrier_type=transportation PASS
   - access_stage=attendance PASS
   - locus=undetermined PASS (default, not inferred from barrier_type)
@@ -1709,7 +1711,48 @@ These are separate Test L scenario fixtures sharing the same Pathway/AuthorityTo
 - **Finding classification:** L-NO-BARRIER-UI (P2 MISSING) — no participant/navigator barrier creation UI.
 - **Recommended action:** Build participant-facing barrier reporting UI before Pilot 002.
 
-### TEST ID: L2
+### L1 CORRECTIVE VERIFICATION — Production Service Default Proof
+
+- **Date/time:** 2026-09-28T17:10Z
+- **Trigger:** Methodological review identified that the initial L1 runner replicated `createBarrierEvent()` defaulting logic via `applyServiceDefaults()` rather than invoking the production function. A corrective test was required to prove application defaults through real production code execution.
+- **Method:** A Vite SSR build of a Node.js entry point (`src/test-l-corrective-entry.ts`) that imported and invoked the actual production `createBarrierEvent()` from `src/services/outcomeService.ts`. The production function uses the shared `supabase` client singleton from `src/lib/supabase.ts` (backed by `import.meta.env.VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, resolved at build time by Vite).
+- **Prerequisites recreated (minimum controlled fixture chain):**
+  - Pathway `4eeced1c-b644-4298-8f81-af828cdad2b3` (status=possible)
+  - AuthorityToAct `fd32e829-6606-4ba7-a4e6-71cde829f844`
+  - ConsentGrant `8b7dd8d7-5fe8-4746-9ba0-9903aa08cab5`
+  - Disclosure `f9da2dcf-1afc-4456-bde9-8580beca3b49` (status=sent)
+  - Referral `9bfa2849-7796-419e-bc90-90a24cd54b08` (advanced to accepted via 7 legal transitions)
+- **Caller payload (4 fields omitted):**
+  ```
+  createBarrierEvent({
+    household_id, person_id, referral_id,
+    access_stage: 'attendance',
+    barrier_type: 'transportation'
+    // locus: OMITTED
+    // provenance: OMITTED
+    // verification_status: OMITTED
+    // remediability: OMITTED
+  })
+  ```
+- **Production createBarrierEvent() defaulting logic (lines 228–232 of outcomeService.ts):**
+  ```
+  locus: params.locus ?? 'undetermined',
+  provenance: params.provenance ?? 'person_reported',
+  verification_status: params.verification_status ?? 'self_reported',
+  remediability: params.remediability ?? 'unknown',
+  ```
+- **Persisted BarrierEvent `5a4b1c20-e308-4e8c-91aa-607fe5c16858`:**
+  - barrier_type=transportation PASS
+  - access_stage=attendance PASS
+  - locus=undetermined PASS (production default, not manually supplied)
+  - provenance=person_reported PASS (production default, not manually supplied)
+  - verification_status=self_reported PASS (production default, not manually supplied)
+  - remediability=unknown PASS (production default, not manually supplied)
+  - incident_id=null PASS (no auto-incident)
+- **Downstream:** incidents=0, outcomes=0, contact_attempts=0, escalations=0. confirmed_needs=2. referral_status=accepted (unchanged). pathway_status=possible (unchanged). barrier_events_count=1.
+- **Result:** PASS — production `createBarrierEvent()` application defaults PROVEN through real production code execution.
+- **Corrective cleanup:** All 6 corrective fixtures deleted by exact UUID (barrier 5a4b1c20, referral 9bfa2849, disclosure f9da2dcf, consent 8b7dd8d7, authority fd32e829, pathway 4eeced1c). Post-cleanup: all tables at 0. Baseline matched. Kenneth preserved. Password rotated. Corrective entry and SSR build artifacts deleted. Source grep: 0 matches.
+- **Record accounting for corrective test:** 6 additional temporary records created (1 pathway, 1 authority, 1 consent, 1 disclosure, 1 referral, 1 barrier). Maximum simultaneous: 6. All deleted.
 
 - **Date/time:** 2026-09-28T16:33Z
 - **Actor:** Pilot A (Maria) via authenticated Supabase client

@@ -1,27 +1,27 @@
 # Pilot 001 — Final Debrief
 
 **Date:** 2026-08-09
-**Status:** Test A COMPLETE. Test B COMPLETE. Test C COMPLETE. Test D COMPLETE. Test E COMPLETE. Test F COMPLETE. Test G COMPLETE. Test H COMPLETE. Test I COMPLETE. Test J COMPLETE. Test K COMPLETE. Test L COMPLETE (L4 PARTIAL). Tests M–O not yet started.
+**Status:** Tests A–O ALL COMPLETE. Test A PASS (7/7). Test B PASS (6/6). Test C PASS (3/3). Test D PASS (4/4). Test E PASS (5/5). Test F PASS (5/5). Test G PASS (8/8). Test H PASS (4/4). Test I PASS (6/6). Test J PASS (5/5). Test K PASS (4/4). Test L PARTIAL (L4: L4a PASS, L4b BLOCKED). Test M PARTIAL (M5 PASS, M1–M4 service PASS + participant visibility BLOCKED). Test N BLOCKED (N1–N8 all BLOCKED at participant UI). Test O PASS (6/6).
 
-Test A, B, C, D, E, F, G, and H results are recorded below. The remaining sections will be completed after all Tests I through O have been executed.
+All Tests A through O have been executed and frozen. Results are recorded below. Final reconciliation complete.
 
 ---
 
 ## 1. Pilot Status
 
-**IN PROGRESS.** Test A (Person + Household) complete — all 7 subtests PASS. Test B (Narration Preservation + Conveyance) complete — all 12 subtests PASS. Test C (Interpretation) complete — all 3 branches PASS + privacy check PASS. Test D (Structured Need Review) complete — all 4 subtests PASS + privacy check PASS. Test E (Pathway) complete — all 5 subtests PASS + RLS PASS + downstream-zero PASS. Test F (Funding Gates) complete — all 5 subtests PASS + RLS PASS + downstream-zero PASS + state-integrity PASS. One P0 defect discovered and fixed in Test A (RLS recursion). No defects in Test B, C, D, E, or F. One P2 finding identified during Test F preparation (F-NO-FUNDING-GUARD, OPEN). One P1 finding identified during Test G preparation (G-NO-DB-TRUST-GUARD, OPEN). No defects introduced during Test G execution. Four findings identified during Test H preparation (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). No defects introduced during Test H execution. Pilot 001 may proceed to Test I.
+**COMPLETE.** All 15 test groups (A–O) executed and frozen. 80 authoritative cases: 67 PASS, 5 PARTIAL, 8 BLOCKED, 0 FAIL. Test A (Person + Household) complete — all 7 subtests PASS. Test B (Narration Preservation + Conveyance) complete — all 12 subtests PASS. Test C (Interpretation) complete — all 3 branches PASS + privacy check PASS. Test D (Structured Need Review) complete — all 4 subtests PASS + privacy check PASS. Test E (Pathway) complete — all 5 subtests PASS + RLS PASS + downstream-zero PASS. Test F (Funding Gates) complete — all 5 subtests PASS + RLS PASS + downstream-zero PASS + state-integrity PASS. One P0 defect discovered and fixed in Test A (RLS recursion). No defects in Test B, C, D, E, or F. One P2 finding identified during Test F preparation (F-NO-FUNDING-GUARD, OPEN). One P1 finding identified during Test G preparation (G-NO-DB-TRUST-GUARD, OPEN). No defects introduced during Test G execution. Four findings identified during Test H preparation (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). No defects introduced during Test H execution. Pilot 001 may proceed to Test I.
 
 Test I is complete — all 6 subtests PASS + post-I6 verification PASS + RLS PASS + downstream-boundary PASS + cleanup verified. 3 new findings identified (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). No defects introduced. Pilot 001 may proceed to Test J.
 
 Test K is complete — all 4 subtests PASS (K1–K4) + 6/6 RLS checks PASS + downstream-boundary PASS after each scenario + cleanup verified + baselines matched. 2 new findings identified (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN). No P0/P1 execution defects triggered. K-NO-OUTCOME-UI recorded P2 OPEN; K-NO-OUTCOME-DB-GUARD remains PROFESSIONAL_REVIEW. Referral lifecycle and person-level Outcome are independent — no false inference from referral completion to outcome state. Provenance preserved as person_reported — not auto-upgraded. Service receipt does not imply helpfulness. Neither automatically means Need met. Application inference (inferServiceReceived) correctly maps not_yet→still_waiting and chose_differently→not_applicable. Pilot 001 may proceed to Test L.
 
-Test L is complete — L1 PASS, L2 PASS, L3 PASS, L4a PASS, L4b BLOCKED (L4 PARTIAL) + 6/6 RLS checks PASS + downstream-boundary PASS after each scenario + cleanup verified + baselines matched. L1 application defaults PROVEN through production createBarrierEvent() execution via corrective Vite SSR verification. 3 new findings identified (L-NO-BARRIER-UI P2 OPEN, L-NO-BARRIER-ADMIN-REVIEW P2 OPEN, L-NO-BARRIER-DB-GUARD PROFESSIONAL_REVIEW OPEN). No P0/P1 execution defects triggered. Locus defaults to undetermined — not inferred from barrier_type, access_stage, referral status, provenance, or person identity. remediability is an independent explicit field — not derived from barrier_type. locus='nextup' does NOT auto-create an Incident. Provenance preserved as person_reported — not auto-upgraded. Barrier creation does not auto-change Need/Pathway/Referral status. 4 separate controlled Referral fixtures used (accepted/sent/screening/acknowledged) for semantic compatibility — these are controlled test states, not universal product rules connecting Referral status to BarrierEvent access_stage. Pilot 001 may proceed to Test O.
+Test L is complete — L1 PASS, L2 PASS, L3 PASS, L4a PASS, L4b BLOCKED (L4 PARTIAL) + 6/6 RLS checks PASS + downstream-boundary PASS after each scenario + cleanup verified + baselines matched. L1 application defaults PROVEN through production createBarrierEvent() execution via corrective Vite SSR verification. 3 new findings identified (L-NO-BARRIER-UI P2 OPEN, L-NO-BARRIER-ADMIN-REVIEW P2 OPEN, L-NO-BARRIER-DB-GUARD PROFESSIONAL_REVIEW OPEN). No P0/P1 execution defects triggered. Locus defaults to undetermined — not inferred from barrier_type, access_stage, referral status, provenance, or person identity. remediability is an independent explicit field — not derived from barrier_type. locus='nextup' does NOT auto-create an Incident. Provenance preserved as person_reported — not auto-upgraded. Barrier creation does not auto-change Need/Pathway/Referral status. 4 separate controlled Referral fixtures used (accepted/sent/screening/acknowledged) for semantic compatibility — these are controlled test states, not universal product rules connecting Referral status to BarrierEvent access_stage. Pilot 001 proceeded to Test M, then Test N, then Test O. All complete.
 
-Test M is complete — M1 PASS, M2 PASS, M3 PASS, M4 PASS, M5 PASS (service-layer) + 5/5 fresh RLS checks PASS + downstream-boundary PASS after each scenario + cleanup verified + baselines matched. All M1-M4 next_action values PROVEN through production createOutcome() execution via Vite SSR — generateNextAction() and inferServiceReceived() invoked by the real production function, not replicated. No new findings introduced. UI display of next_action remains BLOCKED by existing finding K-NO-OUTCOME-UI (P2 OPEN). No P0/P1 execution defects triggered. M5 proven: next_action existence does NOT auto-create a referral — referral count remained 1 across all 4 scenarios. Production-service defaults confirmed: provenance=person_reported, helpfulness=unknown (when omitted), service_received_status inferred by inferServiceReceived() (still_waiting for not_yet, not_applicable for chose_differently). Historical Test K RLS evidence (6/6 PASS) remains frozen and unmodified; fresh Test M RLS evidence (5/5 PASS) is consistent with Test K.
+Test M is complete — RECONCILIATION CORRECTION — NO TEST RERUN. The authoritative Test M directive requires NextUp to "produce an understandable next action after the outcome/barrier." The word "understandable" requires participant visibility to satisfy M1–M4 completely. The prior frozen Test M evidence established: M1–M5 service-layer generation PASS (all next_action values PROVEN through production createOutcome() execution via Vite SSR — generateNextAction() and inferServiceReceived() invoked by the real production function), 5/5 fresh RLS checks PASS, downstream-boundary PASS after each scenario, cleanup verified, baselines matched, M5 proven (next_action existence does NOT auto-create a referral — referral count remained 1 across all 4 scenarios). No new findings introduced. No underlying Test M evidence changed. No new behavior was tested. No finding changed. K-NO-OUTCOME-UI remains the controlling existing finding. However, participant-facing next-action display/understandability is BLOCKED by existing finding K-NO-OUTCOME-UI (P2 OPEN) — no participant UI displays next_action values. This correction resolves the prior mismatch between service-layer PASS evidence and the authoritative human-understandability requirement. The prior Test M report was not erroneous execution — the service evidence was accurately reported. The correction is at the authoritative-case classification level only. Final authoritative classification: M1 PARTIAL (service generation PASS; participant visibility/understandability BLOCKED), M2 PARTIAL (service generation PASS; participant visibility/understandability BLOCKED), M3 PARTIAL (service generation PASS; participant visibility/understandability BLOCKED), M4 PARTIAL (service generation PASS; participant visibility/understandability BLOCKED), M5 PASS. Test M overall: PARTIAL. No P0/P1 execution defects triggered. Production-service defaults confirmed: provenance=person_reported, helpfulness=unknown (when omitted), service_received_status inferred by inferServiceReceived() (still_waiting for not_yet, not_applicable for chose_differently). Historical Test K RLS evidence (6/6 PASS) remains frozen and unmodified; fresh Test M RLS evidence (5/5 PASS) is consistent with Test K.
 
 Test N is complete — N1-N8 all BLOCKED at participant UI level. Service/data capability PROVEN for N1-N3 (recipient/purpose/scope via production getConsentGrants/getActiveConsentGrants), N5-N7 (disclosure status/sent_at/delivered_by via production prepareDisclosure/startDelivery/confirmDelivery/getDisclosures), N8 active (getActiveConsentGrants returns active consent), N8 revoked (production revokeConsentGrant executed, revoked consent excluded from active but retained in full record set). N4 BLOCKED at both UI and data level — no exclusion field exists on consent_grants or disclosures (confirms H-WILL-NOT-SHARE-SERVICE). N8 expired — schema permits status='expired' but no production mechanism (trigger, service function, or UI) creates or evaluates it. 1 new finding: N-NO-PRIVACY-HISTORY-UI (P2 OPEN) — PrivacyPage.tsx is a 1-line stub, not a regression (Test H never verified PrivacyPage rendering). No fresh RLS checks (Test H historical evidence covers consent_grants and disclosures). No P0/P1 execution defects triggered.
 
-Test O has not yet been executed.
+Test O is complete — PASS (6/6). O1–O4: Pilot A (Household A) queried Pilot B (Household B) narration, pathway, referral, and outcome via authenticated Supabase client under RLS — all returned zero rows (BLOCKED as required). O5: Actual navigator (authenticated, assigned to Household A only) queried all 4 Pilot B target tables — all returned zero rows (BLOCKED as required). O6: Fresh anonymous client queried all 4 Pilot B target tables — all returned zero rows (BLOCKED as required). All targets positively verified to exist via admin SQL before attack tests. No query errors. No partial metadata leaked. No P0 stop event. No new findings. 5 temporary fixtures created in Pilot B's household, all deleted post-test. Pilot A and navigator temporary passwords rotated to random post-test. Pilot B credentials untouched. All 14 baseline metrics matched exactly post-cleanup. Kenneth preserved. Ephemeral runner and build artifacts deleted. Source grep for temporary secrets: 0 matches. Tests A–O are now frozen.
 
 ---
 
@@ -30,7 +30,7 @@ Test O has not yet been executed.
 | Test Group | Tests | Executed | Passed | Failed | Partial | Blocked |
 |------------|-------|----------|--------|--------|---------|---------|
 | A — Person + Household | 7 | 7 | 7 | 0 | 0 | 0 |
-| B — Narration | 10 | 10 | 10 | 0 | 0 | 0 |
+| B — Narration | 6 | 6 | 6 | 0 | 0 | 0 |
 | C — Interpretation | 3 | 3 | 3 | 0 | 0 | 0 |
 | D — Need Review | 4 | 4 | 4 | 0 | 0 | 0 |
 | E — Pathway | 5 | 5 | 5 | 0 | 0 | 0 |
@@ -41,10 +41,10 @@ Test O has not yet been executed.
 | J — No Response | 5 | 5 | 5 | 0 | 0 | 0 |
 | K — What Happened? | 4 | 4 | 4 | 0 | 0 | 0 |
 | L — Barrier | 4 | 4 | 3 | 0 | 1 | 0 |
-| M — Next Action | 5 | 5 | 5 | 0 | 0 | 0 |
-| N — Privacy History | 8 | 0 | 8 | 0 | 0 | 1 |
-| O — Isolation Attack | 6 | — | — | — | — | — |
-| **Total** | **76** | **—** | **—** | **—** | **—** | **—** |
+| M — Next Action | 5 | 5 | 1 | 0 | 4 | 0 |
+| N — Privacy History | 8 | 8 | 0 | 0 | 0 | 8 |
+| O — Isolation Attack | 6 | 6 | 6 | 0 | 0 | 0 |
+| **Total** | **80** | **80** | **67** | **0** | **5** | **8** |
 
 ---
 
@@ -82,8 +82,8 @@ Test O has not yet been executed.
 - Consent WHO/WHY/WHAT/DURATION: WHO=recipient_name ✓, WHY=purpose ✓, WHAT=data_categories ✓, DURATION=expires_at=NULL (H-NO-DURATION gap).
 - Consent-vs-disclosure match: recipient_name MATCH, purpose MATCH, data_categories=data_fields MATCH, no extra data in disclosure.
 - Prepared UI: "Your sharing request is ready." + "Approved by you. Not sent yet." — does NOT say Sent/Shared/Delivered/Completed.
-- PrivacyPage sharing history: prepared shows "Prepared for:" with amber badge + "Approved by you. Not sent yet." Sent shows "Sent to:" with green badge + "Sent on [date] via [method]." Participant can distinguish prepared from delivery_pending from sent.
-- Active Permissions shows WHO, WHY, WHAT, no DURATION (gap).
+- PrivacyPage sharing history: EXPECTED/DESIGNED behavior — not browser-verified during Test H. Test H observation log used "would show" descriptive language. No Test H evidence shows actual PrivacyPage rendering. Test N later confirmed PrivacyPage.tsx is a 1-line stub and was never functional. The described behavior (prepared shows "Prepared for:" with amber badge; sent shows "Sent to:" with green badge) represents the intended design, not verified participant UI evidence.
+- Active Permissions: EXPECTED/DESIGNED behavior — not browser-verified. Same caveat as PrivacyPage sharing history above. Test N confirmed no participant privacy history UI exists. The described behavior (WHO, WHY, WHAT, no DURATION) represents the intended design, not verified participant UI evidence.
 - RLS: VERIFIED. consent_grants and disclosures scoped to household members, assigned navigators, admins. Cross-household/anonymous/unassigned navigator blocked.
 - Downstream zero: VERIFIED. Zero referrals, contact_attempts, outcomes, barrier_events, incidents, escalations. Delivered disclosure did NOT auto-create a referral.
 - Partial failure risk: createConsentGrant and prepareDisclosure are separate DB calls with no transaction. If consent succeeds but disclosure fails, an orphaned active consent remains. Classified as PROFESSIONAL_REVIEW.
@@ -335,7 +335,7 @@ For each major step:
 
 ## 10. Data-Model Mismatches
 
-(To be completed after test execution. Record as MISSING or MODIFY first — do not change schema during validation.)
+Data-model and production-model limitations identified during Pilot 001 are represented either by canonical findings or by frozen test observations. No new finding is created during this documentation reconciliation. Canonical schema/service findings include F-NO-FUNDING-GUARD, I-NO-PERSON-DECLINED-TRANSITION, H-NO-AUTHORITY-LINK, K-NO-OUTCOME-DB-GUARD, L-NO-BARRIER-DB-GUARD, and H-WILL-NOT-SHARE-SERVICE. Test N additionally established that no exclusion field currently supports N4's "will not share" requirement and that N8's expired state is schema-representable but has no current production mechanism that creates, derives, or evaluates expiration. Those Test N observations remain frozen without creating or broadening findings.
 
 ---
 
@@ -459,8 +459,11 @@ For each major step:
 |----------|-------|------------|
 | P0 | 1 (FIXED) | D-001 |
 | P1 | 2 (OPEN) | G-NO-DB-TRUST-GUARD, H-NO-AUTHORITY-LINK |
-| P2 | 10 (OPEN) | E-NO-CREATION-UI, F-NO-FUNDING-GUARD, F-NO-FUNDING-UI, G-NO-TRUST-UI, H-NO-DURATION, H-NO-DELIVERY-UI, I-NO-PERSON-DECLINED-TRANSITION, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK, I-NO-REFERRAL-CREATION-UI, K-NO-OUTCOME-UI |
+| P2 | 13 (OPEN) | E-NO-CREATION-UI, F-NO-FUNDING-GUARD, F-NO-FUNDING-UI, G-NO-TRUST-UI, H-NO-DURATION, H-NO-DELIVERY-UI, I-NO-PERSON-DECLINED-TRANSITION, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK, I-NO-REFERRAL-CREATION-UI, K-NO-OUTCOME-UI, L-NO-BARRIER-UI, L-NO-BARRIER-ADMIN-REVIEW, N-NO-PRIVACY-HISTORY-UI |
 | P3 | 3 (OPEN) | E-PROVENANCE, F-PROVENANCE, H-WILL-NOT-SHARE-SERVICE |
+| PROFESSIONAL_REVIEW | 2 (OPEN) | K-NO-OUTCOME-DB-GUARD, L-NO-BARRIER-DB-GUARD |
+
+**Total: 21 findings (1 FIXED + 20 OPEN).** P0: 1 FIXED. P1: 2 OPEN. P2: 13 OPEN. P3: 3 OPEN. PROFESSIONAL_REVIEW: 2 OPEN.
 
 ---
 
@@ -483,20 +486,35 @@ For each major step:
 
 ## 19. Automated Tests That Should Now Be Created
 
-(To be completed after test execution.)
+Based on frozen Pilot 001 findings, the following automated tests should be created before Pilot 002:
+- Cross-household RLS isolation test (narration, pathway, referral, outcome) — covers O1–O6 patterns
+- Narration immutability trigger test — covers B4–B5 pattern
+- Pathway confirmed-need guard test — covers E1 pattern
+- Referral transition guard test — covers I1 pattern (disclosure-before-referral)
+- Disclosure delivery constraint test — covers H4 pattern (sent requires delivery proof)
+- Funding gate state-integrity test — covers F-NO-FUNDING-GUARD once guard is implemented
+- Trust boundary enforcement test — covers G-NO-DB-TRUST-GUARD once guard is implemented
+- Consent authority link test — covers H-NO-AUTHORITY-LINK once link is implemented
+- Outcome/barrier cross-field validation test — covers K-NO-OUTCOME-DB-GUARD and L-NO-BARRIER-DB-GUARD pending professional review
 
 ---
 
 ## 20. Pilot 002 Recommendation
 
-(To be completed after test execution.)
+### Final Status
 
-### Final Gate
-
-**READY FOR PILOT 002** or **NOT READY FOR PILOT 002**
-
-(To be determined after all tests are executed.)
+**PILOT 001 EXECUTION COMPLETE — PILOT 002 GATING REQUIRES AUTHORITATIVE PILOT 002 SCOPE**
 
 ### Explanation
 
-(To be completed after test execution.)
+The Pilot 001 test protocol is fully executed. All 15 test groups (A–O) are frozen. 80 authoritative cases: 67 PASS, 5 PARTIAL (L4, M1–M4), 8 BLOCKED (N1–N8), 0 FAIL. No Test P exists in the authoritative test script.
+
+A READY/NOT READY determination for Pilot 002 cannot be issued because Pilot 002 scope and objectives have not been authoritatively defined. The blocking status of 13 P2 findings depends on what Pilot 002 intends to exercise. The 2 P1 findings' actual blocking status depends on whether Pilot 002 introduces access paths that bypass the SharePage UI hard-stop or requires consent-to-authority audit trails. The 2 PROFESSIONAL_REVIEW findings require domain-expert input that cannot be substituted by engineering inference.
+
+Once Pilot 002 scope is defined, the provisional gate candidates from the final reconciliation report can be resolved into definitive Gate A/B/C/D classifications, and a READY/NOT READY determination can be issued.
+
+### Findings Summary
+
+- 21 total findings: 1 P0 FIXED, 2 P1 OPEN, 13 P2 OPEN, 3 P3 OPEN, 2 PROFESSIONAL_REVIEW OPEN
+- 1 FIXED + 20 unresolved = 21 total
+- No finding status, severity, scope, or identity was changed during reconciliation

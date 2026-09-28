@@ -1,7 +1,7 @@
 # Pilot 001 — Defect Tracker
 
 **Date started:** 2026-08-09
-**Status:** 1 defect recorded (P0 — FIXED). Test B: 0 defects. Test C: 0 defects. Test D: 0 defects. Test E: 0 defects. Test F: 0 defects introduced. 1 pre-existing P2 finding recorded (F-NO-FUNDING-GUARD, OPEN). Test G: 1 P1 finding recorded (G-NO-DB-TRUST-GUARD, OPEN). Test H: 4 findings recorded (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). Test I: 0 defects introduced. 3 findings recorded (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). Test J: 0 defects introduced. Test K: No P0/P1 execution defects triggered. K-NO-OUTCOME-UI recorded P2 OPEN; K-NO-OUTCOME-DB-GUARD remains PROFESSIONAL_REVIEW. 2 findings recorded (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN). Test L: No P0/P1 execution defects triggered. L1 PASS, L2 PASS, L3 PASS, L4a PASS, L4b BLOCKED (L4 PARTIAL). 3 findings recorded (L-NO-BARRIER-UI P2 OPEN, L-NO-BARRIER-ADMIN-REVIEW P2 OPEN, L-NO-BARRIER-DB-GUARD PROFESSIONAL_REVIEW OPEN). Test M: No P0/P1 execution defects triggered. M1 PASS, M2 PASS, M3 PASS, M4 PASS, M5 PASS (service-layer). 5/5 fresh RLS checks PASS. No new findings introduced — UI gap covered by existing K-NO-OUTCOME-UI (P2 OPEN). Test N: No P0/P1 execution defects triggered. N1-N8 all BLOCKED at participant UI level. Service/data capability PROVEN for N1-N3, N5-N7, N8 active, N8 revoked via production trustService functions. N4 BLOCKED at UI + data level (confirms H-WILL-NOT-SHARE-SERVICE). N8 expired — no production mechanism at any layer. 1 new finding: N-NO-PRIVACY-HISTORY-UI (P2 OPEN). No fresh RLS checks (Test H historical evidence covers consent_grants and disclosures).
+**Status:** 1 defect recorded (P0 — FIXED). Test B: 0 defects. Test C: 0 defects. Test D: 0 defects. Test E: 0 defects. Test F: 0 defects introduced. 1 pre-existing P2 finding recorded (F-NO-FUNDING-GUARD, OPEN). Test G: 1 P1 finding recorded (G-NO-DB-TRUST-GUARD, OPEN). Test H: 4 findings recorded (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). Test I: 0 defects introduced. 3 findings recorded (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). Test J: 0 defects introduced. Test K: No P0/P1 execution defects triggered. K-NO-OUTCOME-UI recorded P2 OPEN; K-NO-OUTCOME-DB-GUARD remains PROFESSIONAL_REVIEW. 2 findings recorded (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN). Test L: No P0/P1 execution defects triggered. L1 PASS, L2 PASS, L3 PASS, L4a PASS, L4b BLOCKED (L4 PARTIAL). 3 findings recorded (L-NO-BARRIER-UI P2 OPEN, L-NO-BARRIER-ADMIN-REVIEW P2 OPEN, L-NO-BARRIER-DB-GUARD PROFESSIONAL_REVIEW OPEN). Test M: No P0/P1 execution defects triggered. M1 PASS, M2 PASS, M3 PASS, M4 PASS, M5 PASS (service-layer). 5/5 fresh RLS checks PASS. No new findings introduced — UI gap covered by existing K-NO-OUTCOME-UI (P2 OPEN). Test N: No P0/P1 execution defects triggered. N1-N8 all BLOCKED at participant UI level. Service/data capability PROVEN for N1-N3, N5-N7, N8 active, N8 revoked via production trustService functions. N4 BLOCKED at UI + data level (confirms H-WILL-NOT-SHARE-SERVICE). N8 expired — no production mechanism at any layer. 1 new finding: N-NO-PRIVACY-HISTORY-UI (P2 OPEN). No fresh RLS checks (Test H historical evidence covers consent_grants and disclosures). Test O: No P0/P1 execution defects triggered. O1–O6 all PASS (6/6). Cross-household isolation (O1–O4), unassigned navigator isolation (O5), and anonymous access blocking (O6) all verified with fresh authenticated and unauthenticated Supabase clients under RLS. All targets positively verified to exist before attack tests. No new findings. 5 temporary fixtures created and deleted. Temporary credentials rotated. Baselines matched. Kenneth preserved. Total findings: 21 (1 P0 FIXED, 2 P1 OPEN, 13 P2 OPEN, 3 P3 OPEN, 2 PROFESSIONAL_REVIEW OPEN). 1 FIXED + 20 unresolved.
 
 ---
 
@@ -308,3 +308,93 @@ P0 findings stop Pilot 001 immediately.
 - **Not a regression:** Test H observation log (lines 1068, 1100) used "would show" descriptive language for PrivacyPage behavior. No Test H evidence shows actual PrivacyPage rendering or browser verification. PrivacyPage was never proven functional during Pilot 001.
 - **Required before Pilot 002?:** yes. Build participant-facing privacy history UI displaying consent grants (recipient, purpose, data_categories, status) and disclosures (status, sent_at, delivered_by_user_id, delivery_method).
 - **Why this matters:** The authoritative Test N PASS condition is "A reasonable person can understand their information history without needing a navigator to decode it." Without a UI, this condition cannot be met. All N1-N8 cases are BLOCKED.
+
+### FINDING ID: E-PROVENANCE
+
+- **Severity:** P3
+- **Test ID:** E (identified during Test E preparation)
+- **Origin:** Frozen Test E preparation evidence
+- **Description:** Provider source_authority ("Publicly available organization information") is not shown to the participant in PathwayDetail. The participant sees provider name, location, and phone without any indication that this information is unverified. The source_authority is available in the data model but not surfaced to the participant.
+- **Reproduction steps:**
+  1. Navigate to PathwayDetail for a pathway with a linked provider
+  2. Observe provider name, location, and phone are displayed
+  3. Observe no source_authority, verification status, or staleness indicator is shown
+- **Expected:** source_authority or a verification status should be visible to the participant, not just to admins.
+- **Actual:** Provider information is displayed without provenance context.
+- **Privacy/security impact:** None — this is a transparency issue, not a data leak.
+- **Workaround:** AdminPathwaysPage shows source_authority in admin context.
+- **Status:** OPEN
+- **Required before Pilot 002?:** No hard requirement. Improvement for participant transparency.
+- **Why this matters:** A participant could reasonably assume provider information is confirmed when it is only publicly sourced and not verified.
+
+### FINDING ID: E-NO-CREATION-UI
+
+- **Severity:** P2
+- **Test ID:** E (identified during Test E preparation)
+- **Origin:** Frozen Test E preparation evidence
+- **Description:** No navigator/admin UI form exists to create a pathway. createPathway() is a service function in pathwayService.ts but is not called from any UI component. AdminPathwaysPage only displays review data (needs without pathways, draft pathways, stale catalog). A pathway creation form is needed for navigator workflow.
+- **Reproduction steps:**
+  1. Search for any UI component that calls createPathway — none found
+  2. AdminPathwaysPage only shows read-only review data
+  3. The service function exists but is not wired to any component
+- **Expected:** A navigator workflow should exist to create pathways from confirmed needs.
+- **Actual:** Pathway creation is only possible through direct API calls. No navigator UI exists.
+- **Privacy/security impact:** None — this is a missing workflow, not a data leak.
+- **Workaround:** Direct API calls or SQL can create pathways for testing.
+- **Status:** OPEN
+- **Required before Pilot 002?:** Conditional — depends on Pilot 002 scope. If Pilot 002 requires navigator pathway creation through UI, this must be built first.
+- **Why this matters:** Without a pathway creation UI, navigators cannot act on confirmed needs through normal application use.
+
+### FINDING ID: F-PROVENANCE
+
+- **Severity:** P3
+- **Test ID:** F (identified during Test F preparation)
+- **Origin:** Frozen Test F preparation evidence
+- **Description:** FundingOption source_authority ("Program Provider / School District") is a generic source description. source_checked_at is recorded but not shown to the participant. The participant sees "Source: Program Provider / School District" without knowing when it was last checked or how specific the source is.
+- **Reproduction steps:**
+  1. View FundingStatus component for a pathway with a linked funding option
+  2. Observe "Source: Program Provider / School District" in sub-text
+  3. Observe source_checked_at is not displayed
+- **Expected:** source_checked_at or a more specific source label should be shown to the participant.
+- **Actual:** Generic source label without temporal context.
+- **Privacy/security impact:** None.
+- **Workaround:** AdminPathwaysPage shows source_checked_at in admin context.
+- **Status:** OPEN
+- **Required before Pilot 002?:** No hard requirement. Improvement for participant transparency.
+- **Why this matters:** A generic source label does not establish current provider confirmation.
+
+### FINDING ID: F-NO-FUNDING-UI
+
+- **Severity:** P2
+- **Test ID:** F (identified during Test F preparation)
+- **Origin:** Frozen Test F preparation evidence
+- **Description:** No navigator/admin UI form exists to create or manage funding options or gates. createFundingOption(), createFundingGate(), updateFundingOption(), updateFundingGateStatus() are service functions not wired to any UI component. AdminPathwaysPage only shows gates needing verification in a read-only list. A funding management form is needed for navigator workflow.
+- **Reproduction steps:**
+  1. Search for any UI component that calls createFundingOption or createFundingGate — none found
+  2. AdminPathwaysPage only shows read-only gate verification lists
+  3. The service functions exist but are not wired to any component
+- **Expected:** A navigator workflow should exist to create and manage funding options and gates.
+- **Actual:** Funding management is only possible through direct API calls. No navigator UI exists.
+- **Privacy/security impact:** None — this is a missing workflow, not a data leak.
+- **Workaround:** Direct API calls or SQL can manage funding for testing.
+- **Status:** OPEN
+- **Required before Pilot 002?:** Conditional — depends on Pilot 002 scope. If Pilot 002 requires navigator funding management through UI, this must be built first. F-NO-FUNDING-GUARD must also be resolved before any such UI is operationalized.
+- **Why this matters:** Without a funding management UI, navigators cannot create or update funding options through normal application use.
+
+### FINDING ID: G-NO-TRUST-UI
+
+- **Severity:** P2
+- **Test ID:** G (identified during Test G preparation)
+- **Origin:** Frozen Test G preparation evidence
+- **Description:** No navigator/admin UI form exists to create or manage AuthorityToAct, YouthAssent, or ConsentGrant records. createAuthority(), createYouthAssent(), createConsentGrant() are service functions not wired to any UI component. AdminTrustPage only displays escalations, disputed authorities, declined assents, and revoked consents in read-only lists. A trust management form is needed for navigator workflow.
+- **Reproduction steps:**
+  1. Search for any UI component that calls createAuthority or createYouthAssent — none found
+  2. AdminTrustPage only shows read-only review lists
+  3. The service functions exist but are not wired to any component
+- **Expected:** A navigator workflow should exist to create and manage trust records.
+- **Actual:** Trust management is only possible through direct API calls. No navigator UI exists.
+- **Privacy/security impact:** None — this is a missing workflow, not a data leak.
+- **Workaround:** Direct API calls or SQL can manage trust records for testing.
+- **Status:** OPEN
+- **Required before Pilot 002?:** Conditional — depends on Pilot 002 scope. If Pilot 002 requires navigator trust management through UI, this must be built first. G-NO-DB-TRUST-GUARD must also be resolved before any such UI is operationalized.
+- **Why this matters:** Without a trust management UI, navigators cannot create authority or assent records through normal application use.

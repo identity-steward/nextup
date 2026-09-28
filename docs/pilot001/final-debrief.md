@@ -1,7 +1,7 @@
 # Pilot 001 — Final Debrief
 
 **Date:** 2026-08-09
-**Status:** Test A COMPLETE. Test B COMPLETE. Test C COMPLETE. Test D COMPLETE. Test E COMPLETE. Test F COMPLETE. Test G COMPLETE. Test H COMPLETE. Test I COMPLETE. Tests J–O not yet started.
+**Status:** Test A COMPLETE. Test B COMPLETE. Test C COMPLETE. Test D COMPLETE. Test E COMPLETE. Test F COMPLETE. Test G COMPLETE. Test H COMPLETE. Test I COMPLETE. Test J COMPLETE. Test K COMPLETE. Test L COMPLETE (L4 PARTIAL). Tests M–O not yet started.
 
 Test A, B, C, D, E, F, G, and H results are recorded below. The remaining sections will be completed after all Tests I through O have been executed.
 
@@ -15,7 +15,9 @@ Test I is complete — all 6 subtests PASS + post-I6 verification PASS + RLS PAS
 
 Test K is complete — all 4 subtests PASS (K1–K4) + 6/6 RLS checks PASS + downstream-boundary PASS after each scenario + cleanup verified + baselines matched. 2 new findings identified (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN). No P0/P1 execution defects triggered. K-NO-OUTCOME-UI recorded P2 OPEN; K-NO-OUTCOME-DB-GUARD remains PROFESSIONAL_REVIEW. Referral lifecycle and person-level Outcome are independent — no false inference from referral completion to outcome state. Provenance preserved as person_reported — not auto-upgraded. Service receipt does not imply helpfulness. Neither automatically means Need met. Application inference (inferServiceReceived) correctly maps not_yet→still_waiting and chose_differently→not_applicable. Pilot 001 may proceed to Test L.
 
-Tests J through O have not yet been executed.
+Test L is complete — L1 PASS, L2 PASS, L3 PASS, L4a PASS, L4b BLOCKED (L4 PARTIAL) + 6/6 RLS checks PASS + downstream-boundary PASS after each scenario + cleanup verified + baselines matched. 3 new findings identified (L-NO-BARRIER-UI P2 OPEN, L-NO-BARRIER-ADMIN-REVIEW P2 OPEN, L-NO-BARRIER-DB-GUARD PROFESSIONAL_REVIEW OPEN). No P0/P1 execution defects triggered. Locus defaults to undetermined — not inferred from barrier_type, access_stage, referral status, provenance, or person identity. remediability is an independent explicit field — not derived from barrier_type. locus='nextup' does NOT auto-create an Incident. Provenance preserved as person_reported — not auto-upgraded. Barrier creation does not auto-change Need/Pathway/Referral status. 4 separate controlled Referral fixtures used (accepted/sent/screening/acknowledged) for semantic compatibility — these are controlled test states, not universal product rules connecting Referral status to BarrierEvent access_stage. Pilot 001 may proceed to Test M.
+
+Tests M through O have not yet been executed.
 
 ---
 
@@ -32,9 +34,9 @@ Tests J through O have not yet been executed.
 | G — Trust Hard Stop | 8 | 8 | 8 | 0 | 0 | 0 |
 | H — Consent + Disclosure | 4 | 4 | 4 | 0 | 0 | 0 |
 | I — Referral | 6 | 6 | 6 | 0 | 0 | 0 |
-| J — No Response | 5 | — | — | — | — | — |
-| K — What Happened? | 4 | — | — | — | — | — |
-| L — Barrier | 4 | — | — | — | — | — |
+| J — No Response | 5 | 5 | 5 | 0 | 0 | 0 |
+| K — What Happened? | 4 | 4 | 4 | 0 | 0 | 0 |
+| L — Barrier | 4 | 4 | 3 | 0 | 1 | 0 |
 | M — Next Action | 5 | — | — | — | — | — |
 | N — Privacy History | 8 | — | — | — | — | — |
 | O — Isolation Attack | 6 | — | — | — | — | — |
@@ -217,6 +219,24 @@ Tests J through O have not yet been executed.
 - Referral lifecycle ≠ person-level Outcome: No trigger or function links the two. Referral completion does not auto-create an outcome, auto-set need to met, or auto-change pathway status. Outcome creation does not auto-change referral status.
 - Provenance preservation: person_reported is not auto-upgraded to provider_reported or system_observed through any mechanism.
 - Kenneth reconciliation: Test K Phase 0 verified `2b855933` (athletes table) instead of `ae8e2fd2` (persons table). Both records untouched. The authoritative Pilot 001 Kenneth preservation target is `ae8e2fd2` (persons, auth user kjrf@duck.com). `2b855933` (athletes) is separate pre-existing platform data. See observation log Test K reconciliation note.
+
+**Test L — Barrier:**
+- L1 (PASS): Transportation barrier, all application defaults omitted. locus=undetermined, provenance=person_reported, verification_status=self_reported, remediability=unknown. No Incident. No Outcome. No status changes. Blame boundary preserved — locus not inferred from barrier_type, access_stage, referral status, provenance, or person identity.
+- L2 (PASS): Communication failure barrier, locus omitted. locus=undetermined (NOT inferred as provider or person_context). No blame from non-response. No Incident. No Outcome. No status changes.
+- L3 (PASS): External decision barrier, barrier_type='other' (neutral), remediability='requires_external_decision' explicit. Proven that remediability is independent of barrier_type — not inferred. locus=undetermined (default). No Incident. No Outcome. No status changes.
+- L4a (PASS): NextUp-caused barrier, locus='nextup' (explicit — controlled scenario provides evidence). barrier_type='stale_directory_information'. incident_id=null. No auto-incident. No auto-outcome. No status changes.
+- L4b (BLOCKED): Admin review suggests Incident consideration — AdminOutcomesPage does not surface getOutcomeReviewData or nextUpCausedBarriers. L-NO-BARRIER-ADMIN-REVIEW P2 MISSING OPEN.
+- L4 overall: PARTIAL — L4a PASS; L4b BLOCKED by missing admin UI.
+- L-RLS (6/6 PASS): Pilot A sees own barriers. Navigator sees assigned household barriers. Anonymous blocked. Pilot B blocked from SELECT and INSERT. Pilot B cannot see Pilot A's referral. Pilot B INSERT left no record.
+- L-NO-BARRIER-UI (P2 OPEN): No participant or navigator UI exists to create or view barriers. Same class as K-NO-OUTCOME-UI, I-NO-REFERRAL-CREATION-UI.
+- L-NO-BARRIER-ADMIN-REVIEW (P2 OPEN): AdminOutcomesPage doesn't surface barrier review. getOutcomeReviewData exists in service layer but is not wired to any admin UI. Blocks L4b.
+- L-NO-BARRIER-DB-GUARD (PROFESSIONAL_REVIEW OPEN): No DB cross-field validation on barrier combinations. May be intentional (preserve person-reported state) or a gap.
+- Controlled Referral states: 4 separate Referral fixtures used (accepted for L1, sent for L2, screening for L3, acknowledged for L4) for semantic compatibility with each scenario's access_stage. These are controlled test states, not universal product rules.
+- Blame boundary: L1/L2/L3 locus defaults to undetermined — not inferred from any field. L4 locus='nextup' is explicitly asserted because the controlled scenario provides evidence.
+- Provenance preservation: person_reported is not auto-upgraded to navigator_reported or system_observed.
+- No auto-incident: locus='nextup' does NOT trigger auto-incident creation. Incident creation is a separate manual decision (linkBarrierToIncident).
+- No auto-outcome: Barrier creation does not auto-create an Outcome.
+- No status inference: Barrier creation does not change Need, Pathway, or Referral status.
 
 ---
 

@@ -1,7 +1,7 @@
 # Pilot 001 — Defect Tracker
 
 **Date started:** 2026-08-09
-**Status:** 1 defect recorded (P0 — FIXED). Test B: 0 defects. Test C: 0 defects. Test D: 0 defects. Test E: 0 defects. Test F: 0 defects introduced. 1 pre-existing P2 finding recorded (F-NO-FUNDING-GUARD, OPEN). Test G: 1 P1 finding recorded (G-NO-DB-TRUST-GUARD, OPEN). Test H: 4 findings recorded (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). Test I: 0 defects introduced. 3 findings recorded (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). Test J: 0 defects introduced. Test K: No P0/P1 execution defects triggered. K-NO-OUTCOME-UI recorded P2 OPEN; K-NO-OUTCOME-DB-GUARD remains PROFESSIONAL_REVIEW. 2 findings recorded (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN).
+**Status:** 1 defect recorded (P0 — FIXED). Test B: 0 defects. Test C: 0 defects. Test D: 0 defects. Test E: 0 defects. Test F: 0 defects introduced. 1 pre-existing P2 finding recorded (F-NO-FUNDING-GUARD, OPEN). Test G: 1 P1 finding recorded (G-NO-DB-TRUST-GUARD, OPEN). Test H: 4 findings recorded (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). Test I: 0 defects introduced. 3 findings recorded (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). Test J: 0 defects introduced. Test K: No P0/P1 execution defects triggered. K-NO-OUTCOME-UI recorded P2 OPEN; K-NO-OUTCOME-DB-GUARD remains PROFESSIONAL_REVIEW. 2 findings recorded (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN). Test L: No P0/P1 execution defects triggered. L1 PASS, L2 PASS, L3 PASS, L4a PASS, L4b BLOCKED (L4 PARTIAL). 3 findings recorded (L-NO-BARRIER-UI P2 OPEN, L-NO-BARRIER-ADMIN-REVIEW P2 OPEN, L-NO-BARRIER-DB-GUARD PROFESSIONAL_REVIEW OPEN).
 
 ---
 
@@ -245,3 +245,48 @@ P0 findings stop Pilot 001 immediately.
 - **Privacy/security impact:** None directly. Potential semantic-integrity concern if inconsistent combinations are used for reporting.
 - **Status:** OPEN — PROFESSIONAL_REVIEW. Not classified as a defect. Do not fix during Test K.
 - **Why this matters:** Whether these combinations should be prohibited is a domain question, not a mechanical finding. The system may intentionally preserve person-reported state without judging internal consistency.
+
+### FINDING ID: L-NO-BARRIER-UI
+
+- **Severity:** P2
+- **Test ID:** L (identified during Test L execution)
+- **Description:** No participant or navigator UI exists to create or view barrier events. OutcomePage.tsx is a 1-line stub. AdminOutcomesPage.tsx does not surface barriers. createBarrierEvent() is a service function not wired to any UI component. PERSON_BARRIER_OPTIONS exists as a plain-language mapping but is not rendered by any component. Same class as K-NO-OUTCOME-UI, I-NO-REFERRAL-CREATION-UI, H-NO-DELIVERY-UI.
+- **Reproduction steps:**
+  1. Search for any UI component that calls createBarrierEvent — none found
+  2. Search for any UI component that renders PERSON_BARRIER_OPTIONS — none found
+  3. OutcomePage.tsx renders a single div; AdminOutcomesPage.tsx does not import getOutcomeReviewData
+- **Expected:** A participant-facing barrier reporting UI and a navigator-facing barrier management UI should exist.
+- **Actual:** Barrier creation is only possible through direct API calls. No UI exercises the barrier service.
+- **Privacy/security impact:** None — this is a missing workflow, not a data leak.
+- **Workaround:** Direct API calls or SQL can create barriers for testing.
+- **Status:** OPEN — do not fix during Test L.
+- **Required before:** Pilot 002. Build participant-facing barrier reporting UI and navigator barrier management UI.
+- **Why this matters:** Without a barrier UI, the system cannot capture person-reported barriers through normal application use. The neutral blame language ("What got in the way?" not "Who failed?") and locus=undetermined default are ready but no UI exercises them.
+
+### FINDING ID: L-NO-BARRIER-ADMIN-REVIEW
+
+- **Severity:** P2
+- **Test ID:** L4b (identified during Test L execution)
+- **Description:** The authoritative Test L4 requirement states "admin review suggests Incident consideration without automatically creating an Incident." The aggregation logic EXISTS in outcomeService.ts — getOutcomeReviewData() includes nextUpCausedBarriers (locus='nextup'), barriersRequiringExternalDecision, and barriersRequiringNavigatorAction. However, AdminOutcomesPage.tsx does not import or call getOutcomeReviewData. No admin UI surfaces barrier-review data or suggests Incident consideration. This blocks the L4b verification.
+- **Reproduction steps:**
+  1. Inspect AdminOutcomesPage.tsx — no import of getOutcomeReviewData or outcomeService
+  2. Search for any admin UI component that surfaces nextUpCausedBarriers — none found
+  3. The aggregation logic is present in the service layer but disconnected from the UI
+- **Expected:** Admin review UI should surface nextUpCausedBarriers and suggest Incident consideration without auto-creating one.
+- **Actual:** No admin UI surfaces barrier-review aggregation. L4b BLOCKED.
+- **Privacy/security impact:** None — this is a missing admin workflow, not a data leak.
+- **Workaround:** The service function getOutcomeReviewData() can be called directly, but no admin UI exercises it.
+- **Status:** OPEN — do not fix during Test L.
+- **Required before:** Pilot 002. Wire AdminOutcomesPage to getOutcomeReviewData and surface nextUpCausedBarriers with Incident consideration suggestion.
+- **Why this matters:** Without admin barrier review, NextUp-caused barriers (locus='nextup') are not surfaced for Incident consideration. The no-auto-incident boundary is proven (L4a PASS), but the admin-review requirement is unimplemented.
+
+### FINDING ID: L-NO-BARRIER-DB-GUARD
+
+- **Severity:** PROFESSIONAL_REVIEW
+- **Test ID:** L (identified during Test L execution)
+- **Description:** No DB trigger or cross-field CHECK constraint prevents logically inconsistent barrier field combinations. For example: locus='nextup' with provenance='system_observed' (system observes its own failure), or barrier_type='stale_directory_information' with locus='undetermined' (stale directory info implies NextUp caused it, but locus could remain undetermined if evidence is incomplete). The barrier fields are fully independent at the database level. This may be intentional — the system preserves person-reported state as-is without judging consistency — or it may be a gap requiring domain-expert review.
+- **Expected:** Domain expert should determine whether any combinations should be prohibited at the DB or application level.
+- **Actual:** All combinations permitted by CHECK constraints. No cross-field validation.
+- **Privacy/security impact:** None directly. Potential semantic-integrity concern if inconsistent combinations are used for reporting.
+- **Status:** OPEN — PROFESSIONAL_REVIEW. Not classified as a defect. Do not fix during Test L.
+- **Why this matters:** Whether these combinations should be prohibited is a domain question, not a mechanical finding. The system may intentionally preserve person-reported barriers without judging internal consistency.

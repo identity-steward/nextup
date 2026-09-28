@@ -1655,71 +1655,178 @@ This document records every test execution. Each entry uses the structure below.
 
 ## TEST L — BARRIER
 
-(Not yet executed)
+**Date executed:** 2026-09-28
+
+**Phase 0 — Baseline and Identity Verification:**
+
+Live identity verification confirmed:
+- Pilot A: Maria, person_id=`b38e7879-2fc9-4534-9cc2-2afc762d3733`, auth_user_id=`7c73b09c-766b-45eb-bef8-8aaf9fd1fb8f`, household_id=`0bb28561-436a-4d0d-922a-71f4ac3f2713`
+- Navigator: auth_user_id=`380c682d-bfee-4df8-ac4d-760d53d26cde`, assigned to Pilot A household (active)
+- Pilot B: James, person_id=`788ae94d-ab6b-4221-a71e-38f639ee8afc`, auth_user_id=`bed6444f-ec5d-4ad1-9be0-deaa55e9664d`, household_id=`9aa80e8c-fd89-4e4c-9e23-a2fcf2dc1171` (unassigned to Pilot A household)
+- Confirmed needs: `92823c92` (After-school program), `bc4cbf8e` (Emotional support), both on person `b38e7879`
+- Kenneth artifact: `ae8e2fd2-fc3b-4130-8a02-45253effb2f9` confirmed present in persons table (created 2026-08-11)
+
+Pre-test baselines (25 metrics captured): pilot_a_persons=6, confirmed_needs=2, pathways=0, referrals=0, barrier_events=0, outcomes=0, incidents=0, contact_attempts=0, escalations=0, persons_total=6, households_total=5, memberships_total=6, narrations_total=2, authority_to_act=0, consent_grants=0, disclosures=0, athletes=7, athlete_signups=2, creators=1, media_uploads=4, services=3, providers=3, eligibility_pathways=2, active_nav_assignments=1.
+
+**Controlled Setup:**
+
+4 shared prerequisite records created:
+- Pathway `2c326f4d-ce0b-4cab-acfa-c4cb6626bb91` (status=possible, linked to need 92823c92, service 0ca115e0)
+- AuthorityToAct `42545c9f-ceda-4cb9-a7b0-b58170679c09` (verification_status=asserted)
+- ConsentGrant `341823ae-d975-4107-9b86-8e8f82355279` (status=active, linked to AuthorityToAct)
+- Disclosure `0146d2e4-c0ca-470c-a4d1-e87d6bd0ae12` (status=sent, delivery_method=email, delivered_by_user_id=navigator)
+
+4 controlled Referral fixtures created, each advanced to its semantically correct state via sequential legal transitions:
+- Referral-A `da90b589-066d-48af-aa0c-235794a8b28e`: draft→ready→sent→received→acknowledged→screening→accepted (7 transitions). Controlled state for L1 (access_stage=attendance).
+- Referral-B `309570e0-6519-4d5d-ba3a-74312744a253`: draft→ready→sent (3 transitions). Controlled state for L2 (access_stage=contact_attempted).
+- Referral-C `6e25694a-3a5e-4e46-980b-9ced62b5c3ba`: draft→ready→sent→received→acknowledged→screening (6 transitions). Controlled state for L3 (access_stage=eligibility_review).
+- Referral-D `3ca1060c-bce9-4729-8cb9-58742befd369`: draft→ready→sent→received→acknowledged (5 transitions). Controlled state for L4 (access_stage=application).
+
+These are separate Test L scenario fixtures sharing the same Pathway/AuthorityToAct/ConsentGrant/Disclosure (schema permits shared disclosure_id and pathway_id across referrals). Their simultaneous existence is not four real-world referrals; it is controlled test state.
+
+**Service function defaults:** The runner replicated createBarrierEvent() defaults: when omitted, locus='undetermined', provenance='person_reported', verification_status='self_reported', remediability='unknown'. These are application-layer defaults set by the service function, not raw DB column defaults (which are 'unknown' and 'unverified').
 
 ### TEST ID: L1
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T16:32Z
+- **Actor:** Pilot A (Maria) via authenticated Supabase client
+- **Starting state:** Referral-A at accepted. 0 barrier_events. 0 incidents, 0 outcomes, 0 contact_attempts, 0 escalations. 2 confirmed needs. Pathway=possible.
+- **Action performed:** createBarrierEvent with barrier_type='transportation', access_stage='attendance', referral_id=Referral-A. OMITTED locus, provenance, verification_status, remediability (testing application defaults).
+- **Expected behavior:** BarrierEvent created with defaults: locus=undetermined, provenance=person_reported, verification_status=self_reported, remediability=unknown. No Incident auto-created. No Outcome. No status changes.
+- **Actual behavior:** BarrierEvent `5202af21-c4b4-4c46-ae93-ef3120470e93` created. All 7 assertions PASS:
+  - barrier_type=transportation PASS
+  - access_stage=attendance PASS
+  - locus=undetermined PASS (default, not inferred from barrier_type)
+  - provenance=person_reported PASS (service function default)
+  - verification_status=self_reported PASS (service function default)
+  - remediability=unknown PASS (default)
+  - incident_id=null PASS (no auto-incident)
+- **Downstream:** incidents=0, outcomes=0, contact_attempts=0, escalations=0. Needs: 2 confirmed (unchanged). Referral-A: accepted (unchanged). Pathway: possible (unchanged). barrier_events count=1.
+- **Result:** PASS
+- **Data created/changed:** 1 BarrierEvent created (5202af21). No other records changed. Deleted via admin SQL after scenario.
+- **Security/privacy observation:** Locus not inferred from barrier_type, access_stage, referral status, provenance, or person identity. Blame boundary preserved.
+- **User-experience observation:** No participant UI exists to create barriers (L-NO-BARRIER-UI). Tested via service layer only.
+- **Finding classification:** L-NO-BARRIER-UI (P2 MISSING) — no participant/navigator barrier creation UI.
+- **Recommended action:** Build participant-facing barrier reporting UI before Pilot 002.
 
 ### TEST ID: L2
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T16:33Z
+- **Actor:** Pilot A (Maria) via authenticated Supabase client
+- **Starting state:** Referral-B at sent. 0 barrier_events (L1 barrier deleted). 0 incidents, 0 outcomes, 0 contact_attempts, 0 escalations. 2 confirmed needs. Pathway=possible.
+- **Action performed:** createBarrierEvent with barrier_type='communication_failure', access_stage='contact_attempted', referral_id=Referral-B, provenance='person_reported'. OMITTED locus (testing default).
+- **Expected behavior:** BarrierEvent created with locus=undetermined (no blame inferred from non-response). No Incident. No Outcome. No status changes.
+- **Actual behavior:** BarrierEvent `f85a472f-601d-4d37-992b-b7aae49c5d9f` created. All 4 assertions PASS:
+  - barrier_type=communication_failure PASS
+  - access_stage=contact_attempted PASS
+  - locus=undetermined PASS (NOT inferred as provider or person_context)
+  - incident_id=null PASS
+- **Downstream:** incidents=0, outcomes=0, contact_attempts=0, escalations=0. Needs: 2 confirmed (unchanged). Referral-B: sent (unchanged). Pathway: possible (unchanged). barrier_events count=1.
+- **Result:** PASS
+- **Data created/changed:** 1 BarrierEvent created (f85a472f). Deleted via admin SQL after scenario.
+- **Security/privacy observation:** Communication failure does NOT auto-assign locus to provider or person. Locus remains undetermined — no blame inference from non-response.
+- **User-experience observation:** No participant UI exists for barrier reporting.
+- **Finding classification:** L-NO-BARRIER-UI (P2 MISSING, same as L1).
+- **Recommended action:** Build participant-facing barrier reporting UI before Pilot 002.
 
 ### TEST ID: L3
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T16:34Z
+- **Actor:** Pilot A (Maria) via authenticated Supabase client
+- **Starting state:** Referral-C at screening. 0 barrier_events (L2 barrier deleted). 0 incidents, 0 outcomes, 0 contact_attempts, 0 escalations. 2 confirmed needs. Pathway=possible.
+- **Action performed:** createBarrierEvent with barrier_type='other' (neutral), access_stage='eligibility_review', remediability='requires_external_decision', referral_id=Referral-C, provenance='person_reported'. OMITTED locus (testing default).
+- **Expected behavior:** BarrierEvent created with remediability=requires_external_decision (explicitly set, not inferred from barrier_type). locus=undetermined (default). No Incident. No Outcome. No status changes.
+- **Actual behavior:** BarrierEvent `23c236e0-4c1c-4b80-8548-6a656ce90044` created. All 5 assertions PASS:
+  - barrier_type=other PASS (neutral — no unsupported substantive cause introduced)
+  - access_stage=eligibility_review PASS
+  - locus=undetermined PASS (default, not inferred)
+  - remediability=requires_external_decision PASS (explicitly represented, NOT inferred from barrier_type='other')
+  - incident_id=null PASS
+- **Downstream:** incidents=0, outcomes=0, contact_attempts=0, escalations=0. Needs: 2 confirmed (unchanged). Referral-C: screening (unchanged). Pathway: possible (unchanged). barrier_events count=1.
+- **Result:** PASS
+- **Data created/changed:** 1 BarrierEvent created (23c236e0). Deleted via admin SQL after scenario.
+- **Security/privacy observation:** remediability is an independent explicit field, not derived from barrier_type. Using neutral barrier_type='other' proves the independence.
+- **User-experience observation:** No participant UI exists for barrier reporting.
+- **Finding classification:** L-NO-BARRIER-UI (P2 MISSING, same as L1).
+- **Recommended action:** Build participant-facing barrier reporting UI before Pilot 002.
 
 ### TEST ID: L4
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+**L4a — NextUp-caused barrier (EXECUTABLE):**
+
+- **Date/time:** 2026-09-28T16:35Z
+- **Actor:** Pilot A (Maria) via authenticated Supabase client (person reports stale info)
+- **Starting state:** Referral-D at acknowledged. 0 barrier_events (L3 barrier deleted). 0 incidents, 0 outcomes, 0 contact_attempts, 0 escalations. 2 confirmed needs. Pathway=possible.
+- **Action performed:** createBarrierEvent with barrier_type='stale_directory_information', access_stage='application', locus='nextup' (explicitly set — controlled scenario provides evidence NextUp's stale directory caused the barrier), referral_id=Referral-D, provenance='person_reported'.
+- **Expected behavior:** BarrierEvent created with locus=nextup. No Incident auto-created (incident_id=null). No Outcome. No status changes.
+- **Actual behavior:** BarrierEvent `4a056b57-113d-4f97-92e0-2353df92e35c` created. All 4 assertions PASS:
+  - barrier_type=stale_directory_information PASS
+  - access_stage=application PASS
+  - locus=nextup PASS (explicitly set, not auto-assigned)
+  - incident_id=null PASS (no auto-incident)
+- **Downstream:** incidents=0 (critical — proves no-auto-incident), outcomes=0, contact_attempts=0, escalations=0. Needs: 2 confirmed (unchanged). Referral-D: acknowledged (unchanged). Pathway: possible (unchanged). barrier_events count=1.
+- **Result:** PASS
+- **Data created/changed:** 1 BarrierEvent created (4a056b57). Deleted via admin SQL after scenario.
+- **Security/privacy observation:** locus='nextup' does NOT trigger auto-incident creation. Incident creation is a separate manual decision via linkBarrierToIncident().
+- **User-experience observation:** No participant UI exists for barrier reporting.
+
+**L4b — Admin review suggests Incident consideration (BLOCKED):**
+
+- **Date/time:** 2026-09-28
+- **Actor:** N/A — implementation state inspection
+- **Action performed:** Inspected AdminOutcomesPage.tsx for barrier-review aggregation (getOutcomeReviewData, nextUpCausedBarriers).
+- **Expected behavior:** Admin review UI should surface nextUpCausedBarriers and suggest Incident consideration without auto-creating one.
+- **Actual behavior:** AdminOutcomesPage.tsx does not import or call getOutcomeReviewData. No admin UI surfaces nextUpCausedBarriers or any barrier-review aggregation. The aggregation logic EXISTS in outcomeService.ts (getOutcomeReviewData includes nextUpCausedBarriers, barriersRequiringExternalDecision, barriersRequiringNavigatorAction) but is not connected to any admin UI component.
+- **Result:** BLOCKED — admin-review requirement unavailable through current UI.
+- **Finding classification:** L-NO-BARRIER-ADMIN-REVIEW (P2 MISSING) — AdminOutcomesPage doesn't surface barrier review.
+- **Recommended action:** Wire AdminOutcomesPage to getOutcomeReviewData and surface nextUpCausedBarriers with Incident consideration suggestion before Pilot 002.
+
+**L4 overall classification:** PARTIAL — L4a PASS (core barrier/no-auto-Incident behavior proven); L4b BLOCKED by missing admin UI (L-NO-BARRIER-ADMIN-REVIEW P2 MISSING OPEN).
+
+**Aggregation rule:** Per Pilot framework, L4 is reported as PARTIAL when the core barrier semantics pass but the admin-review requirement is blocked by missing UI. This does not imply L4 PASS.
+
+### RLS CHECKS
+
+**RLS fixture:** BarrierEvent `62976018-22a5-44d9-ad3a-198870c44feb` created via Pilot A against Referral-A (access_stage=follow_up, barrier_type=other).
+
+| Check | Actor | Action | Expected | Result |
+|-------|-------|--------|----------|--------|
+| L-RLS-1 | Pilot A | SELECT own barriers | count=1 | PASS |
+| L-RLS-2 | Navigator | SELECT assigned household barriers | count=1 | PASS |
+| L-RLS-3 | Anonymous | SELECT barriers | blocked (count=0) | PASS |
+| L-RLS-4 | Pilot B | SELECT cross-household barriers | count=0/blocked | PASS |
+| L-RLS-5 | Pilot B | INSERT barrier against Pilot A referral | blocked | PASS (no record created) |
+| L-RLS-6 | Pilot B | SELECT Pilot A referrals | count=0/blocked | PASS |
+
+Post-RLS verification: total barrier_events=1 (only RLS fixture). Pilot B INSERT left no record. 6/6 PASS.
+
+### CLEANUP
+
+All 13 temporary records deleted in dependency-safe order via admin SQL:
+1. RLS fixture BarrierEvent (62976018)
+2. Referral-A (da90b589), Referral-B (309570e0), Referral-C (6e25694a), Referral-D (3ca1060c)
+3. Disclosure (0146d2e4)
+4. ConsentGrant (341823ae)
+5. AuthorityToAct (42545c9f)
+6. Pathway (2c326f4d)
+
+Post-cleanup verification: barrier_events=0, referrals=0, disclosures=0, consent_grants=0, authority_to_act=0, pathways=0.
+
+### BASELINE COMPARISON
+
+All 25 pre-test metrics matched exactly post-cleanup. No baseline drift.
+
+### KENNETH PRESERVATION
+
+persons.id = ae8e2fd2-fc3b-4130-8a02-45253effb2f9 confirmed present and untouched before and after Test L.
+
+### CREDENTIAL RESTORATION
+
+Temporary passwords rotated to random values (gen_random_bytes) for all three test accounts (pilot001.a, pilot001.nav, pilot001.b).
+
+### RUNNER/SECRET CHECKS
+
+Ephemeral runner .test-l-pilot001.mjs deleted from disk. Source grep for temporary passwords and pilot email addresses: 0 matches.
 
 ---
 

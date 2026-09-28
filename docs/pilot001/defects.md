@@ -1,7 +1,7 @@
 # Pilot 001 — Defect Tracker
 
 **Date started:** 2026-08-09
-**Status:** 1 defect recorded (P0 — FIXED). Test B: 0 defects. Test C: 0 defects. Test D: 0 defects. Test E: 0 defects. Test F: 0 defects introduced. 1 pre-existing P2 finding recorded (F-NO-FUNDING-GUARD, OPEN). Test G: 1 P1 finding recorded (G-NO-DB-TRUST-GUARD, OPEN). Test H: 4 findings recorded (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). Test I: 0 defects introduced. 3 findings recorded (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). Test J: 0 defects introduced. Test K: No P0/P1 execution defects triggered. K-NO-OUTCOME-UI recorded P2 OPEN; K-NO-OUTCOME-DB-GUARD remains PROFESSIONAL_REVIEW. 2 findings recorded (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN). Test L: No P0/P1 execution defects triggered. L1 PASS, L2 PASS, L3 PASS, L4a PASS, L4b BLOCKED (L4 PARTIAL). 3 findings recorded (L-NO-BARRIER-UI P2 OPEN, L-NO-BARRIER-ADMIN-REVIEW P2 OPEN, L-NO-BARRIER-DB-GUARD PROFESSIONAL_REVIEW OPEN). Test M: No P0/P1 execution defects triggered. M1 PASS, M2 PASS, M3 PASS, M4 PASS, M5 PASS (service-layer). 5/5 fresh RLS checks PASS. No new findings introduced — UI gap covered by existing K-NO-OUTCOME-UI (P2 OPEN).
+**Status:** 1 defect recorded (P0 — FIXED). Test B: 0 defects. Test C: 0 defects. Test D: 0 defects. Test E: 0 defects. Test F: 0 defects introduced. 1 pre-existing P2 finding recorded (F-NO-FUNDING-GUARD, OPEN). Test G: 1 P1 finding recorded (G-NO-DB-TRUST-GUARD, OPEN). Test H: 4 findings recorded (H-NO-AUTHORITY-LINK P1 OPEN, H-NO-DURATION P2 OPEN, H-NO-DELIVERY-UI P2 OPEN, H-WILL-NOT-SHARE-SERVICE P3 OPEN). Test I: 0 defects introduced. 3 findings recorded (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). Test J: 0 defects introduced. Test K: No P0/P1 execution defects triggered. K-NO-OUTCOME-UI recorded P2 OPEN; K-NO-OUTCOME-DB-GUARD remains PROFESSIONAL_REVIEW. 2 findings recorded (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN). Test L: No P0/P1 execution defects triggered. L1 PASS, L2 PASS, L3 PASS, L4a PASS, L4b BLOCKED (L4 PARTIAL). 3 findings recorded (L-NO-BARRIER-UI P2 OPEN, L-NO-BARRIER-ADMIN-REVIEW P2 OPEN, L-NO-BARRIER-DB-GUARD PROFESSIONAL_REVIEW OPEN). Test M: No P0/P1 execution defects triggered. M1 PASS, M2 PASS, M3 PASS, M4 PASS, M5 PASS (service-layer). 5/5 fresh RLS checks PASS. No new findings introduced — UI gap covered by existing K-NO-OUTCOME-UI (P2 OPEN). Test N: No P0/P1 execution defects triggered. N1-N8 all BLOCKED at participant UI level. Service/data capability PROVEN for N1-N3, N5-N7, N8 active, N8 revoked via production trustService functions. N4 BLOCKED at UI + data level (confirms H-WILL-NOT-SHARE-SERVICE). N8 expired — no production mechanism at any layer. 1 new finding: N-NO-PRIVACY-HISTORY-UI (P2 OPEN). No fresh RLS checks (Test H historical evidence covers consent_grants and disclosures).
 
 ---
 
@@ -290,3 +290,21 @@ P0 findings stop Pilot 001 immediately.
 - **Privacy/security impact:** None directly. Potential semantic-integrity concern if inconsistent combinations are used for reporting.
 - **Status:** OPEN — PROFESSIONAL_REVIEW. Not classified as a defect. Do not fix during Test L.
 - **Why this matters:** Whether these combinations should be prohibited is a domain question, not a mechanical finding. The system may intentionally preserve person-reported barriers without judging internal consistency.
+
+### FINDING ID: N-NO-PRIVACY-HISTORY-UI
+
+- **Severity:** P2
+- **Test ID:** N (identified during Test N execution)
+- **Description:** PrivacyPage.tsx (route `/app/privacy`) is a 1-line stub rendering only a "Privacy" heading. No consent grants, disclosures, or permission status are displayed to the participant. The participant cannot review their privacy/sharing history — who they shared with (N1), why (N2), what was shared (N3), what was NOT shared (N4), whether it was prepared or sent (N5), when it was delivered (N6), who recorded delivery (N7), or what permissions remain active/revoked/expired (N8). All service-layer data exists and is retrievable via production `getConsentGrants()`, `getActiveConsentGrants()`, `getDisclosures()`, and `revokeConsentGrant()`, but no UI renders it.
+- **Reproduction steps:**
+  1. Sign in as Pilot A
+  2. Navigate to `/app/privacy`
+  3. Page renders only `<h1>Privacy</h1>` — no data, no imports from trustService, no consent/disclosure rendering
+- **Expected:** A participant-facing privacy history UI showing sharing records with recipient, purpose, scope, status, delivery details, and permission status.
+- **Actual:** PrivacyPage is a stub. No privacy history is displayed.
+- **Privacy/security impact:** None — this is a missing workflow state, not a data leak. Consent and disclosure data are correctly scoped by RLS (Test H historical evidence, 6/6 PASS).
+- **Workaround:** Direct service function calls can retrieve privacy data, but no participant UI exercises them.
+- **Status:** OPEN — do not fix during Test N.
+- **Not a regression:** Test H observation log (lines 1068, 1100) used "would show" descriptive language for PrivacyPage behavior. No Test H evidence shows actual PrivacyPage rendering or browser verification. PrivacyPage was never proven functional during Pilot 001.
+- **Required before Pilot 002?:** yes. Build participant-facing privacy history UI displaying consent grants (recipient, purpose, data_categories, status) and disclosures (status, sent_at, delivered_by_user_id, delivery_method).
+- **Why this matters:** The authoritative Test N PASS condition is "A reasonable person can understand their information history without needing a navigator to decode it." Without a UI, this condition cannot be met. All N1-N8 cases are BLOCKED.

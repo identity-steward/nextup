@@ -2104,135 +2104,277 @@ No new findings introduced by Test M. All service-layer behavior is correct. The
 
 ## TEST N — PRIVACY HISTORY
 
-(Not yet executed)
+**Date executed:** 2026-09-28
+
+**Phase 0 — Baseline and Identity Verification:**
+
+Live identity verification confirmed:
+- Pilot A: Maria, person_id=`b38e7879-2fc9-4534-9cc2-2afc762d3733`, household_id=`0bb28561-436a-4d0d-922a-71f4ac3f2713`
+- Confirmed needs: 2
+- Active navigator assignment: 1
+- Kenneth: `ae8e2fd2-fc3b-4130-8a02-45253effb2f9` confirmed present
+
+Pre-test baselines (13 metrics): confirmed_needs=2, pathways=0, referrals=0, outcomes=0, barrier_events=0, incidents=0, contact_attempts=0, escalations=0, persons=6, households=5, authority_to_act=0, consent_grants=0, disclosures=0, active_nav=1.
+
+**Production-service invocation method:** All fixture creation and retrieval was performed by importing and invoking actual production functions from `src/services/trustService.ts` via a Vite SSR build. Functions invoked: `createAuthority()`, `createConsentGrant()`, `getConsentGrants()`, `getActiveConsentGrants()`, `prepareDisclosure()`, `startDelivery()`, `confirmDelivery()`, `getDisclosures()`, `revokeConsentGrant()`. Authentication was via the shared `supabase` client singleton as Pilot A.
+
+**Fixture UUIDs:**
+- AuthorityToAct: `53fd2e53-cc9b-4513-9622-3f46f6a57d92`
+- ConsentGrant: `89ad1e95-9c0b-42f3-b296-7a03b86659eb`
+- Disclosure: `74cfece8-677d-4936-8319-ea036dd39a7d`
+
+**PrivacyPage source inspection:** `src/pages/PrivacyPage.tsx` is a 1-line stub rendering `<h1>Privacy</h1>`. No imports from trustService. No consent/disclosure rendering. No participant-facing privacy history UI exists.
+
+**Test H reconciliation:** Test H observation log (lines 1052, 1068, 1100) used "would show" descriptive language for PrivacyPage behavior. No Test H evidence shows actual PrivacyPage rendering or browser verification. The screenshot/reference for H1 cites SharePage.tsx, not PrivacyPage. Therefore PrivacyPage was never proven functional during Test H — the current stub state is NOT a regression.
 
 ### TEST ID: N1
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:02Z
+- **Actor:** Pilot A (Maria) via authenticated production supabase client
+- **Starting state:** 0 consent_grants, 0 disclosures, 0 authority_to_act. AuthorityToAct created via production `createAuthority()`.
+- **Action performed:** Production `createConsentGrant()` with recipient_name="Test N School Contact". Then production `getConsentGrants(householdId)` and `getActiveConsentGrants(householdId)`.
+- **Expected behavior:** Participant can see who they allowed information to be shared with (recipient visible).
+- **Actual behavior:** `getConsentGrants()` returned 1 consent with `recipient_name="Test N School Contact"`. `getActiveConsentGrants()` returned 1 consent. N1_RECIPIENT_VISIBLE=YES. Data capability proven at service layer.
+- **Result:** BLOCKED — UI. Recipient data capability PROVEN at service layer. PrivacyPage is a stub — participant cannot see this data.
+- **Screenshot/reference:** trustService.ts lines 258-266 (getConsentGrants), lines 268-277 (getActiveConsentGrants), lines 279-311 (createConsentGrant)
+- **Data created/changed:** 1 ConsentGrant created (89ad1e95). Deleted after test.
+- **Security/privacy observation:** Consent data is household-scoped via RLS (Test H historical evidence, 6/6 PASS).
+- **User-experience observation:** No participant UI exists to display recipient. PrivacyPage renders only "Privacy" heading.
+- **Finding classification:** MISSING — N-NO-PRIVACY-HISTORY-UI (P2 OPEN)
+- **Recommended action:** Build participant-facing privacy history UI before Pilot 002.
 
 ### TEST ID: N2
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:02Z
+- **Actor:** Pilot A (Maria) via authenticated production supabase client
+- **Starting state:** Same as N1.
+- **Action performed:** Production `getConsentGrants(householdId)` retrieval. Verified `purpose` field on returned consent.
+- **Expected behavior:** Participant can see why (purpose visible).
+- **Actual behavior:** `getConsentGrants()` returned consent with `purpose="Ask about tutoring support"`. N2_PURPOSE_VISIBLE=YES. Data capability proven at service layer.
+- **Result:** BLOCKED — UI. Purpose data capability PROVEN at service layer. PrivacyPage is a stub.
+- **Screenshot/reference:** trustService.ts lines 258-266 (getConsentGrants)
+- **Data created/changed:** none (retrieval only)
+- **Security/privacy observation:** Purpose is stored and retrievable but not displayed to participant.
+- **User-experience observation:** No participant UI exists to display purpose.
+- **Finding classification:** MISSING — covered by N-NO-PRIVACY-HISTORY-UI (P2 OPEN)
+- **Recommended action:** Build participant-facing privacy history UI before Pilot 002.
 
 ### TEST ID: N3
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:02Z
+- **Actor:** Pilot A (Maria) via authenticated production supabase client
+- **Starting state:** Same as N1.
+- **Action performed:** Production `getConsentGrants(householdId)` retrieval. Verified `data_categories` field on returned consent.
+- **Expected behavior:** Participant can see what was shared (scope visible).
+- **Actual behavior:** `getConsentGrants()` returned consent with `data_categories=["Student name","School"]`. N3_SCOPE_VISIBLE=YES. Data capability proven at service layer.
+- **Result:** BLOCKED — UI. Shared-scope data capability PROVEN at service layer. PrivacyPage is a stub.
+- **Screenshot/reference:** trustService.ts lines 258-266 (getConsentGrants)
+- **Data created/changed:** none (retrieval only)
+- **Security/privacy observation:** Data categories are stored and retrievable but not displayed to participant.
+- **User-experience observation:** No participant UI exists to display what was shared.
+- **Finding classification:** MISSING — covered by N-NO-PRIVACY-HISTORY-UI (P2 OPEN)
+- **Recommended action:** Build participant-facing privacy history UI before Pilot 002.
 
 ### TEST ID: N4
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:02Z
+- **Actor:** Pilot A (Maria) via authenticated production supabase client
+- **Starting state:** Same as N1. Disclosure created and transitioned to sent.
+- **Action performed:** Inspected persisted consent_grants and disclosures records for any exclusion/willNotShare field.
+- **Expected behavior:** Participant can see what was NOT shared (exclusions visible).
+- **Actual behavior:** `consent_grants` has `data_categories` (what was shared) but NO field for exclusions. `disclosures` has `data_fields` (what was shared) but NO field for exclusions. No `willNotShare`, `exclusions`, or equivalent column exists on either table. The `buildDisclosurePreview()` function returns `willNotShare: []` (always empty array, hardcoded at trustService.ts line 498). N4_DISCLOSURE_no_exclusion_field=true.
+- **Result:** BLOCKED — UI + exclusion-data limitation. Exclusions are not persisted in the database at all. PrivacyPage is a stub.
+- **Screenshot/reference:** trustService.ts line 498 (willNotShare: []), information_schema.columns for consent_grants and disclosures (no exclusion column)
+- **Data created/changed:** none (inspection only)
+- **Security/privacy observation:** The participant cannot see what was NOT shared because it is never recorded. This is a data-level gap, not just a UI gap.
+- **User-experience observation:** No participant UI exists. Even if it did, exclusion data would not be available.
+- **Finding classification:** Confirms existing H-WILL-NOT-SHARE-SERVICE (P3 OPEN). No new finding needed.
+- **Recommended action:** Add exclusion persistence to consent/disclosure schema and display in participant UI.
 
 ### TEST ID: N5
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:02Z
+- **Actor:** Pilot A (Maria) via authenticated production supabase client
+- **Starting state:** Disclosure created via production `prepareDisclosure()` at status=prepared. Then transitioned via production `startDelivery()` to delivery_pending, then via production `confirmDelivery()` to sent.
+- **Action performed:** At prepared: captured status=prepared, sent_at=null. At sent: production `getDisclosures(householdId)` retrieval. Verified status=sent.
+- **Expected behavior:** Participant can see if it was only prepared or actually sent (status visible and understandable).
+- **Actual behavior:** Prepared: N5_PREPARED_status=prepared, N5_PREPARED_sent_at=null, N5_PREPARED_distinguishable=YES. Sent: N5_SENT_status=sent, N5_SENT_distinguishable=YES. Disclosure status is correctly stored and distinguishable between prepared and sent. Data capability proven at service layer.
+- **Result:** BLOCKED — UI. Disclosure-status capability PROVEN at service layer. PrivacyPage is a stub — participant cannot see status.
+- **Screenshot/reference:** trustService.ts lines 346-367 (prepareDisclosure), lines 379-388 (startDelivery), lines 397-419 (confirmDelivery), lines 325-333 (getDisclosures)
+- **Data created/changed:** 1 Disclosure created (74cfece8), transitioned prepared → delivery_pending → sent. Deleted after test.
+- **Security/privacy observation:** Status transitions are correctly enforced. sent requires delivery_method + delivered_by_user_id + sent_at.
+- **User-experience observation:** No participant UI exists to display disclosure status.
+- **Finding classification:** MISSING — covered by N-NO-PRIVACY-HISTORY-UI (P2 OPEN)
+- **Recommended action:** Build participant-facing privacy history UI before Pilot 002.
 
 ### TEST ID: N6
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:02Z
+- **Actor:** Pilot A (Maria) via authenticated production supabase client
+- **Starting state:** Disclosure at sent.
+- **Action performed:** Production `getDisclosures(householdId)` retrieval. Verified `sent_at` field.
+- **Expected behavior:** Participant can see when it was delivered (sent_at visible).
+- **Actual behavior:** N6_sent_at=2026-09-28T20:02:12.527+00:00. sent_at is correctly populated. Data capability proven at service layer.
+- **Result:** BLOCKED — UI. sent_at capability PROVEN at service layer. PrivacyPage is a stub.
+- **Screenshot/reference:** trustService.ts lines 325-333 (getDisclosures), lines 397-419 (confirmDelivery sets sent_at)
+- **Data created/changed:** none (retrieval only)
+- **Security/privacy observation:** sent_at is stored and retrievable but not displayed to participant.
+- **User-experience observation:** No participant UI exists to display delivery timestamp.
+- **Finding classification:** MISSING — covered by N-NO-PRIVACY-HISTORY-UI (P2 OPEN)
+- **Recommended action:** Build participant-facing privacy history UI before Pilot 002.
 
 ### TEST ID: N7
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:02Z
+- **Actor:** Pilot A (Maria) via authenticated production supabase client
+- **Starting state:** Disclosure at sent.
+- **Action performed:** Production `getDisclosures(householdId)` retrieval. Verified `delivered_by_user_id` and `delivery_method` fields.
+- **Expected behavior:** Participant can see who recorded delivery (delivered_by visible).
+- **Actual behavior:** N7_delivered_by_user_id=380c682d-bfee-4df8-ac4d-760d53d26cde (navigator). N7_delivery_method=secure_email. Both fields correctly populated. Data capability proven at service layer.
+- **Result:** BLOCKED — UI. Delivery-recorder capability PROVEN at service layer. PrivacyPage is a stub.
+- **Screenshot/reference:** trustService.ts lines 325-333 (getDisclosures), lines 397-419 (confirmDelivery sets delivered_by_user_id and delivery_method)
+- **Data created/changed:** none (retrieval only)
+- **Security/privacy observation:** delivered_by_user_id is stored as a UUID. The participant would need a name resolution to understand who recorded delivery (UUID → display name). This is an additional UI requirement not tested here.
+- **User-experience observation:** No participant UI exists to display who recorded delivery.
+- **Finding classification:** MISSING — covered by N-NO-PRIVACY-HISTORY-UI (P2 OPEN)
+- **Recommended action:** Build participant-facing privacy history UI with navigator name resolution before Pilot 002.
 
 ### TEST ID: N8
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T20:02Z
+- **Actor:** Pilot A (Maria) via authenticated production supabase client
+- **Starting state:** ConsentGrant at status=active. Then revoked via production `revokeConsentGrant()`.
+- **Action performed:** Three sub-verification: (1) active — `getActiveConsentGrants()` and `getConsentGrants()` while consent is active. (2) revoked — invoke production `revokeConsentGrant(consentId)`, then re-verify both retrieval functions. (3) expired — architecture evidence from schema and source inspection.
+- **Expected behavior:** Participant can see what permissions remain active (Active/expired/revoked visible).
+- **Actual behavior:**
+
+  **Active:**
+  - `getActiveConsentGrants()` returned the consent (count=1). N8_ACTIVE_IN_ACTIVE=YES.
+  - `getConsentGrants()` returned the consent (count=1). N8_ACTIVE_IN_ALL=YES.
+  - N8_ACTIVE_STATUS=active.
+  - Classification: active service/data capability PROVEN; participant visibility BLOCKED.
+
+  **Revoked:**
+  - Production `revokeConsentGrant()` invoked on same ConsentGrant UUID (89ad1e95).
+  - `getConsentGrants()` still returns the consent (N8_REVOKED_in_getConsentGrants=YES). Revoked history remains retrievable.
+  - `getActiveConsentGrants()` no longer returns the consent (N8_REVOKED_in_getActiveConsentGrants=NO, correct).
+  - N8_REVOKED_status=revoked, N8_REVOKED_revoked_at=2026-09-28T20:02:12.73+00:00.
+  - Classification: revoked service/data capability PROVEN; participant visibility BLOCKED.
+
+  **Expired:**
+  - Schema: `consent_grants.status` CHECK constraint permits `'expired'` (confirmed via pg_constraint query).
+  - `expires_at`: nullable column exists, no CHECK constraint relating it to status.
+  - No trigger on consent_grants converts `active → expired` based on `expires_at` (only trigger is `trg_consent_grants_updated` for `updated_at`).
+  - No production service function evaluates `expires_at` against current time for consent grants. `getActiveConsentGrants()` filters by `status='active'` only, not by `expires_at`.
+  - `createConsentGrant()` accepts `opts?.expiresAt` but no production caller passes it (SharePage does not pass `expiresAt`).
+  - No participant UI derives expiration from `expires_at`.
+  - No admin SQL was used to force `status='expired'` or set `expires_at`.
+  - Classification: expired is schema-representable but no current production mechanism creates/derives/evaluates the state; participant visibility BLOCKED.
+
+- **Result:** BLOCKED — UI. Active/revoked service/data capability PROVEN. Expired has no production mechanism at any layer. PrivacyPage is a stub.
+- **Screenshot/reference:** trustService.ts lines 268-277 (getActiveConsentGrants), lines 313-319 (revokeConsentGrant), pg_constraint and pg_trigger query output, trustService.ts line 302 (expires_at defaults to null)
+- **Data created/changed:** 1 ConsentGrant transitioned active → revoked (same UUID 89ad1e95). Deleted after test.
+- **Security/privacy observation:** Revoked consents remain in the full record set (`getConsentGrants()`) but are excluded from active-only queries. This is correct behavior — revoked history is preserved.
+- **User-experience observation:** No participant UI exists to display active/revoked/expired permission status.
+- **Finding classification:** MISSING — covered by N-NO-PRIVACY-HISTORY-UI (P2 OPEN). Expired-state gap is related to H-NO-DURATION (P2 OPEN) but distinct: H-NO-DURATION identified the UI not collecting duration; N8 expired evidence establishes that no production mechanism at any layer creates or evaluates expiration.
+- **Recommended action:** Build participant-facing privacy history UI with active/revoked status display. Implement expiration mechanism (trigger or service function) if expired permissions are a product requirement.
+
+### FINDINGS
+
+**New finding:**
+
+N-NO-PRIVACY-HISTORY-UI — MISSING (P2 OPEN)
+
+PrivacyPage.tsx (route `/app/privacy`) is a 1-line stub rendering only a "Privacy" heading. No consent grants, disclosures, or permission status are displayed to the participant. The participant cannot review their privacy/sharing history. All N1-N8 authoritative requirements are BLOCKED at the UI level.
+
+Severity rationale: P2 per the Pilot severity rubric — "Significant confusion, unnecessary burden, missing workflow state." The participant cannot review who they shared with, why, what was shared, what was excluded, whether it was sent, when it was delivered, who recorded delivery, or what permissions remain active. This is a missing workflow state. No P0/P1 criteria apply (no privacy leak, no cross-household access, no trust control failure, no misleading authority representation).
+
+Not a regression: Test H observation log (lines 1068, 1100) used "would show" descriptive language for PrivacyPage behavior. No Test H evidence shows actual PrivacyPage rendering or browser verification. PrivacyPage was never proven functional during Pilot 001.
+
+**Reconciliation with existing findings:**
+
+| Finding | Status | Relationship to Test N |
+|---|---|---|
+| H-WILL-NOT-SHARE-SERVICE (P3 OPEN) | Preserved | Confirmed by N4 — no exclusion field exists on consent_grants or disclosures. `buildDisclosurePreview()` returns `willNotShare: []` (hardcoded empty). |
+| H-NO-DURATION (P2 OPEN) | Preserved, not broadened | H-NO-DURATION proved the tested ConsentGrant had `expires_at=null` and SharePage does not pass `expiresAt`. N8 expired evidence establishes the broader architecture: no trigger, no service function, and no UI logic evaluates consent expiration. H-NO-DURATION is not broadened beyond its proven scope. |
+| H-NO-DELIVERY-UI (P2 OPEN) | Preserved | Navigator delivery workflow UI, not participant privacy history. Different concern. |
+| K-NO-OUTCOME-UI (P2 OPEN) | Preserved | Outcome UI, not privacy history. Different concern. |
+
+### RLS
+
+No fresh RLS checks performed. Test N introduces no new access pattern — the participant queries their own household's consent_grants and disclosures through the same production service functions already verified in Test H. Test H historical RLS evidence (6/6 PASS for consent_grants and disclosures) is cited as historical evidence, not fresh Test N evidence.
+
+### CLEANUP
+
+All 3 temporary records deleted in dependency-safe order via admin SQL:
+1. Disclosure (74cfece8)
+2. ConsentGrant (89ad1e95)
+3. AuthorityToAct (53fd2e53)
+
+Post-cleanup verification: outcomes=0, disclosures=0, consent_grants=0, authority_to_act=0, pathways=0, referrals=0.
+
+### BASELINE COMPARISON
+
+All 13 pre-test metrics matched exactly post-cleanup. No baseline drift.
+
+| Metric | Pre-test | Post-cleanup |
+|--------|----------|-------------|
+| confirmed_needs | 2 | 2 |
+| pathways | 0 | 0 |
+| referrals | 0 | 0 |
+| outcomes | 0 | 0 |
+| barrier_events | 0 | 0 |
+| incidents | 0 | 0 |
+| contact_attempts | 0 | 0 |
+| escalations | 0 | 0 |
+| persons | 6 | 6 |
+| households | 5 | 5 |
+| authority_to_act | 0 | 0 |
+| consent_grants | 0 | 0 |
+| disclosures | 0 | 0 |
+| active_nav | 1 | 1 |
+
+### KENNETH PRESERVATION
+
+persons.id = ae8e2fd2-fc3b-4130-8a02-45253effb2f9 confirmed present and untouched before and after Test N.
+
+### CREDENTIAL RESTORATION
+
+Pilot A temporary password rotated to random (gen_random_bytes) after completion.
+
+### RUNNER/BUILD-ARTIFACT CLEANUP
+
+Ephemeral runner files deleted from disk:
+- `src/test-n-pilot001-entry.ts` (Vite SSR entry)
+- `.test-n-pilot001-build/` (SSR build artifacts)
+
+Source grep for temporary passwords and pilot email addresses: 0 matches.
+
+### RECORD ACCOUNTING
+
+- Total temporary record instances created: 3 (AuthorityToAct + ConsentGrant + Disclosure)
+- Maximum simultaneous records: 3
+- The active → revoked transition of the same ConsentGrant does not constitute another record instance.
+- All 3 records deleted by exact UUID.
+
+### EVIDENCE CLASSIFICATION
+
+| Evidence | Classification |
+|---|---|
+| N1-N3 recipient/purpose/scope retrieval | Production-service behavior — invoked actual production `getConsentGrants()` and `getActiveConsentGrants()` via Vite SSR |
+| N4 exclusion absence | Database behavior — no exclusion column exists on consent_grants or disclosures |
+| N5 disclosure status prepared vs sent | Production-service behavior — invoked actual production `prepareDisclosure()`, `startDelivery()`, `confirmDelivery()`, `getDisclosures()` |
+| N6 sent_at retrieval | Production-service behavior — invoked actual production `getDisclosures()` |
+| N7 delivered_by_user_id retrieval | Production-service behavior — invoked actual production `getDisclosures()` |
+| N8 active state | Production-service behavior — invoked actual production `getActiveConsentGrants()` and `getConsentGrants()` |
+| N8 revoked state | Production-service behavior — invoked actual production `revokeConsentGrant()`, then `getActiveConsentGrants()` and `getConsentGrants()` |
+| N8 expired architecture | Source/schema inspection — pg_constraint, pg_trigger, trustService.ts source analysis |
+| Consent/disclosure RLS | Historical Test H evidence (6/6 PASS) — frozen, not modified by Test N |
+| Participant UI display of privacy history | UI behavior — BLOCKED by N-NO-PRIVACY-HISTORY-UI (P2 OPEN) |
+
+### TEST N OVERALL: BLOCKED
+
+All 8 authoritative N cases are BLOCKED at the participant UI level. Service/data capability is PROVEN for N1-N3, N5-N7, N8 active, and N8 revoked. N4 is BLOCKED at both UI and data levels (no exclusion field exists). N8 expired has no production mechanism at any layer. The authoritative PASS condition — "A reasonable person can understand their information history without needing a navigator to decode it" — cannot be met while PrivacyPage is a stub.
 
 ---
 

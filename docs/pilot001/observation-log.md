@@ -1356,6 +1356,8 @@ This document records every test execution. Each entry uses the structure below.
 **Executed:** 2026-09-28T13:55:00Z
 **Overall result:** PASS (5/5 subtests PASS + RLS PASS + downstream-zero PASS + cleanup verified)
 
+**J4 Addendum:** The original J4 execution (2026-09-28T13:55:51Z) did not set `follow_up_at` on ContactAttempt 2, resulting in follow_up_at=NULL. A J4 retest was executed (2026-09-28T14:09:00Z) with `follow_up_at` set to approximately now+24h. All 7 J4 verification checks passed. The missing unassigned-navigator RLS check was also completed during the retest. See J4 RETEST section below.
+
 **Execution path:** Authenticated Node.js + @supabase/supabase-js client (anon key + user JWT), respecting RLS. Same architecture as Tests A–I. Supabase MCP used for admin/catalog verification only.
 
 **Pre-test control state verified (Phase 0):**
@@ -1370,7 +1372,7 @@ This document records every test execution. Each entry uses the structure below.
 - Not verifiable through current privilege context: trigger firing behavior (only observable through actual transition attempts, which J1–J5 exercised)
 
 **Administrative actions required:**
-- Temporary password set on pilot test accounts (pilot001.a and pilot001.nav) to enable authenticated client access. Passwords were rotated to random values after Test J completion. This is the same pattern as Test I.
+- Temporary password set on pilot test accounts (pilot001.a, pilot001.nav, and pilot001.b) to enable authenticated client access. pilot001.b was used as the unassigned navigator for the RLS check (Pilot B has no navigator_assignment to Pilot A's household). All three passwords were rotated to random values after Test J completion. This is the same pattern as Test I.
 
 **Test records created (7 total):**
 - Pathway ID: `99974167-54c2-42fa-b59e-b8a86c7ec798` (status=possible, need=92823c92)
@@ -1433,21 +1435,52 @@ This document records every test execution. Each entry uses the structure below.
 - **Finding classification:** KEEP
 - **Recommended action:** None — referral correctly remains at sent.
 
-### TEST ID: J4
+### TEST ID: J4 (original execution — superseded by retest)
 
 - **Date/time:** 2026-09-28T13:55:51Z
 - **Actor:** navigator
 - **Starting state:** 2 ContactAttempts exist, Referral at sent
 - **Action performed:** Verify contact attempt records are visible to navigator for follow-up. Check follow_up_at field.
-- **Expected behavior:** Contact attempts visible to assigned navigator. Follow-up action or next action visible.
-- **Actual behavior:** Both contact attempts visible to navigator (nav_reads_attempts=true, count=2). follow_up_at is NULL on both — the system does not auto-schedule follow-ups. Navigator can see the attempts and decide next steps manually.
-- **Result:** PASS (with observation)
-- **Screenshot/reference:** .test-j-pilot001.mjs output
+- **Expected behavior:** Contact attempts visible to assigned navigator. CA2 should have follow_up_at set to approximately now+24h.
+- **Actual behavior:** Both contact attempts visible to navigator. **follow_up_at was NULL on both CAs** — the original execution did not set follow_up_at on CA2 as required by the approved plan.
+- **Result:** NOT PROVEN / EXECUTION DEVIATION — superseded by J4 retest below
+- **Screenshot/reference:** .test-j-pilot001.mjs output (ephemeral, deleted)
 - **Data created/changed:** none (verification only)
-- **Security/privacy observation:** Contact attempts are visible only to assigned navigator and household members, not anonymous or unassigned users.
-- **User-experience observation:** follow_up_at is not auto-populated. The navigator sees the contact attempt history but must manually decide on follow-up timing. This is appropriate — the system does not presume to know when the navigator should follow up.
+- **Security/privacy observation:** N/A — execution deviation, not a product failure.
+- **User-experience observation:** N/A — execution deviation.
+- **Finding classification:** N/A — not a product defect. The runner did not set follow_up_at; the system accepted NULL because the column is nullable.
+- **Recommended action:** Retest with follow_up_at set. See J4 RETEST below.
+
+### TEST ID: J4 RETEST
+
+- **Date/time:** 2026-09-28T14:09:47Z
+- **Actor:** navigator (assigned to Pilot A household)
+- **Starting state:** Minimal prerequisite lifecycle established: 1 Pathway, 1 AuthorityToAct, 1 ConsentGrant, 1 Disclosure (sent), 1 Referral (sent). 0 ContactAttempts.
+- **Action performed:** Create 2 ContactAttempts against the referral: CA1 (method=phone, result=no_response, follow_up_at=NULL) and CA2 (method=email, result=no_response, follow_up_at=now+24h). Then verify 7 checks:
+  1. CA2 persisted a non-NULL follow_up_at
+  2. Stored timestamp matches intended follow-up time
+  3. Assigned navigator retrieves CA2 including follow_up_at
+  4. Pilot A retrieves CA2 including same follow_up_at
+  5. Referral remains sent
+  6. received_at, acknowledged_at, closed_at remain NULL
+  7. No BarrierEvent or Outcome created
+- **Expected behavior:** All 7 checks pass.
+- **Actual behavior:**
+  - CA2: id=742d5ffb-76ce-49bb-b3ce-66fa5dde8c4b, method=email, result=no_response, follow_up_at=2026-09-29T14:09:47.396+00:00
+  - Check 1 (follow_up_at non-NULL): PASS — value=2026-09-29T14:09:47.396+00:00
+  - Check 2 (timestamp matches intended): PASS — diff_ms=0, stored=2026-09-29T14:09:47.396+00:00, intended=2026-09-29T14:09:47.396Z
+  - Check 3 (navigator retrieves CA2 follow_up_at): PASS — value=2026-09-29T14:09:47.396+00:00
+  - Check 4 (Pilot A retrieves CA2 follow_up_at): PASS — value=2026-09-29T14:09:47.396+00:00
+  - Check 5 (referral remains sent): PASS — status=sent
+  - Check 6 (received_at/acknowledged_at/closed_at all NULL): PASS
+  - Check 7 (no BarrierEvent/Outcome): PASS — outcomes=0, barriers=0
+- **Result:** PASS (7/7 checks)
+- **Screenshot/reference:** .test-j4-retest.mjs output (ephemeral, deleted after test)
+- **Data created/changed:** 7 retest records created then deleted (pathway, authority, consent, disclosure, referral, 2 contact_attempts)
+- **Security/privacy observation:** follow_up_at is a nullable field that the navigator sets explicitly. The system does not auto-populate it. When set, it is persisted exactly and retrievable by both navigator and household member through their respective RLS policies.
+- **User-experience observation:** The follow_up_at field allows the navigator to schedule a tracked follow-up date. Both navigator and household member can see when the next follow-up is scheduled. This is appropriate — the system supports but does not mandate follow-up scheduling.
 - **Finding classification:** KEEP
-- **Recommended action:** None — contact attempts are visible for navigator follow-up. Auto-scheduling follow-ups is not a current feature; manual navigator judgment is appropriate.
+- **Recommended action:** None — J4 now fully verified with follow_up_at.
 
 ### TEST ID: J5
 
@@ -1467,19 +1500,23 @@ This document records every test execution. Each entry uses the structure below.
 
 ### TEST ID: J-RLS
 
-- **Date/time:** 2026-09-28T13:55:52Z
-- **Actor:** pilot_participant_a + navigator + anonymous
+- **Date/time:** 2026-09-28T13:55:52Z (original) + 2026-09-28T14:09:52Z (retest addendum)
+- **Actor:** pilot_participant_a + navigator + anonymous + pilot_participant_b (unassigned)
 - **Starting state:** Referral at sent with 2 ContactAttempts for Pilot A household
-- **Action performed:** 1) Pilot A reads own referral and contact attempts. 2) Navigator reads referral and contact attempts. 3) Anonymous reads referral and contact attempts.
-- **Expected behavior:** Pilot A can read own referral and attempts. Navigator can read assigned household's referral and attempts. Anonymous fully blocked.
-- **Actual behavior:** pilotA_reads_own_referral=true, pilotA_reads_own_attempts=true (count=2). nav_reads_referral=true, nav_reads_attempts=true (count=2). anonym_blocked_referral=true, anonym_blocked_attempts=true (count=0).
-- **Result:** PASS
-- **Screenshot/reference:** .test-j-pilot001.mjs output
-- **Data created/changed:** none (read-only)
-- **Security/privacy observation:** RLS correctly scopes referral and contact attempt access to household members and assigned navigators. Anonymous fully blocked. Pilot B cross-household isolation not tested (credentials not available) but was validated in Tests A–H.
+- **Action performed:**
+  Original: 1) Pilot A reads own referral and contact attempts. 2) Navigator reads referral and contact attempts. 3) Anonymous reads referral and contact attempts.
+  Retest addendum: 4) Unassigned navigator (Pilot B, no navigator_assignment to Pilot A household) SELECTs ContactAttempts for Pilot A's referral. 5) Unassigned navigator (Pilot B) INSERTs a ContactAttempt against Pilot A's referral. 6) Unassigned navigator (Pilot B) SELECTs Pilot A's referral.
+- **Expected behavior:** Pilot A can read. Navigator can read. Anonymous blocked. Unassigned navigator blocked on all operations.
+- **Actual behavior:**
+  Original: pilotA_reads_own_referral=true, pilotA_reads_own_attempts=true (count=2). nav_reads_referral=true, nav_reads_attempts=true (count=2). anonym_blocked_referral=true, anonym_blocked_attempts=true (count=0).
+  Retest addendum: unassigned_navigator_SELECT_blocked=true (count=0). unassigned_navigator_INSERT_blocked=true (error: "new row violates row-level security policy for table 'contact_attempts'"). unassigned_navigator_SELECT_referral_blocked=true.
+- **Result:** PASS (all 6 RLS checks: 3 original + 3 retest addendum)
+- **Screenshot/reference:** .test-j-pilot001.mjs + .test-j4-retest.mjs output (ephemeral, deleted)
+- **Data created/changed:** none (read-only + blocked insert)
+- **Security/privacy observation:** RLS correctly scopes referral and contact attempt access to household members and assigned navigators only. Anonymous fully blocked. Unassigned navigator (Pilot B) fully blocked on SELECT and INSERT for both referrals and contact_attempts. Cross-household isolation enforced.
 - **User-experience observation:** Security test — not visible to participant.
 - **Finding classification:** KEEP
-- **Recommended action:** None — RLS isolation holds for all tested paths.
+- **Recommended action:** None — RLS isolation holds for all tested paths including unassigned navigator.
 
 ### TEST ID: J-DOWNSTREAM-ZERO
 

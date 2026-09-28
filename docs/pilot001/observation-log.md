@@ -1,7 +1,7 @@
 # Pilot 001 — Observation Log
 
 **Date started:** 2026-08-09
-**Status:** Test A COMPLETE — all subtests PASS. Test B COMPLETE — all subtests PASS. Test C COMPLETE — all subtests PASS. Test D COMPLETE — all subtests PASS. Test E COMPLETE — all subtests PASS. Test F COMPLETE — all subtests PASS. Test G COMPLETE — all subtests PASS. Test H COMPLETE — all subtests PASS.
+**Status:** Test A COMPLETE — all subtests PASS. Test B COMPLETE — all subtests PASS. Test C COMPLETE — all subtests PASS. Test D COMPLETE — all subtests PASS. Test E COMPLETE — all subtests PASS. Test F COMPLETE — all subtests PASS. Test G COMPLETE — all subtests PASS. Test H COMPLETE — all subtests PASS. Test I COMPLETE — all subtests PASS. Test J COMPLETE — all subtests PASS.
 
 This document records every test execution. Each entry uses the structure below. Copy the template for each test ID.
 
@@ -1353,87 +1353,165 @@ This document records every test execution. Each entry uses the structure below.
 
 ## TEST J — NO RESPONSE
 
-(Not yet executed)
+**Executed:** 2026-09-28T13:55:00Z
+**Overall result:** PASS (5/5 subtests PASS + RLS PASS + downstream-zero PASS + cleanup verified)
+
+**Execution path:** Authenticated Node.js + @supabase/supabase-js client (anon key + user JWT), respecting RLS. Same architecture as Tests A–I. Supabase MCP used for admin/catalog verification only.
+
+**Pre-test control state verified (Phase 0):**
+- Pilot A scoped: 1 Person, 1 Household, 1 HouseholdMembership, 1 confirmed PersonNarration, 2 confirmed Needs, 0 downstream records, 1 navigator assignment (active)
+- Global: 6 persons (includes Kenneth artifact ae8e2fd2), 5 households, 6 memberships, 2 narrations, 2 needs, 0 pathways/referrals/disclosures/consent_grants/authority_to_act/contact_attempts/outcomes/barrier_events/escalations/youth_assents, 7 athletes, 2 athlete_signups, 1 creator, 4 media_uploads, 3 services, 3 providers, 2 eligibility_pathways
+- Kenneth artifact (ae8e2fd2, auth user d66b5b02) confirmed present and preserved
+- Navigator assignment confirmed: navigator_user_id=380c682d, assignment_status=active
+
+**Phase 0 verification classification:**
+- Live verified (via MCP admin SQL): table existence, column definitions, CHECK constraints, referral transition guard function source, RLS policy definitions, catalog records (services/providers/eligibility_pathways), auth.users existence, Pilot A records, Kenneth artifact, global counts
+- Source/migration verified: migration files on disk (50+ migrations)
+- Not verifiable through current privilege context: trigger firing behavior (only observable through actual transition attempts, which J1–J5 exercised)
+
+**Administrative actions required:**
+- Temporary password set on pilot test accounts (pilot001.a and pilot001.nav) to enable authenticated client access. Passwords were rotated to random values after Test J completion. This is the same pattern as Test I.
+
+**Test records created (7 total):**
+- Pathway ID: `99974167-54c2-42fa-b59e-b8a86c7ec798` (status=possible, need=92823c92)
+- AuthorityToAct ID: `ea27f388-6330-4d10-8a92-b176da9988c3` (verification_status=asserted, disputed=false, legal_instrument_asserted=false)
+- ConsentGrant ID: `025fc1c8-02b9-41a0-a196-08ddd2aeacb8` (active, authority_to_act_id linked)
+- Disclosure ID: `20d2bb88-f14f-4bcf-9e0c-d15f17d23835` (prepared → delivery_pending → sent)
+- Referral ID: `f80e9894-1e89-4056-8418-c0e1f51e7418` (draft → ready → sent, frozen at sent)
+- ContactAttempt 1 ID: `0e891d3b-90c9-4e4c-b563-2d58de4e9130` (result=no_response, method=phone)
+- ContactAttempt 2 ID: `e8656c07-75dd-4691-864c-9e795d484dba` (result=no_response, method=email)
+
+**Referral lifecycle:** draft → ready → sent. Frozen at sent for entirety of J1–J5. Two no_response ContactAttempts did NOT manufacture unable_to_contact, received, acknowledged, Outcome, BarrierEvent, Need resolution, or any other inferred state.
+
+**Cleanup:** All 7 Test J records deleted in dependency-safe order (contact_attempts → referral → disclosure → consent_grant → authority_to_act → pathway). ADMINISTRATIVE TEST CLEANUP — NOT PART OF RLS BEHAVIOR UNDER TEST (no DELETE RLS policies exist on these tables). Post-cleanup baselines matched pre-test baselines exactly in both Pilot A scoped and global contexts. Kenneth artifact preserved.
 
 ### TEST ID: J1
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T13:55:48Z
+- **Actor:** navigator (assigned to Pilot A household)
+- **Starting state:** Referral at sent, 0 contact_attempts
+- **Action performed:** Create 2 ContactAttempts with result='no_response' (phone + email)
+- **Expected behavior:** Both ContactAttempts created with result='no_response'
+- **Actual behavior:** CA1: id=0e891d3b, result=no_response, method=phone. CA2: id=e8656c07, result=no_response, method=email. Both created successfully.
+- **Result:** PASS
+- **Screenshot/reference:** .test-j-pilot001.mjs output (ephemeral, deleted after test)
+- **Data created/changed:** 2 contact_attempts rows
+- **Security/privacy observation:** Navigator RLS insert policy enforced — only assigned navigator could create contact attempts for this referral.
+- **User-experience observation:** Not visible to participant — navigator workflow.
+- **Finding classification:** KEEP
+- **Recommended action:** None — no-response contact attempts correctly recorded.
 
 ### TEST ID: J2
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T13:55:48Z
+- **Actor:** navigator
+- **Starting state:** 2 ContactAttempts with result='no_response' exist
+- **Action performed:** Verify no blame language in notes, result is 'no_response' not 'person_declined' or similar
+- **Expected behavior:** No blame language. Result='no_response' does not blame the person.
+- **Actual behavior:** CA1 notes: "Test J — first no-response contact attempt" (no blame language). CA2 notes: "Test J — second no-response contact attempt" (no blame language). Both results='no_response', not 'person_declined', not 'contact_information_invalid'.
+- **Result:** PASS
+- **Screenshot/reference:** .test-j-pilot001.mjs output
+- **Data created/changed:** none (verification only)
+- **Security/privacy observation:** 'no_response' is a neutral observation, not a person-blaming label.
+- **User-experience observation:** Not visible to participant — navigator workflow.
+- **Finding classification:** KEEP
+- **Recommended action:** None — no-response correctly does not blame the person.
 
 ### TEST ID: J3
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T13:55:51Z
+- **Actor:** navigator (re-read only)
+- **Starting state:** 2 ContactAttempts with result='no_response', Referral at sent
+- **Action performed:** Re-read referral after 2 no_response contact attempts. Verify status remains 'sent', not advanced to 'unable_to_contact', 'received', 'acknowledged', or any other inferred state.
+- **Expected behavior:** Referral status='sent'. No automatic transition. received_at=NULL, acknowledged_at=NULL, closed_at=NULL.
+- **Actual behavior:** status=sent, sent_at=2026-09-28T13:55:50.044383+00:00, received_at=null, acknowledged_at=null, closed_at=null. No automatic transition occurred.
+- **Result:** PASS
+- **Screenshot/reference:** .test-j-pilot001.mjs output
+- **Data created/changed:** none (read-only)
+- **Security/privacy observation:** The system does not manufacture a closed loop from no-response contact attempts. Each referral transition requires an explicit navigator action.
+- **User-experience observation:** Not visible to participant — data-level check.
+- **Finding classification:** KEEP
+- **Recommended action:** None — referral correctly remains at sent.
 
 ### TEST ID: J4
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T13:55:51Z
+- **Actor:** navigator
+- **Starting state:** 2 ContactAttempts exist, Referral at sent
+- **Action performed:** Verify contact attempt records are visible to navigator for follow-up. Check follow_up_at field.
+- **Expected behavior:** Contact attempts visible to assigned navigator. Follow-up action or next action visible.
+- **Actual behavior:** Both contact attempts visible to navigator (nav_reads_attempts=true, count=2). follow_up_at is NULL on both — the system does not auto-schedule follow-ups. Navigator can see the attempts and decide next steps manually.
+- **Result:** PASS (with observation)
+- **Screenshot/reference:** .test-j-pilot001.mjs output
+- **Data created/changed:** none (verification only)
+- **Security/privacy observation:** Contact attempts are visible only to assigned navigator and household members, not anonymous or unassigned users.
+- **User-experience observation:** follow_up_at is not auto-populated. The navigator sees the contact attempt history but must manually decide on follow-up timing. This is appropriate — the system does not presume to know when the navigator should follow up.
+- **Finding classification:** KEEP
+- **Recommended action:** None — contact attempts are visible for navigator follow-up. Auto-scheduling follow-ups is not a current feature; manual navigator judgment is appropriate.
 
 ### TEST ID: J5
 
-- **Date/time:** —
-- **Actor:** —
-- **Starting state:** —
-- **Action performed:** —
-- **Expected behavior:** —
-- **Actual behavior:** —
-- **Result:** —
-- **Screenshot/reference:** —
-- **Data created/changed:** —
-- **Security/privacy observation:** —
-- **User-experience observation:** —
-- **Finding classification:** —
-- **Recommended action:** —
+- **Date/time:** 2026-09-28T13:55:51Z
+- **Actor:** navigator
+- **Starting state:** 2 ContactAttempts with result='no_response', Referral at sent
+- **Action performed:** Verify ContactAttempt result field remains distinct from Referral status. Verify no auto-change to referral status.
+- **Expected behavior:** ContactAttempt result='no_response' ≠ Referral status='sent'. No automatic referral status change triggered by contact attempt creation.
+- **Actual behavior:** contact_attempt_count=2, referral_status_unchanged=true (still 'sent'), contact_attempts_have_own_status=true (result='no_response' ≠ status='sent'), no_auto_referral_status_change=true.
+- **Result:** PASS
+- **Screenshot/reference:** .test-j-pilot001.mjs output
+- **Data created/changed:** none (verification only)
+- **Security/privacy observation:** ContactAttempt and Referral are distinct lifecycle records. No trigger or automatic mechanism links contact attempt creation to referral status changes.
+- **User-experience observation:** Not visible to participant — data-level check.
+- **Finding classification:** KEEP
+- **Recommended action:** None — ContactAttempt remains distinct from Referral status.
+
+### TEST ID: J-RLS
+
+- **Date/time:** 2026-09-28T13:55:52Z
+- **Actor:** pilot_participant_a + navigator + anonymous
+- **Starting state:** Referral at sent with 2 ContactAttempts for Pilot A household
+- **Action performed:** 1) Pilot A reads own referral and contact attempts. 2) Navigator reads referral and contact attempts. 3) Anonymous reads referral and contact attempts.
+- **Expected behavior:** Pilot A can read own referral and attempts. Navigator can read assigned household's referral and attempts. Anonymous fully blocked.
+- **Actual behavior:** pilotA_reads_own_referral=true, pilotA_reads_own_attempts=true (count=2). nav_reads_referral=true, nav_reads_attempts=true (count=2). anonym_blocked_referral=true, anonym_blocked_attempts=true (count=0).
+- **Result:** PASS
+- **Screenshot/reference:** .test-j-pilot001.mjs output
+- **Data created/changed:** none (read-only)
+- **Security/privacy observation:** RLS correctly scopes referral and contact attempt access to household members and assigned navigators. Anonymous fully blocked. Pilot B cross-household isolation not tested (credentials not available) but was validated in Tests A–H.
+- **User-experience observation:** Security test — not visible to participant.
+- **Finding classification:** KEEP
+- **Recommended action:** None — RLS isolation holds for all tested paths.
+
+### TEST ID: J-DOWNSTREAM-ZERO
+
+- **Date/time:** 2026-09-28T13:55:51Z
+- **Actor:** navigator/admin (verification)
+- **Starting state:** After J1–J5 (referral at sent, 2 no_response contact attempts)
+- **Action performed:** Verify zero downstream records (outcomes, barrier_events).
+- **Expected behavior:** Zero outcomes, zero barrier_events. No-response contact attempts must NOT create outcomes, barriers, or any other inferred state.
+- **Actual behavior:** outcomes=0, barrier_events=0. No downstream records created.
+- **Result:** PASS
+- **Screenshot/reference:** .test-j-pilot001.mjs output
+- **Data created/changed:** none (verification only)
+- **Security/privacy observation:** No-response contact attempts do not manufacture downstream state.
+- **User-experience observation:** Not visible — data-level check.
+- **Finding classification:** KEEP
+- **Recommended action:** None — no manufactured downstream state.
+
+### TEST ID: J-CLEANUP
+
+- **Date/time:** 2026-09-28T13:56:30Z
+- **Actor:** admin (SQL cleanup — no DELETE RLS policies exist on these tables)
+- **Starting state:** 7 Test J records exist
+- **Action performed:** Delete in dependency-safe order: contact_attempts, referrals, disclosures, consent_grants, authority_to_act, pathways. Verify baselines restored. Verify Kenneth artifact untouched. Rotate pilot test passwords back to random.
+- **Expected behavior:** All 7 Test J records deleted. Pilot A scoped baseline restored. Global baseline restored. Kenneth artifact preserved. Passwords rotated.
+- **Actual behavior:** All 7 records deleted (0 remaining). Pilot A scoped: 1 person, 1 household, 1 membership, 1 narration, 2 needs, 0 downstream, 1 navigator_assignment — matches pre-test. Global: 6 persons, 5 households, 6 memberships, 2 narrations, 2 needs, 0 downstream, 7 athletes, 2 athlete_signups, 1 creator, 4 media_uploads, 3 services, 3 providers, 2 eligibility_pathways — matches pre-test. Kenneth artifact (ae8e2fd2) preserved. Passwords rotated to random.
+- **Result:** PASS
+- **Screenshot/reference:** MCP execute_sql output
+- **Data created/changed:** 7 Test J records deleted. Pilot test passwords rotated to random.
+- **Security/privacy observation:** ADMINISTRATIVE TEST CLEANUP — NOT PART OF RLS BEHAVIOR UNDER TEST. No DELETE RLS policies exist on these tables — cleanup required admin SQL. This is a known finding (same as Test I cleanup).
+- **User-experience observation:** Not visible — cleanup operation.
+- **Finding classification:** KEEP
+- **Recommended action:** None — cleanup verified, baselines restored, artifacts preserved.
 
 ---
 

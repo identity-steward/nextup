@@ -1569,6 +1569,8 @@ This document records every test execution. Each entry uses the structure below.
 
 **Findings:** K-NO-OUTCOME-UI (P2 MISSING), K-NO-OUTCOME-DB-GUARD (PROFESSIONAL_REVIEW)
 
+**K-KENNETH-RECONCILIATION (added 2026-09-28):** Test K Phase 0 queried the `athletes` table for `first_name = 'Kenneth'` and verified UUID `2b855933-518c-49dc-8592-a77f6f44697e` (Kenneth F, athlete profile, created 2026-05-22). This is NOT the Pilot 001 Kenneth preservation target. The authoritative Pilot 001 Kenneth artifact is `ae8e2fd2-fc3b-4130-8a02-45253effb2f9` in the `persons` table (created 2026-08-11, auth user kjrf@duck.com), as correctly referenced by Tests I and J. Both records remained untouched during Test K. The original Test K evidence is preserved as written; this note clarifies the discrepancy rather than silently rewriting it. Going forward, `ae8e2fd2` (persons) is the authoritative Pilot 001 preservation target. `2b855933` (athletes) is separate pre-existing platform data.
+
 ### TEST ID: K1
 
 - **Date/time:** 2026-09-28T15:22:00Z

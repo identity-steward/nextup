@@ -13,7 +13,7 @@ Test A, B, C, D, E, F, G, and H results are recorded below. The remaining sectio
 
 Test I is complete — all 6 subtests PASS + post-I6 verification PASS + RLS PASS + downstream-boundary PASS + cleanup verified. 3 new findings identified (I-NO-PERSON-DECLINED-TRANSITION P2 OPEN, I-NO-CONSENT-DISCLOSURE-HOUSEHOLD-CHECK P2 OPEN, I-NO-REFERRAL-CREATION-UI P2 OPEN). No defects introduced. Pilot 001 may proceed to Test J.
 
-Test K is complete — all 4 subtests PASS (K1–K4) + 6/6 RLS checks PASS + downstream-boundary PASS after each scenario + cleanup verified + baselines matched. 2 new findings identified (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN). No defects introduced. Referral lifecycle and person-level Outcome are independent — no false inference from referral completion to outcome state. Provenance preserved as person_reported — not auto-upgraded. Service receipt does not imply helpfulness. Neither automatically means Need met. Application inference (inferServiceReceived) correctly maps not_yet→still_waiting and chose_differently→not_applicable. Pilot 001 may proceed to Test L.
+Test K is complete — all 4 subtests PASS (K1–K4) + 6/6 RLS checks PASS + downstream-boundary PASS after each scenario + cleanup verified + baselines matched. 2 new findings identified (K-NO-OUTCOME-UI P2 OPEN, K-NO-OUTCOME-DB-GUARD PROFESSIONAL_REVIEW OPEN). No P0/P1 execution defects triggered. K-NO-OUTCOME-UI recorded P2 OPEN; K-NO-OUTCOME-DB-GUARD remains PROFESSIONAL_REVIEW. Referral lifecycle and person-level Outcome are independent — no false inference from referral completion to outcome state. Provenance preserved as person_reported — not auto-upgraded. Service receipt does not imply helpfulness. Neither automatically means Need met. Application inference (inferServiceReceived) correctly maps not_yet→still_waiting and chose_differently→not_applicable. Pilot 001 may proceed to Test L.
 
 Tests J through O have not yet been executed.
 
@@ -216,6 +216,7 @@ Tests J through O have not yet been executed.
 - K-NO-OUTCOME-DB-GUARD (PROFESSIONAL_REVIEW OPEN): No DB cross-field validation on outcome status combinations. May be intentional (preserve person-reported state as-is) or a gap requiring domain-expert review.
 - Referral lifecycle ≠ person-level Outcome: No trigger or function links the two. Referral completion does not auto-create an outcome, auto-set need to met, or auto-change pathway status. Outcome creation does not auto-change referral status.
 - Provenance preservation: person_reported is not auto-upgraded to provider_reported or system_observed through any mechanism.
+- Kenneth reconciliation: Test K Phase 0 verified `2b855933` (athletes table) instead of `ae8e2fd2` (persons table). Both records untouched. The authoritative Pilot 001 Kenneth preservation target is `ae8e2fd2` (persons, auth user kjrf@duck.com). `2b855933` (athletes) is separate pre-existing platform data. See observation log Test K reconciliation note.
 
 ---
 

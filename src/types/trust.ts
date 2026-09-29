@@ -96,8 +96,6 @@ export interface Disclosure {
   delivered_by_user_id: string | null;
   delivery_reference: string | null;
   delivery_notes: string | null;
-  participant_approved: boolean;
-  participant_approved_at: string | null;
   created_at: string;
 }
 

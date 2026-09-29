@@ -1,25 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Share2, FileText, ShieldCheck, Send, CheckCircle2, AlertCircle,
-  Loader2, ArrowRight, X, Clock, User, Building2, Lock,
+  Share2, FileText, ShieldCheck, CheckCircle2, AlertCircle,
+  Loader2, ArrowRight, X, Clock, User, Lock, ShieldAlert,
 } from 'lucide-react';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabase';
-import { getParticipantHouseholdId, getPrivacyHistory, type PrivacyHistoryEntry } from '../services/privacyService';
-import { checkAuthorityHardStops } from '../services/trustService';
-import type { ConsentGrant } from '../types/trust';
+import { getParticipantHouseholdId } from '../services/privacyService';
+import * as trustService from '../services/trustService';
+import type { AuthorityToAct, ConsentGrant } from '../types/trust';
 
 export function SharePage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [householdId, setHouseholdId] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [personId, setPersonId] = useState<string | null>(null);
+  const [householdId, setHouseholdId] = useState<string | null>(null);
+  const [authorities, setAuthorities] = useState<AuthorityToAct[]>([]);
   const [activeConsents, setActiveConsents] = useState<ConsentGrant[]>([]);
-  const [pendingDisclosures, setPendingDisclosures] = useState<PrivacyHistoryEntry[]>([]);
-  const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
-  const [approving, setApproving] = useState<string | null>(null);
+  const [approving, setApproving] = useState(false);
+  const [selectedAuthority, setSelectedAuthority] = useState<AuthorityToAct | null>(null);
+
+  const [form, setForm] = useState({
+    recipientName: '',
+    recipientType: '',
+    purpose: '',
+    dataCategories: 'education',
+    expiresAt: '',
+  });
 
   const loadData = useCallback(async () => {
     if (!user?.id) return;
@@ -34,13 +42,11 @@ export function SharePage() {
       setHouseholdId(householdInfo.householdId);
       setPersonId(householdInfo.personId);
 
-      const history = await getPrivacyHistory(householdInfo.householdId);
-      setActiveConsents(history.activeConsents);
+      const auths = await trustService.getAuthorityRecords(householdInfo.householdId);
+      setAuthorities(auths);
 
-      const pending = history.entries.filter(
-        (e) => e.disclosure.status === 'prepared' || e.disclosure.status === 'delivery_pending',
-      );
-      setPendingDisclosures(pending);
+      const cs = await trustService.getConsentGrants(householdInfo.householdId);
+      setActiveConsents(cs.filter((c) => c.status === 'active'));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load sharing information.');
     } finally {
@@ -50,27 +56,39 @@ export function SharePage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const approveDisclosure = async (disclosureId: string) => {
-    setApproving(disclosureId);
+  const validAuthorities = authorities.filter((a) => {
+    if (a.subject_person_id !== personId) return false;
+    const hardStop = trustService.checkAuthorityHardStops(a);
+    return !hardStop.blocked;
+  });
+
+  const handleApprove = async () => {
+    if (!householdId || !personId || !selectedAuthority) return;
+    setApproving(true);
     setError(null);
+    setSuccess(null);
     try {
-      const { error: updateError } = await supabase
-        .from('disclosures')
-        .update({ participant_approved: true, participant_approved_at: new Date().toISOString() })
-        .eq('id', disclosureId);
-      if (updateError) {
-        if (updateError.message.includes('participant_approved')) {
-          setApprovedIds((prev) => new Set(prev).add(disclosureId));
-        } else {
-          throw updateError;
-        }
-      } else {
-        setApprovedIds((prev) => new Set(prev).add(disclosureId));
-      }
+      const consent = await trustService.createConsentGrant(
+        personId,
+        personId,
+        householdId,
+        form.recipientName,
+        form.purpose,
+        form.dataCategories.split(',').map((s) => s.trim()).filter(Boolean),
+        {
+          recipientType: form.recipientType || undefined,
+          expiresAt: form.expiresAt || undefined,
+          authorityToActId: selectedAuthority.id,
+        },
+      );
+      setActiveConsents((prev) => [consent, ...prev]);
+      setSelectedAuthority(null);
+      setForm({ recipientName: '', recipientType: '', purpose: '', dataCategories: 'education', expiresAt: '' });
+      setSuccess('You have approved sharing. Your navigator can now prepare and send the disclosure.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to record approval.');
+      setError(e instanceof Error ? e.message : 'Failed to create consent.');
     } finally {
-      setApproving(null);
+      setApproving(false);
     }
   };
 
@@ -93,7 +111,7 @@ export function SharePage() {
             <h2 className="text-lg font-bold text-[#1a1f3a]">Sharing Approval</h2>
           </div>
           <p className="text-sm text-gray-600">
-            Review information your navigator has prepared to share on your behalf. Your approval is recorded before anything is sent.
+            Your navigator has created an authority to share information on your behalf. Review the details below and approve sharing to give your navigator permission to prepare and send information.
           </p>
         </div>
 
@@ -105,12 +123,20 @@ export function SharePage() {
           </div>
         )}
 
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3">
+            <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-green-700 flex-1">{success}</p>
+            <button onClick={() => setSuccess(null)} className="text-green-400 hover:text-green-600"><X className="w-5 h-5" /></button>
+          </div>
+        )}
+
         {/* Active consent grants */}
         {activeConsents.length > 0 && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center space-x-3 mb-4">
               <ShieldCheck className="w-5 h-5 text-green-600" />
-              <h3 className="text-sm font-bold text-gray-900">Active Permissions</h3>
+              <h3 className="text-sm font-bold text-gray-900">Your Active Permissions</h3>
             </div>
             <div className="space-y-3">
               {activeConsents.map((c) => (
@@ -133,121 +159,118 @@ export function SharePage() {
           </div>
         )}
 
-        {/* Pending disclosures awaiting participant approval */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <FileText className="w-5 h-5 text-[#c5a572]" />
-            <h3 className="text-sm font-bold text-gray-900">Information Prepared for Sharing</h3>
-          </div>
-
-          {pendingDisclosures.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4">No information is currently waiting for your approval.</p>
-          ) : (
-            <div className="space-y-4">
-              {pendingDisclosures.map((entry) => (
-                <PendingDisclosureCard
-                  key={entry.disclosure.id}
-                  entry={entry}
-                  approved={approvedIds.has(entry.disclosure.id)}
-                  approving={approving === entry.disclosure.id}
-                  onApprove={() => approveDisclosure(entry.disclosure.id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </DashboardLayout>
-  );
-}
-
-function PendingDisclosureCard({
-  entry, approved, approving, onApprove,
-}: {
-  entry: PrivacyHistoryEntry;
-  approved: boolean;
-  approving: boolean;
-  onApprove: () => void;
-}) {
-  const { disclosure, consent, authority } = entry;
-  const hardStop = authority ? checkAuthorityHardStops(authority) : null;
-
-  return (
-    <div className="p-4 rounded-lg border border-gray-200">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-3">
-          <span className={`px-2 py-1 rounded text-xs font-medium ${
-            disclosure.status === 'prepared' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
-          }`}>
-            {disclosure.status === 'prepared' ? 'Prepared' : 'Delivery in progress'}
-          </span>
-          <span className="text-sm font-medium text-gray-900">{disclosure.recipient_name}</span>
-        </div>
-      </div>
-
-      <div className="space-y-2 mb-4">
-        <div className="flex items-start space-x-2">
-          <User className="w-4 h-4 text-gray-400 mt-0.5" />
-          <div>
-            <p className="text-xs font-medium text-gray-500">Who will receive it</p>
-            <p className="text-sm text-gray-900">{disclosure.recipient_name}</p>
-          </div>
-        </div>
-        <div className="flex items-start space-x-2">
-          <FileText className="w-4 h-4 text-gray-400 mt-0.5" />
-          <div>
-            <p className="text-xs font-medium text-gray-500">Why it is being shared</p>
-            <p className="text-sm text-gray-900">{disclosure.purpose}</p>
-          </div>
-        </div>
-        <div className="flex items-start space-x-2">
-          <Share2 className="w-4 h-4 text-gray-400 mt-0.5" />
-          <div>
-            <p className="text-xs font-medium text-gray-500">What will be shared</p>
-            <p className="text-sm text-gray-900">{disclosure.data_fields.join(', ')}</p>
-          </div>
-        </div>
-        {consent && (
-          <div className="flex items-start space-x-2">
-            <ShieldCheck className="w-4 h-4 text-gray-400 mt-0.5" />
-            <div>
-              <p className="text-xs font-medium text-gray-500">Permission basis</p>
-              <p className="text-sm text-gray-900">
-                Active consent grant{authority ? ` based on ${authority.authority_basis || 'authority to act'}` : ''}
-              </p>
+        {/* No valid authorities */}
+        {validAuthorities.length === 0 && !selectedAuthority && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-start space-x-3">
+              <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">No sharing approvals available</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Your navigator has not yet created a valid authority for sharing your information, or the authority is under review. Please check back later or contact your navigator.
+                </p>
+              </div>
             </div>
           </div>
         )}
-      </div>
 
-      {hardStop?.blocked && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
-          <div className="flex items-start space-x-2">
-            <AlertCircle className="w-4 h-4 text-red-600 mt-0.5" />
-            <p className="text-sm text-red-700">{hardStop.reason}</p>
-          </div>
-        </div>
-      )}
-
-      {!hardStop?.blocked && (
-        <div className="flex items-center justify-between">
-          {approved ? (
-            <div className="flex items-center space-x-2 text-sm text-green-700">
-              <CheckCircle2 className="w-5 h-5" />
-              <span>You have approved this sharing. Your navigator can now send it.</span>
+        {/* Authority selection + approval form */}
+        {validAuthorities.length > 0 && !selectedAuthority && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <ShieldCheck className="w-5 h-5 text-[#c5a572]" />
+              <h3 className="text-sm font-bold text-gray-900">Approve Sharing</h3>
             </div>
-          ) : (
-            <button
-              onClick={onApprove}
-              disabled={approving}
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#1a1f3a] text-white text-sm font-medium hover:bg-[#252b4a] disabled:opacity-50"
-            >
-              {approving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              <span>I approve this sharing</span>
+            <p className="text-sm text-gray-600 mb-4">Select an authority to review and approve sharing:</p>
+            <div className="space-y-2">
+              {validAuthorities.map((a) => (
+                <button key={a.id} onClick={() => setSelectedAuthority(a)}
+                  className="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:border-[#c5a572] hover:bg-amber-50/30 transition-colors text-left">
+                  <div className="flex items-center space-x-3">
+                    <ShieldCheck className="w-5 h-5 text-green-600" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{a.data_category} / {a.action_type}</p>
+                      <p className="text-xs text-gray-500">{a.authority_basis || 'Authority to act'} · {a.verification_status}</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Approval form for selected authority */}
+        {selectedAuthority && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <FileText className="w-5 h-5 text-[#c5a572]" />
+                <h3 className="text-sm font-bold text-gray-900">Review and Approve</h3>
+              </div>
+              <button onClick={() => setSelectedAuthority(null)} className="text-sm text-gray-500 hover:text-gray-700">Back</button>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <div className="flex items-start space-x-2 mb-2">
+                <ShieldCheck className="w-4 h-4 text-green-600 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-gray-500">Authority basis</p>
+                  <p className="text-sm text-gray-900">{selectedAuthority.authority_basis || 'Authority to act'}</p>
+                  <p className="text-xs text-gray-500 mt-1">Category: {selectedAuthority.data_category} · Action: {selectedAuthority.action_type} · Status: {selectedAuthority.verification_status}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Who will receive the information *</label>
+                <input value={form.recipientName} onChange={(e) => setForm((f) => ({ ...f, recipientName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#c5a572] focus:ring-2 focus:ring-[#c5a572]/10"
+                  placeholder="Lincoln High School" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Recipient type</label>
+                <input value={form.recipientType} onChange={(e) => setForm((f) => ({ ...f, recipientType: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#c5a572] focus:ring-2 focus:ring-[#c5a572]/10"
+                  placeholder="School" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Why it is being shared *</label>
+                <input value={form.purpose} onChange={(e) => setForm((f) => ({ ...f, purpose: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#c5a572] focus:ring-2 focus:ring-[#c5a572]/10"
+                  placeholder="Share transcript for enrollment" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">What information is covered *</label>
+                <input value={form.dataCategories} onChange={(e) => setForm((f) => ({ ...f, dataCategories: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#c5a572] focus:ring-2 focus:ring-[#c5a572]/10"
+                  placeholder="education, enrollment" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Expires on (optional)</label>
+                <input type="date" value={form.expiresAt} onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#c5a572] focus:ring-2 focus:ring-[#c5a572]/10" />
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <div className="flex items-start space-x-2">
+                <Lock className="w-4 h-4 text-blue-600 mt-0.5" />
+                <p className="text-sm text-blue-700">
+                  By approving, you give your navigator permission to prepare and send this information. Your navigator cannot send anything until you approve. You can review your sharing history at any time on the Privacy page.
+                </p>
+              </div>
+            </div>
+
+            <button onClick={handleApprove} disabled={approving || !form.recipientName || !form.purpose}
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg bg-[#1a1f3a] text-white font-medium hover:bg-[#252b4a] disabled:opacity-50 transition-colors">
+              {approving ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+              <span>I Approve This Sharing</span>
             </button>
-          )}
-        </div>
-      )}
-    </div>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

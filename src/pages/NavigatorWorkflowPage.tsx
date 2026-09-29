@@ -14,7 +14,7 @@ import * as pathwayService from '../services/pathwayService';
 import * as trustService from '../services/trustService';
 import * as narrationService from '../services/narrationService';
 
-type WorkflowStep = 'select' | 'needs' | 'pathway' | 'authority' | 'consent' | 'disclosure' | 'referral';
+type WorkflowStep = 'select' | 'needs' | 'pathway' | 'authority' | 'awaiting_approval' | 'disclosure' | 'referral';
 
 interface SelectedContext {
   householdId: string;
@@ -200,10 +200,8 @@ export function NavigatorWorkflowPage() {
         return;
       }
 
-      const cs = await trustService.getConsentGrants(ctx.householdId);
-      setConsents(cs);
-      setStep('consent');
-      setSuccess('Authority created and valid.');
+      setStep('awaiting_approval');
+      setSuccess('Authority created. Participant approval is required through SharePage before disclosure can proceed.');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create authority');
     } finally {
@@ -226,7 +224,15 @@ export function NavigatorWorkflowPage() {
       setCtx((c) => ({ ...c, authorityId }));
       const cs = await trustService.getConsentGrants(ctx.householdId);
       setConsents(cs);
-      setStep('consent');
+      const active = cs.filter((c) => c.status === 'active' && c.subject_person_id === ctx.personId);
+      if (active.length > 0) {
+        setCtx((c) => ({ ...c, consentId: active[0].id }));
+        const discs = await trustService.getDisclosures(ctx.householdId!);
+        setDisclosures(discs);
+        setStep('disclosure');
+      } else {
+        setStep('awaiting_approval');
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to select authority');
     } finally {
@@ -234,52 +240,28 @@ export function NavigatorWorkflowPage() {
     }
   };
 
-  const [consentForm, setConsentForm] = useState({
-    recipientName: '',
-    recipientType: '',
-    purpose: '',
-    dataCategories: 'education',
-    expiresAt: '',
-  });
-
-  const createConsent = async () => {
-    if (!ctx.householdId || !ctx.personId || !ctx.authorityId) return;
+  const checkForActiveConsent = async () => {
+    if (!ctx.householdId) return;
     setLoading(true);
     setError(null);
-    setSuccess(null);
     try {
-      const consent = await trustService.createConsentGrant(
-        ctx.personId,
-        ctx.personId,
-        ctx.householdId,
-        consentForm.recipientName,
-        consentForm.purpose,
-        consentForm.dataCategories.split(',').map((s) => s.trim()).filter(Boolean),
-        {
-          recipientType: consentForm.recipientType || undefined,
-          expiresAt: consentForm.expiresAt || undefined,
-          authorityToActId: ctx.authorityId,
-        },
-      );
-      setConsents((prev) => [consent, ...prev]);
-      setCtx((c) => ({ ...c, consentId: consent.id }));
-      const discs = await trustService.getDisclosures(ctx.householdId);
-      setDisclosures(discs);
-      setStep('disclosure');
-      setSuccess('Consent grant created.');
+      const cs = await trustService.getConsentGrants(ctx.householdId);
+      setConsents(cs);
+      const active = cs.filter((c) => c.status === 'active' && c.subject_person_id === ctx.personId);
+      if (active.length > 0) {
+        setCtx((c) => ({ ...c, consentId: active[0].id }));
+        const discs = await trustService.getDisclosures(ctx.householdId!);
+        setDisclosures(discs);
+        setStep('disclosure');
+        setSuccess('Participant has approved sharing. Disclosure workflow is available.');
+      } else {
+        setStep('awaiting_approval');
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create consent grant');
+      setError(e instanceof Error ? e.message : 'Failed to check consent status');
     } finally {
       setLoading(false);
     }
-  };
-
-  const selectConsent = async (consentId: string) => {
-    if (!ctx.householdId) return;
-    setCtx((c) => ({ ...c, consentId }));
-    const discs = await trustService.getDisclosures(ctx.householdId);
-    setDisclosures(discs);
-    setStep('disclosure');
   };
 
   const [disclosureForm, setDisclosureForm] = useState({
@@ -445,9 +427,9 @@ export function NavigatorWorkflowPage() {
     setSuccess(null);
   };
 
-  const stepOrder: WorkflowStep[] = ['select', 'needs', 'pathway', 'authority', 'consent', 'disclosure', 'referral'];
+  const stepOrder: WorkflowStep[] = ['select', 'needs', 'pathway', 'authority', 'awaiting_approval', 'disclosure', 'referral'];
   const stepIndex = stepOrder.indexOf(step);
-  const stepLabels = ['Household', 'Needs', 'Pathway', 'Authority', 'Consent', 'Disclosure', 'Referral'];
+  const stepLabels = ['Household', 'Needs', 'Pathway', 'Authority', 'Approval', 'Disclosure', 'Referral'];
 
   return (
     <DashboardLayout title="Navigator Workflow">
@@ -688,25 +670,40 @@ export function NavigatorWorkflowPage() {
           </div>
         )}
 
-        {/* Step 5: Consent */}
-        {step === 'consent' && (
+        {/* Step 5: Awaiting Participant Approval */}
+        {step === 'awaiting_approval' && (
           <div className="space-y-4">
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <FileText className="w-6 h-6 text-[#c5a572]" />
-                  <h2 className="text-lg font-bold text-[#1a1f3a]">Consent Grant</h2>
+                  <Clock className="w-6 h-6 text-[#c5a572]" />
+                  <h2 className="text-lg font-bold text-[#1a1f3a]">Awaiting Participant Approval</h2>
                 </div>
                 <button onClick={reset} className="text-sm text-gray-500 hover:text-gray-700">Start over</button>
               </div>
 
-              {consents.length > 0 && (
-                <div className="mb-6">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Existing active consent grants:</p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                <div className="flex items-start space-x-3">
+                  <Clock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-900">Participant approval is required</p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      The participant must approve sharing through their SharePage. Once they create an active consent grant using the authority you created, the disclosure workflow will become available.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {consents.filter((c) => c.status === 'active' && c.subject_person_id === ctx.personId).length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-green-700 mb-2">Active consent found:</p>
                   <div className="space-y-2">
-                    {consents.filter((c) => c.status === 'active').map((c) => (
-                      <button key={c.id} onClick={() => selectConsent(c.id)}
-                        className="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-[#c5a572] transition-colors text-left">
+                    {consents.filter((c) => c.status === 'active' && c.subject_person_id === ctx.personId).map((c) => (
+                      <button key={c.id} onClick={() => {
+                        setCtx((prev) => ({ ...prev, consentId: c.id }));
+                        setStep('disclosure');
+                      }}
+                        className="w-full flex items-center justify-between p-3 rounded-lg border border-green-200 bg-green-50/30 hover:border-[#c5a572] transition-colors text-left">
                         <div className="flex items-center space-x-3">
                           <CheckCircle2 className="w-4 h-4 text-green-500" />
                           <span className="text-sm text-gray-700">{c.recipient_name} — {c.purpose}</span>
@@ -718,36 +715,11 @@ export function NavigatorWorkflowPage() {
                 </div>
               )}
 
-              <div className="border-t border-gray-200 pt-4">
-                <p className="text-sm font-medium text-gray-700 mb-3">Create new consent grant</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField label="Recipient Name">
-                    <input value={consentForm.recipientName} onChange={(e) => setConsentForm((f) => ({ ...f, recipientName: e.target.value }))}
-                      className="form-input" placeholder="Lincoln High School" />
-                  </FormField>
-                  <FormField label="Recipient Type">
-                    <input value={consentForm.recipientType} onChange={(e) => setConsentForm((f) => ({ ...f, recipientType: e.target.value }))}
-                      className="form-input" placeholder="School" />
-                  </FormField>
-                  <FormField label="Purpose">
-                    <input value={consentForm.purpose} onChange={(e) => setConsentForm((f) => ({ ...f, purpose: e.target.value }))}
-                      className="form-input" placeholder="Share transcript for enrollment" />
-                  </FormField>
-                  <FormField label="Data Categories (comma-separated)">
-                    <input value={consentForm.dataCategories} onChange={(e) => setConsentForm((f) => ({ ...f, dataCategories: e.target.value }))}
-                      className="form-input" placeholder="education, enrollment" />
-                  </FormField>
-                  <FormField label="Expires At">
-                    <input type="date" value={consentForm.expiresAt} onChange={(e) => setConsentForm((f) => ({ ...f, expiresAt: e.target.value }))}
-                      className="form-input" />
-                  </FormField>
-                </div>
-                <button onClick={createConsent} disabled={loading || !consentForm.recipientName || !consentForm.purpose}
-                  className="mt-4 flex items-center space-x-2 px-4 py-3 rounded-lg bg-[#1a1f3a] text-white font-medium hover:bg-[#252b4a] disabled:opacity-50 transition-colors">
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-                  <span>Create Consent Grant</span>
-                </button>
-              </div>
+              <button onClick={checkForActiveConsent} disabled={loading}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>Check for Participant Approval</span>
+              </button>
             </div>
           </div>
         )}

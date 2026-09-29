@@ -131,12 +131,7 @@ function DisclosureHistoryCard({ entry }: { entry: PrivacyHistoryEntry }) {
           <DeliveryStatusBadge status={disclosure.status} />
           <span className="text-sm font-medium text-gray-900">{disclosure.recipient_name}</span>
         </div>
-        {disclosure.participant_approved && (
-          <div className="flex items-center space-x-1 text-xs text-green-700">
-            <CheckCircle2 className="w-3 h-3" />
-            <span>You approved this</span>
-          </div>
-        )}
+
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

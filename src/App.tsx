@@ -49,6 +49,7 @@ import { AdminPathwaysPage } from './pages/AdminPathwaysPage';
 import { AdminOutcomesPage } from './pages/AdminOutcomesPage';
 import { AdminIdentityReviewPage } from './pages/AdminIdentityReviewPage';
 import { AdminYouthRelationshipPage } from './pages/AdminYouthRelationshipPage';
+import { NavigatorWorkflowPage } from './pages/NavigatorWorkflowPage';
 
 function AppContent() {
   return (
@@ -115,6 +116,7 @@ function AppContent() {
           <Route path="/admin/outcomes" element={<ProtectedRoute requireAdmin><AdminOutcomesPage /></ProtectedRoute>} />
           <Route path="/admin/identity-review" element={<ProtectedRoute requireAdmin><AdminIdentityReviewPage /></ProtectedRoute>} />
           <Route path="/admin/youth-relationships" element={<ProtectedRoute requireAdmin><AdminYouthRelationshipPage /></ProtectedRoute>} />
+          <Route path="/admin/navigator" element={<ProtectedRoute requireAdmin><NavigatorWorkflowPage /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

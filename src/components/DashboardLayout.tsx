@@ -19,6 +19,7 @@ const navigation = [
   { name: 'Identity Review', icon: UserCheck, path: '/admin/identity-review' },
   { name: 'Youth & Relationships', icon: Users, path: '/admin/youth-relationships' },
   { name: 'Pathway Review', icon: Compass, path: '/admin/pathways' },
+  { name: 'Navigator Workflow', icon: Compass, path: '/admin/navigator' },
   { name: 'Outcome Review', icon: CheckCircle, path: '/admin/outcomes' },
   { name: 'Agent Ops', icon: Zap, path: '/admin/agent-ops' },
 ];

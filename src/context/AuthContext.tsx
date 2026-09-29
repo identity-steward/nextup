@@ -7,6 +7,7 @@ interface AuthContextValue {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  isNavigator: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -18,6 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isNavigator, setIsNavigator] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -25,15 +27,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        const { count } = await supabase
+          .from('navigator_assignments')
+          .select('id', { count: 'exact', head: true })
+          .eq('navigator_user_id', session.user.id)
+          .eq('assignment_status', 'active');
+        setIsNavigator((count ?? 0) > 0);
+      } else {
+        setIsNavigator(false);
+      }
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        const { count } = await supabase
+          .from('navigator_assignments')
+          .select('id', { count: 'exact', head: true })
+          .eq('navigator_user_id', session.user.id)
+          .eq('assignment_status', 'active');
+        setIsNavigator((count ?? 0) > 0);
+      } else {
+        setIsNavigator(false);
+      }
       setLoading(false);
     });
 
@@ -57,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, isNavigator, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,6 +2,32 @@ import { supabase } from '../lib/supabase';
 import type { Athlete, AthleteInput } from '../types/athlete';
 
 export class AthleteService {
+  static async getFemaleAthletes(limit?: number): Promise<Athlete[]> {
+    let query = supabase
+      .from('athletes')
+      .select('*')
+      .eq('profile_status', 'active')
+      .eq('is_female', true)
+      .order('created_at', { ascending: false });
+    if (limit) query = query.limit(limit);
+    const { data, error } = await query;
+    if (error) { console.error('Error fetching female athletes:', error); return []; }
+    return data || [];
+  }
+
+  static async getFeaturedAthlete(): Promise<Athlete | null> {
+    const { data, error } = await supabase
+      .from('athletes')
+      .select('*')
+      .eq('profile_status', 'active')
+      .eq('is_featured', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) { console.error('Error fetching featured athlete:', error); return null; }
+    return data;
+  }
+
   static async getAllAthletes(): Promise<Athlete[]> {
     const { data, error } = await supabase
       .from('athletes')

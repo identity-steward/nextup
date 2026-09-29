@@ -289,6 +289,44 @@ export async function createConsentGrant(
     authorityToActId?: string;
   },
 ): Promise<ConsentGrant> {
+  if (!opts?.authorityToActId) {
+    throw new Error(
+      'An active consent grant requires a valid authority-to-act reference.',
+    );
+  }
+
+  const { data: authority, error: authError } = await supabase
+    .from('authority_to_act')
+    .select('*')
+    .eq('id', opts.authorityToActId)
+    .maybeSingle();
+
+  if (authError) throw authError;
+  if (!authority) {
+    throw new Error(
+      'The referenced authority-to-act record does not exist.',
+    );
+  }
+
+  const authRecord = authority as AuthorityToAct;
+
+  if (authRecord.household_id !== householdId) {
+    throw new Error(
+      'The authority-to-act record does not belong to the same household as the consent grant.',
+    );
+  }
+
+  if (authRecord.subject_person_id !== subjectPersonId) {
+    throw new Error(
+      'The authority-to-act record does not apply to the same subject person as the consent grant.',
+    );
+  }
+
+  const hardStop = checkAuthorityHardStops(authRecord);
+  if (hardStop.blocked) {
+    throw new Error(hardStop.reason);
+  }
+
   const { data, error } = await supabase
     .from('consent_grants')
     .insert({
@@ -300,7 +338,7 @@ export async function createConsentGrant(
       purpose,
       data_categories: dataCategories,
       expires_at: opts?.expiresAt ?? null,
-      authority_to_act_id: opts?.authorityToActId ?? null,
+      authority_to_act_id: opts.authorityToActId,
       status: 'active',
       effective_at: new Date().toISOString(),
     })

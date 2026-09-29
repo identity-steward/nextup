@@ -184,7 +184,9 @@ function DisclosureHistoryCard({ entry }: { entry: PrivacyHistoryEntry }) {
           label="Who recorded the delivery"
           value={
             disclosure.delivered_by_user_id
-              ? `Recorded by navigator (${deliveryMethodLabel(disclosure.delivery_method)})`
+              ? entry.deliveredByName
+                ? `Recorded by ${entry.deliveredByName} (${deliveryMethodLabel(disclosure.delivery_method)})`
+                : 'Recorder identity unavailable'
               : disclosure.status === 'prepared'
                 ? 'No delivery has been recorded yet'
                 : disclosure.status === 'delivery_pending'

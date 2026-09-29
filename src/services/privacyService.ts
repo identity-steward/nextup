@@ -30,6 +30,16 @@ export async function getPrivacyHistory(householdId: string): Promise<PrivacyHis
 
   const activeConsents = consents.filter((c) => c.status === 'active');
 
+  const recorderRes = await supabase
+    .rpc('resolve_delivery_recorder_labels', { p_household_uuid: householdId });
+
+  const recorderMap = new Map<string, string | null>();
+  if (!recorderRes.error && recorderRes.data) {
+    for (const row of recorderRes.data as { delivered_by_user_id: string; staff_display_name: string | null }[]) {
+      recorderMap.set(row.delivered_by_user_id, row.staff_display_name);
+    }
+  }
+
   const entries: PrivacyHistoryEntry[] = disclosures.map((disclosure) => {
     const consent = disclosure.consent_grant_id
       ? consents.find((c) => c.id === disclosure.consent_grant_id) ?? null
@@ -37,7 +47,10 @@ export async function getPrivacyHistory(householdId: string): Promise<PrivacyHis
     const authority = consent?.authority_to_act_id
       ? authorities.find((a) => a.id === consent.authority_to_act_id) ?? null
       : null;
-    return { disclosure, consent, authority, deliveredByName: null };
+    const deliveredByName = disclosure.delivered_by_user_id
+      ? recorderMap.get(disclosure.delivered_by_user_id) ?? null
+      : null;
+    return { disclosure, consent, authority, deliveredByName };
   });
 
   return { entries, activeConsents };

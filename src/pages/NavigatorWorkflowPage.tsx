@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Compass, FileText, ShieldCheck, Send, CheckCircle2, AlertCircle,
-  ChevronRight, Loader2, ArrowRight, Plus, X, Mail, Phone, Globe,
-  User, Building2, Clock,
+  ChevronRight, Loader2, ArrowRight, Plus, X,
+  Building2, Clock,
 } from 'lucide-react';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import type { HouseholdWithMembers, Need } from '../types/narration';
 import type { PathwayWithRelations, Referral, ReferralStatus, PathwayStatus } from '../types/pathway';
-import type { AuthorityToAct, ConsentGrant, Disclosure, DisclosureStatus, VerificationStatus, HardStopResult } from '../types/trust';
+import type { AuthorityToAct, ConsentGrant, Disclosure, DisclosureStatus, VerificationStatus } from '../types/trust';
 import * as pathwayService from '../services/pathwayService';
 import * as trustService from '../services/trustService';
 import * as narrationService from '../services/narrationService';
@@ -431,22 +431,6 @@ export function NavigatorWorkflowPage() {
     }
   };
 
-  const advanceReferral = async (referralId: string, newStatus: ReferralStatus) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      await pathwayService.updateReferralStatus(referralId, newStatus, 'navigator_reported');
-      const refs = await pathwayService.getReferralsForPathway(ctx.pathwayId!);
-      setReferrals(refs);
-      setSuccess(`Referral status updated to ${newStatus}.`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to update referral status');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const reset = () => {
     setStep('select');
     setCtx({});
@@ -655,10 +639,9 @@ export function NavigatorWorkflowPage() {
                       className="form-input">
                       <option value="asserted">Asserted</option>
                       <option value="documented">Documented</option>
-                      <option value="verified_by_qualified_authority">Verified by qualified authority</option>
-                      <option value="disputed">Disputed</option>
                       <option value="unknown">Unknown</option>
                     </select>
+                    <p className="text-xs text-gray-400 mt-1">Verified-by-qualified-authority and disputed are reviewer-qualified states, not navigator-selectable.</p>
                   </FormField>
                   <FormField label="Authority Basis">
                     <input value={authForm.authorityBasis} onChange={(e) => setAuthForm((f) => ({ ...f, authorityBasis: e.target.value }))}
@@ -862,7 +845,6 @@ export function NavigatorWorkflowPage() {
                         selectedDisclosureId={ctx.disclosureId}
                         onLinkAndAdvance={(discId) => linkDisclosureAndAdvance(r.id, discId)}
                         onSend={() => sendReferral(r.id)}
-                        onAdvance={(s) => advanceReferral(r.id, s)}
                         loading={loading}
                       />
                     ))}
@@ -1044,14 +1026,13 @@ function DisclosureCard({
 }
 
 function ReferralCard({
-  referral, disclosures, selectedDisclosureId, onLinkAndAdvance, onSend, onAdvance, loading,
+  referral, disclosures, selectedDisclosureId, onLinkAndAdvance, onSend, loading,
 }: {
   referral: Referral;
   disclosures: Disclosure[];
   selectedDisclosureId: string | undefined;
   onLinkAndAdvance: (disclosureId: string) => void;
   onSend: () => void;
-  onAdvance: (status: ReferralStatus) => void;
   loading: boolean;
 }) {
   const sentDisclosures = disclosures.filter((d) => d.status === 'sent');
@@ -1115,76 +1096,10 @@ function ReferralCard({
       )}
 
       {referral.status === 'sent' && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button onClick={() => onAdvance('received')} disabled={loading}
-            className="px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-medium hover:bg-teal-700 disabled:opacity-50">
-            Mark Received
-          </button>
-          <button onClick={() => onAdvance('unable_to_contact')} disabled={loading}
-            className="px-3 py-1.5 rounded-lg bg-yellow-600 text-white text-xs font-medium hover:bg-yellow-700 disabled:opacity-50">
-            Unable to Contact
-          </button>
+        <div className="mt-3 flex items-center space-x-2 text-sm text-green-700">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>Referral sent. The Pilot 002 navigator workflow is complete.</span>
         </div>
-      )}
-
-      {referral.status === 'received' && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button onClick={() => onAdvance('acknowledged')} disabled={loading}
-            className="px-3 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-medium hover:bg-cyan-700 disabled:opacity-50">
-            Acknowledged
-          </button>
-          <button onClick={() => onAdvance('screening')} disabled={loading}
-            className="px-3 py-1.5 rounded-lg bg-yellow-600 text-white text-xs font-medium hover:bg-yellow-700 disabled:opacity-50">
-            Screening
-          </button>
-        </div>
-      )}
-
-      {(referral.status === 'acknowledged') && (
-        <button onClick={() => onAdvance('screening')} disabled={loading}
-          className="mt-3 px-3 py-1.5 rounded-lg bg-yellow-600 text-white text-xs font-medium hover:bg-yellow-700 disabled:opacity-50">
-          Start Screening
-        </button>
-      )}
-
-      {referral.status === 'screening' && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button onClick={() => onAdvance('accepted')} disabled={loading}
-            className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-50">
-            Accepted
-          </button>
-          <button onClick={() => onAdvance('declined')} disabled={loading}
-            className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-700 disabled:opacity-50">
-            Declined
-          </button>
-        </div>
-      )}
-
-      {referral.status === 'accepted' && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button onClick={() => onAdvance('intake_scheduled')} disabled={loading}
-            className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 disabled:opacity-50">
-            Intake Scheduled
-          </button>
-          <button onClick={() => onAdvance('service_initiated')} disabled={loading}
-            className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-50">
-            Service Initiated
-          </button>
-        </div>
-      )}
-
-      {referral.status === 'intake_scheduled' && (
-        <button onClick={() => onAdvance('service_initiated')} disabled={loading}
-          className="mt-3 px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-50">
-          Service Initiated
-        </button>
-      )}
-
-      {referral.status === 'service_initiated' && (
-        <button onClick={() => onAdvance('completed')} disabled={loading}
-          className="mt-3 px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-50">
-          Completed
-        </button>
       )}
     </div>
   );

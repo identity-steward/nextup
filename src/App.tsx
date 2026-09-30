@@ -1,5 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import { isSupabaseConfigured } from './lib/supabase';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -51,10 +51,15 @@ import { AdminIdentityReviewPage } from './pages/AdminIdentityReviewPage';
 import { AdminYouthRelationshipPage } from './pages/AdminYouthRelationshipPage';
 import { NavigatorWorkflowPage } from './pages/NavigatorWorkflowPage';
 
+const dashboardPrefixes = ['/admin', '/app', '/dashboard', '/profile-setup'];
+
 function AppContent() {
+  const location = useLocation();
+  const isDashboardRoute = dashboardPrefixes.some((p) => location.pathname.startsWith(p));
+
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
+    <div className="min-h-screen bg-navy-900">
+      {!isDashboardRoute && <Header />}
       <main>
         {!isSupabaseConfigured && (
           <div className="bg-amber-50 border-b border-amber-200 text-amber-900 pt-24">
@@ -121,7 +126,7 @@ function AppContent() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <Footer />
+      {!isDashboardRoute && <Footer />}
     </div>
   );
 }

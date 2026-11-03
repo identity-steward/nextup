@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AthleteProfileTemplate from '../components/AthleteProfileTemplate';
 import { supabase } from '../lib/supabase';
-import { getSignedUrls } from '../services/mediaUrlService';
+import { getSignedUrls, useSignedUrlRenewal } from '../services/mediaUrlService';
 import type { Athlete } from '../types/athlete';
 import type { AthleteTag } from '../types/traits';
 
@@ -100,6 +100,15 @@ export function AthleteProfilePage({ fixedSlug }: AthleteProfilePageProps) {
       active = false;
     };
   }, [slug]);
+
+  const mediaIds = approvedMedia.map(m => m.id);
+  const renewUrls = useCallback((urls: Record<string, string | null>) => {
+    setApprovedMedia(prev => prev.map(m => ({
+      ...m,
+      signedUrl: urls[m.id] ?? m.signedUrl,
+    })));
+  }, []);
+  useSignedUrlRenewal(mediaIds, renewUrls);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading athlete profile...</div>;
   if (error && !athlete) return <div className="min-h-screen flex items-center justify-center px-6 text-center text-red-800">{error}</div>;

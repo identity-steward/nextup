@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 const EDGE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/media-urls`;
@@ -144,24 +145,29 @@ export const MEDIA_PLACEHOLDER =
   'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIiBmaWxsPSJub25UiPjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjZTVlN2ViIi8+PHRleHQgeD0iMjAwIiB5PSIxNTAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmaWxsPSIjOGE5MWFiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5Qcm9maWxlIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
 
 /**
- * Hook for managing signed URL renewal. Returns a function that refreshes
- * URLs every 4 minutes (before the 5-minute expiry).
+ * React hook that renews signed URLs every 4 minutes (before the 5-minute expiry).
+ * Pass the current media IDs and a callback to receive refreshed URLs.
  */
 export function useSignedUrlRenewal(
   mediaIds: string[],
   onRenew: (urls: Record<string, string | null>) => void
-): () => void {
-  let intervalId: ReturnType<typeof setInterval> | null = null;
+): void {
+  const savedIds = useRef(mediaIds);
+  const savedCallback = useRef(onRenew);
 
-  const renew = async () => {
-    if (mediaIds.length === 0) return;
-    const urls = await getSignedUrls(mediaIds);
-    onRenew(urls);
-  };
+  useEffect(() => {
+    savedIds.current = mediaIds;
+    savedCallback.current = onRenew;
+  }, [mediaIds, onRenew]);
 
-  intervalId = setInterval(renew, 4 * 60 * 1000);
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      const ids = savedIds.current;
+      if (ids.length === 0) return;
+      const urls = await getSignedUrls(ids);
+      savedCallback.current(urls);
+    }, 4 * 60 * 1000);
 
-  return () => {
-    if (intervalId) clearInterval(intervalId);
-  };
+    return () => clearInterval(intervalId);
+  }, []);
 }

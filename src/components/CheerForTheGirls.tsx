@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, Heart, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
+import { resolveAthleteImageWithConsent, MEDIA_PLACEHOLDER } from '../services/mediaUrlService';
 import type { Athlete } from '../types/athlete';
 
 
@@ -65,6 +66,15 @@ function GirlAthleteCard({
 }) {
   const navigate = useNavigate();
   const accent = SPORT_ACCENT[athlete.sport ?? ''] ?? SPORT_ACCENT.default;
+  const [resolvedImage, setResolvedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isPlaceholder || !athlete.id || athlete.id.startsWith('placeholder-')) {
+      setResolvedImage(athlete.image_url ?? null);
+      return;
+    }
+    resolveAthleteImageWithConsent(athlete.image_url, athlete.id).then(setResolvedImage);
+  }, [athlete.id, athlete.image_url, isPlaceholder]);
 
   const handleViewProfile = () => {
     if (!isPlaceholder && athlete.slug) {
@@ -95,11 +105,12 @@ function GirlAthleteCard({
       />
 
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-900">
-        {athlete.image_url ? (
+        {resolvedImage ? (
           <img
-            src={athlete.image_url}
+            src={resolvedImage}
             alt={`${athlete.first_name} ${athlete.last_initial}`}
             className="w-full h-full object-cover object-top"
+            onError={(e) => { e.currentTarget.src = MEDIA_PLACEHOLDER; }}
           />
         ) : (
           <div

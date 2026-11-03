@@ -1,4 +1,4 @@
-import { Handshake, Target, Users, TrendingUp, Heart, Building2, Mail, CheckCircle, UserPlus, ArrowRight } from 'lucide-react';
+import { Handshake, Users, TrendingUp, Heart, Building2, Mail, CheckCircle, UserPlus, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { STRIPE_LINKS } from '../config/stripeLinks';
 
@@ -7,22 +7,22 @@ export default function SponsorsPage() {
     {
       icon: Heart,
       title: 'Community Impact',
-      description: 'Directly support Memphis youth athletes and their families',
+      description: 'Support Memphis youth athletes and their families through a platform that makes development visible.',
     },
     {
       icon: Building2,
       title: 'Brand Visibility',
-      description: 'Showcase your commitment to local youth development',
+      description: 'Showcase your commitment to local youth development alongside athlete journeys.',
     },
     {
       icon: Users,
       title: 'Authentic Connection',
-      description: 'Build meaningful relationships with the Memphis community',
+      description: 'Build meaningful relationships with the Memphis community through real stories.',
     },
     {
       icon: TrendingUp,
       title: 'Measurable Results',
-      description: 'See the direct impact of your sponsorship through athlete progress',
+      description: 'Follow athlete progress through documented journey entries and milestones.',
     },
   ];
 
@@ -34,8 +34,8 @@ export default function SponsorsPage() {
       benefits: [
         'Logo on NextUp Memphis website',
         'Social media recognition',
-        'Support 2-3 athletes monthly',
-        'Quarterly impact reports',
+        'Support youth athlete development',
+        'Quarterly impact summaries',
       ],
       color: 'border-orange-400',
     },
@@ -46,7 +46,6 @@ export default function SponsorsPage() {
       benefits: [
         'All Bronze benefits',
         'Featured sponsor placement',
-        'Support 5-6 athletes monthly',
         'Monthly impact updates',
         'Sponsor spotlight content',
       ],
@@ -60,27 +59,11 @@ export default function SponsorsPage() {
       benefits: [
         'All Silver benefits',
         'Premium logo placement',
-        'Support 10+ athletes monthly',
-        'Dedicated account manager',
+        'Dedicated partnership contact',
         'Custom partnership opportunities',
         'Event sponsorship options',
       ],
       color: 'border-gold',
-    },
-  ];
-
-  const testimonials = [
-    {
-      company: 'Memphis Sports Complex',
-      quote: 'Partnering with NextUp Memphis has been incredible. We love seeing these young athletes thrive.',
-      author: 'Sarah Johnson',
-      role: 'Community Director',
-    },
-    {
-      company: 'Local Bank & Trust',
-      quote: 'NextUp Memphis is making a real difference in our community. Proud to be a sponsor.',
-      author: 'Michael Davis',
-      role: 'VP of Community Relations',
     },
   ];
 
@@ -96,7 +79,7 @@ export default function SponsorsPage() {
             Partner With NextUp Memphis
           </h1>
           <p className="text-xl text-gray-300 mb-8">
-            Invest in the future of Memphis youth sports. Support athletes, strengthen communities, and showcase your commitment to local development.
+            Invest in the future of Memphis youth. Support athletes, strengthen communities, and showcase your commitment to local development.
           </p>
         </div>
       </section>
@@ -107,19 +90,22 @@ export default function SponsorsPage() {
             Why Partner With Us
           </h2>
           <p className="text-xl text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-            Your sponsorship goes beyond logos. It changes lives and builds futures.
+            Your sponsorship helps young athletes build documented records of growth and connect to opportunity.
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
-            {whyPartner.map((item, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-lg text-center">
-                <div className="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                  <item.icon className="w-8 h-8 text-gold" />
+            {whyPartner.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <div key={index} className="bg-white rounded-xl p-6 shadow-lg text-center">
+                  <div className="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mb-4 mx-auto">
+                    <Icon className="w-8 h-8 text-gold" />
+                  </div>
+                  <h3 className="text-xl font-bold text-navy mb-2">{item.title}</h3>
+                  <p className="text-gray-600">{item.description}</p>
                 </div>
-                <h3 className="text-xl font-bold text-navy mb-2">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <h2 className="text-3xl md:text-4xl font-bold text-navy text-center mb-12">
@@ -166,19 +152,16 @@ export default function SponsorsPage() {
           </div>
 
           <div className="bg-navy text-white rounded-2xl p-12">
-            <h2 className="text-3xl font-bold mb-8 text-center">What Sponsors Say</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              {testimonials.map((testimonial, index) => (
-                <div key={index} className="bg-navy-light rounded-xl p-6">
-                  <Target className="w-8 h-8 text-gold mb-4" />
-                  <p className="text-gray-300 mb-4 italic">"{testimonial.quote}"</p>
-                  <div>
-                    <p className="font-semibold">{testimonial.author}</p>
-                    <p className="text-sm text-gray-400">{testimonial.role}</p>
-                    <p className="text-sm text-gold font-semibold mt-1">{testimonial.company}</p>
-                  </div>
-                </div>
-              ))}
+            <h2 className="text-3xl font-bold mb-4 text-center">Become a Founding Partner</h2>
+            <p className="text-gray-300 text-center max-w-2xl mx-auto mb-8">
+              NextUp Memphis is in its pilot phase. We are building partnerships with
+              organizations that share our commitment to making youth development visible.
+              If you are interested in being part of this early stage, we would like to talk.
+            </p>
+            <div className="text-center">
+              <Link to="/contact" className="btn-primary text-lg px-10 py-4 inline-block">
+                Start the Conversation
+              </Link>
             </div>
           </div>
         </div>
@@ -187,7 +170,6 @@ export default function SponsorsPage() {
       <section className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-6 lg:px-8">
 
-          {/* Primary CTA */}
           <div className="text-center mb-12">
             <Mail className="w-12 h-12 text-gold mx-auto mb-6" />
             <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
@@ -204,7 +186,6 @@ export default function SponsorsPage() {
             </p>
           </div>
 
-          {/* Secondary action cards */}
           <div className="grid sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
             <div className="bg-navy rounded-2xl p-6 text-center">
               <div className="w-12 h-12 bg-gold/20 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -212,10 +193,10 @@ export default function SponsorsPage() {
               </div>
               <h3 className="text-white font-bold text-lg mb-2">Sponsor an Athlete</h3>
               <p className="text-gray-400 text-sm mb-5 leading-relaxed">
-                Directly fund a Memphis youth athlete's training, travel, and development.
+                Support a Memphis youth athlete's development through the NextUp platform.
               </p>
               <Link
-                to="/athletes"
+                to="/youth"
                 className="inline-flex items-center gap-2 bg-gold hover:bg-gold-dark text-navy font-black text-sm px-6 py-3 rounded-xl transition-all duration-200 uppercase tracking-wide"
               >
                 Browse Athletes

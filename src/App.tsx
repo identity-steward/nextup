@@ -15,6 +15,9 @@ import { AboutPage } from './pages/AboutPage';
 import { PrivacyTrustPage } from './pages/PrivacyTrustPage';
 import { StartPage } from './pages/StartPage';
 import { ContactPage } from './pages/ContactPage';
+import SupportPage from './pages/SupportPage';
+import SponsorsPage from './pages/SponsorsPage';
+import PartnersPage from './pages/PartnersPage';
 import { SignInPage } from './pages/SignInPage';
 import { SignupPage } from './pages/SignupPage';
 import { JoinPage } from './pages/JoinPage';
@@ -79,6 +82,9 @@ function AppContent() {
           <Route path="/privacy" element={<PrivacyTrustPage />} />
           <Route path="/start" element={<StartPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/support" element={<SupportPage />} />
+          <Route path="/sponsors" element={<SponsorsPage />} />
+          <Route path="/partners" element={<PartnersPage />} />
           <Route path="/signin" element={<SignInPage />} />
 
           <Route path="/athletes" element={<Navigate to="/youth" replace />} />

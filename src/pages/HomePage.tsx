@@ -206,12 +206,12 @@ export function HomePage() {
       <section className="bg-gray-50 py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-3">Product Preview</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-3">What's Coming</p>
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-navy-900 tracking-tight mb-4">
               Your NextUp
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              Where am I? What's happening? What should I do next?
+              A vision for where am I, what's happening, and what should I do next — these capabilities are in active development.
             </p>
           </div>
 
@@ -225,11 +225,7 @@ export function HomePage() {
               <p className="text-sm text-gray-500 leading-relaxed mb-4">
                 See the pathway you're on, what stage it's in, and what comes next.
               </p>
-              <div className="flex items-center gap-2 text-xs font-semibold text-blue-600">
-                <span className="px-2 py-1 bg-blue-50 rounded">Possible</span>
-                <ChevronRight className="w-3 h-3" />
-                <span className="px-2 py-1 bg-blue-50 rounded">Active</span>
-              </div>
+              <span className="inline-block text-xs font-semibold text-navy-500 bg-navy-50 px-2 py-1 rounded">In development</span>
             </div>
 
             {/* Connection Card */}
@@ -241,10 +237,7 @@ export function HomePage() {
               <p className="text-sm text-gray-500 leading-relaxed mb-4">
                 See who is connected to your journey — navigators, organizations, and supporters.
               </p>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <Users className="w-4 h-4" />
-                <span>Navigator assigned</span>
-              </div>
+              <span className="inline-block text-xs font-semibold text-navy-500 bg-navy-50 px-2 py-1 rounded">In development</span>
             </div>
 
             {/* Next Step Card */}
@@ -256,10 +249,7 @@ export function HomePage() {
               <p className="text-sm text-gray-500 leading-relaxed mb-4">
                 Know exactly what to do next — no guessing, no waiting in the dark.
               </p>
-              <div className="flex items-center gap-2 text-xs font-semibold text-navy-700">
-                <ArrowRight className="w-4 h-4 text-blue-600" />
-                <span>Approve sharing request</span>
-              </div>
+              <span className="inline-block text-xs font-semibold text-navy-500 bg-navy-50 px-2 py-1 rounded">In development</span>
             </div>
           </div>
 
@@ -345,8 +335,8 @@ export function HomePage() {
               Real stories. Real journeys.
             </h2>
             <p className="text-lg text-navy-200 max-w-2xl">
-              NextUp stories span basketball, floor hockey, arts, activities,
-              milestones, and community development.
+              NextUp stories span basketball, tennis, and more — with plans to
+              expand into arts, activities, and community development.
             </p>
           </div>
 

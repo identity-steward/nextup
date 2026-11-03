@@ -77,7 +77,7 @@ export default function SupportPage() {
             <h1 className="text-4xl md:text-5xl font-bold">Support NextUp Memphis</h1>
           </div>
           <p className="text-xl text-gray-300 max-w-3xl">
-            Help us empower young athletes by providing the resources, visibility, and opportunities they need to succeed.
+            Help young athletes build visibility and documented records of growth through the NextUp platform.
           </p>
         </div>
       </section>
@@ -87,7 +87,7 @@ export default function SupportPage() {
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-navy mb-4">Support Tiers</h2>
             <p className="text-lg text-gray-600">
-              Choose a support level that works for you. All contributions go directly to helping athletes succeed.
+              Choose a support level that works for you. Contributions help athletes build their journey on the NextUp platform.
             </p>
           </div>
 
@@ -96,7 +96,7 @@ export default function SupportPage() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-2xl font-bold text-navy mb-2">Starter Support Team</h3>
-                  <p className="text-gray-600">Perfect for individuals wanting to make a consistent impact</p>
+                  <p className="text-gray-600">For individuals wanting to make a consistent impact</p>
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-navy">$5</div>
@@ -106,11 +106,11 @@ export default function SupportPage() {
               <ul className="space-y-2 mb-6">
                 <li className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-gold rounded-full mt-2"></div>
-                  <span className="text-gray-700">Help cover basics like team fees and small gear</span>
+                  <span className="text-gray-700">Help cover essentials like team fees and small gear</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-gold rounded-full mt-2"></div>
-                  <span className="text-gray-700">Weekly game updates + quick highlight clips</span>
+                  <span className="text-gray-700">Follow the athlete's journey through profile updates</span>
                 </li>
               </ul>
               {STRIPE_LINKS.SUPPORT_JACOB_5 ? (
@@ -139,7 +139,7 @@ export default function SupportPage() {
               <ul className="space-y-2 mb-6">
                 <li className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-gold rounded-full mt-2"></div>
-                  <span className="text-gray-700">Boost training, travel, and development sessions</span>
+                  <span className="text-gray-700">Help support training, travel, and development</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-gold rounded-full mt-2"></div>
@@ -156,8 +156,17 @@ export default function SupportPage() {
             </div>
           </div>
 
+          <div className="mt-8 bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <p className="text-sm text-gray-500 leading-relaxed text-center">
+              Support contributions are processed through Stripe and help athletes
+              build visibility and documented growth on the NextUp platform. NextUp
+              is in its pilot phase — contact us to learn more about how contributions
+              are used.
+            </p>
+          </div>
+
           <div className="mt-12 text-center">
-            <Link to="/athletes" className="btn-primary px-8 py-4 text-lg inline-block">
+            <Link to="/youth" className="btn-primary px-8 py-4 text-lg inline-block">
               Choose an Athlete to Support
             </Link>
           </div>

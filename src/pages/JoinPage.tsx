@@ -1,1 +1,7 @@
-export function JoinPage() { return <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-2xl font-bold text-gray-400">Join NextUp</h1></div>; }
+import { useNavigate } from 'react-router-dom';
+import CreateAthletePage from './CreateAthletePage';
+
+export function JoinPage() {
+  const navigate = useNavigate();
+  return <CreateAthletePage onNavigate={(page) => navigate(page === 'athletes' ? '/youth' : '/start')} />;
+}

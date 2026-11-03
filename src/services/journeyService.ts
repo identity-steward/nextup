@@ -17,7 +17,7 @@ interface EntryWithAthlete extends JourneyEntry {
 }
 
 export class JourneyService {
-  static async getPublicEntries(athleteId: string, limit = 3): Promise<JourneyEntry[]> {
+  static async getPublicEntriesWithStatus(athleteId: string, limit = 3): Promise<{ data: JourneyEntry[]; error: string | null }> {
     const { data, error } = await supabase
       .from('journey_entries')
       .select('*')
@@ -28,11 +28,13 @@ export class JourneyService {
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    if (error) {
-      console.error('Error fetching public journey entries:', error);
-      return [];
-    }
-    return data || [];
+    return { data: data || [], error: error?.message ?? null };
+  }
+
+  static async getPublicEntries(athleteId: string, limit = 3): Promise<JourneyEntry[]> {
+    const result = await JourneyService.getPublicEntriesWithStatus(athleteId, limit);
+    if (result.error) console.error('Error fetching public journey entries:', result.error);
+    return result.data;
   }
 
   static async getAthleteEntries(athleteId: string): Promise<JourneyEntry[]> {

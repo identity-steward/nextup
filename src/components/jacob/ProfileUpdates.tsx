@@ -36,17 +36,19 @@ export default function ProfileUpdates({ athleteId, athleteName, limit = 3 }: Pr
   const [entries, setEntries] = useState<JourneyEntry[]>([]);
   const [evidenceMap, setEvidenceMap] = useState<Record<string, EvidenceMedia>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!athleteId) { setLoading(false); return; }
 
     (async () => {
-      const data = await JourneyService.getPublicEntries(athleteId, limit);
-      setEntries(data);
+      const result = await JourneyService.getPublicEntriesWithStatus(athleteId, limit);
+      setEntries(result.data);
+      setError(Boolean(result.error));
 
       // Fetch linked evidence media for entries that have evidence_media_id
-      const mediaIds = data
-        .map(e => e.evidence_media_id)
+      const mediaIds = result.data
+        .map((entry: JourneyEntry) => entry.evidence_media_id)
         .filter((id): id is string => id !== null);
 
       if (mediaIds.length > 0) {
@@ -99,6 +101,10 @@ export default function ProfileUpdates({ athleteId, athleteName, limit = 3 }: Pr
                 </div>
               </div>
             ))}
+          </div>
+        ) : error ? (
+          <div className="border border-dashed border-amber-500/20 rounded-xl p-8 text-center">
+            <p className="text-amber-300/70 text-sm">Journey records are temporarily unavailable.</p>
           </div>
         ) : entries.length === 0 ? (
           <div className="border border-dashed border-white/8 rounded-xl p-8 text-center">

@@ -10,6 +10,7 @@ type FormState = {
   athleteFirstName: string;
   athleteLastName: string;
   athleteAge: string;
+  athleteGrade: string;
   athleteSport: string;
   athleteSchool: string;
   city: string;
@@ -20,7 +21,7 @@ type FormState = {
 
 const initialForm: FormState = {
   parentFirstName: '', parentLastName: '', parentEmail: '', parentPhone: '',
-  athleteFirstName: '', athleteLastName: '', athleteAge: '', athleteSport: '',
+  athleteFirstName: '', athleteLastName: '', athleteAge: '', athleteGrade: '', athleteSport: '',
   athleteSchool: '', city: '', athleteBio: '', supportNeeded: '', consentGiven: false,
 };
 
@@ -48,6 +49,7 @@ export function ParentIntakePage() {
       athlete_first_name: form.athleteFirstName.trim(),
       athlete_last_name: form.athleteLastName.trim(),
       athlete_age: form.athleteAge ? Number(form.athleteAge) : null,
+      athlete_grade: form.athleteGrade.trim(),
       athlete_sport: form.athleteSport.trim(),
       athlete_school: form.athleteSchool.trim() || null,
       city: form.city.trim() || null,
@@ -79,7 +81,7 @@ export function ParentIntakePage() {
         {error && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>}
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 space-y-8">
           <div><h2 className="text-lg font-black text-navy-900 mb-5">Parent or guardian contact</h2><div className="grid sm:grid-cols-2 gap-5"><div><label className={labelClass}>First name *</label><input required className={inputClass} value={form.parentFirstName} onChange={setField('parentFirstName')} /></div><div><label className={labelClass}>Last name *</label><input required className={inputClass} value={form.parentLastName} onChange={setField('parentLastName')} /></div><div><label className={labelClass}>Email *</label><input required type="email" className={inputClass} value={form.parentEmail} onChange={setField('parentEmail')} /></div><div><label className={labelClass}>Phone</label><input type="tel" className={inputClass} value={form.parentPhone} onChange={setField('parentPhone')} /></div></div></div>
-          <div><h2 className="text-lg font-black text-navy-900 mb-5">Young person</h2><div className="grid sm:grid-cols-2 gap-5"><div><label className={labelClass}>First name *</label><input required className={inputClass} value={form.athleteFirstName} onChange={setField('athleteFirstName')} /></div><div><label className={labelClass}>Last name *</label><input required className={inputClass} value={form.athleteLastName} onChange={setField('athleteLastName')} /></div><div><label className={labelClass}>Age</label><input type="number" min="5" max="18" className={inputClass} value={form.athleteAge} onChange={setField('athleteAge')} /></div><div><label className={labelClass}>Sport or activity *</label><input required className={inputClass} value={form.athleteSport} onChange={setField('athleteSport')} /></div><div><label className={labelClass}>School</label><input className={inputClass} value={form.athleteSchool} onChange={setField('athleteSchool')} /></div><div><label className={labelClass}>City</label><input className={inputClass} value={form.city} onChange={setField('city')} /></div></div></div>
+          <div><h2 className="text-lg font-black text-navy-900 mb-5">Young person</h2><div className="grid sm:grid-cols-2 gap-5"><div><label className={labelClass}>First name *</label><input required className={inputClass} value={form.athleteFirstName} onChange={setField('athleteFirstName')} /></div><div><label className={labelClass}>Last name *</label><input required className={inputClass} value={form.athleteLastName} onChange={setField('athleteLastName')} /></div><div><label className={labelClass}>Age</label><input type="number" min="5" max="18" className={inputClass} value={form.athleteAge} onChange={setField('athleteAge')} /></div><div><label className={labelClass}>Grade *</label><input required className={inputClass} value={form.athleteGrade} onChange={setField('athleteGrade')} /></div><div><label className={labelClass}>Sport or activity *</label><input required className={inputClass} value={form.athleteSport} onChange={setField('athleteSport')} /></div><div><label className={labelClass}>School</label><input className={inputClass} value={form.athleteSchool} onChange={setField('athleteSchool')} /></div><div><label className={labelClass}>City</label><input className={inputClass} value={form.city} onChange={setField('city')} /></div></div></div>
           <div><label className={labelClass}>Tell us about their journey</label><textarea rows={5} className={inputClass} value={form.athleteBio} onChange={setField('athleteBio')} /><label className={`${labelClass} mt-5`}>What support would be helpful?</label><textarea rows={4} className={inputClass} value={form.supportNeeded} onChange={setField('supportNeeded')} /></div>
           <label className="flex items-start gap-3 text-sm text-gray-600"><input required type="checkbox" checked={form.consentGiven} onChange={setField('consentGiven')} className="mt-1 h-4 w-4 accent-blue-600" /><span>I confirm I am authorized to share this information for NextUp to review this intake.</span></label>
           <button type="submit" disabled={submitting} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-4 transition-colors disabled:opacity-50"><Send className="w-5 h-5" />{submitting ? 'Submitting...' : 'Submit intake'}</button>

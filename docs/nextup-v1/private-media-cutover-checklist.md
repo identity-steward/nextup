@@ -92,104 +92,41 @@
 - [ ] Signed URLs expire after 5 minutes (verify after deploy)
 - [ ] Admin media review still works (verify after deploy)
 
-## Phase 2 — Make Buckets Private (Proposed, Requires Approval)
+## Phase 2 — Complete
 
-### Current State
-- `athlete-photos`: public=true
-- `athlete-videos`: public=true
-- `profile-assets`: public=true
-- `media-quarantine`: public=false (already private)
+### Migration Applied
+`20261103040000_phase2_make_media_buckets_private` — Created `brand-assets` bucket (public), set `athlete-photos`/`athlete-videos`/`profile-assets` to `public=false`, dropped 3 public SELECT policies, created 3 authenticated-only SELECT policies.
 
-### Current storage.objects SELECT Policies (to be replaced)
-1. `Public can access athlete photo objects` — TO `anon, authenticated`, USING `bucket_id = 'athlete-photos' AND name IS NOT NULL AND name != ''`
-2. `Public can access athlete video objects` — TO `anon, authenticated`, USING `bucket_id = 'athlete-videos' AND name IS NOT NULL AND name != ''`
-3. `Public can access profile asset objects` — TO `anon, authenticated`, USING `bucket_id = 'profile-assets' AND name IS NOT NULL AND name != ''`
+### Bucket State (Post-Migration)
+- `athlete-photos`: public=false
+- `athlete-videos`: public=false
+- `profile-assets`: public=false
+- `media-quarantine`: public=false (unchanged)
+- `brand-assets`: public=true (new)
 
-### Proposed Changes (Single Migration)
+### Rollback Policy
+Youth-media buckets must NEVER be restored to public access. If something breaks:
+1. Repair the Edge Function or media URL service.
+2. Display placeholders until the service is fixed.
+3. NEVER run `UPDATE storage.buckets SET public = true` on youth-media buckets.
+4. NEVER recreate public SELECT policies that grant `anon` access to youth-media buckets.
 
-**Step 1 — Create `brand-assets` bucket (public)**
-```sql
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('brand-assets', 'brand-assets', true)
-ON CONFLICT (id) DO NOTHING;
-```
+### Gate Criteria — All Passed
+- [x] All 3 media buckets have `public = false`
+- [x] `brand-assets` bucket created and public
+- [x] No `storage/v1/object/public` URLs in page source (rendering code)
+- [x] All 4 old public URLs return 400 (denied at origin — Supabase returns "Bucket not found" for private buckets)
+- [x] Signed URL issuance and retrieval verified with real synthetic storage object
+- [x] Anonymous media-urls requests return null (no consent)
+- [x] Malformed JWT rejected with 401
+- [x] media-revoke rejects anonymous with 401
+- [x] `npm run build` passes (0 errors)
+- [x] All 4 real media records preserved (approved/implied/platform)
+- [x] All 4 real consent records preserved (pending/false)
+- [x] No files deleted, moved, or modified
 
-**Step 2 — Set 3 media buckets to private**
-```sql
-UPDATE storage.buckets SET public = false
-WHERE id IN ('athlete-photos', 'athlete-videos', 'profile-assets');
-```
-
-**Step 3 — Drop the 3 public SELECT policies**
-```sql
-DROP POLICY IF EXISTS "Public can access athlete photo objects" ON storage.objects;
-DROP POLICY IF EXISTS "Public can access athlete video objects" ON storage.objects;
-DROP POLICY IF EXISTS "Public can access profile asset objects" ON storage.objects;
-```
-
-**Step 4 — Create authenticated-only SELECT policies**
-```sql
-CREATE POLICY "Authenticated can read athlete photos"
-ON storage.objects FOR SELECT TO authenticated
-USING (bucket_id = 'athlete-photos' AND name IS NOT NULL AND name != '');
-
-CREATE POLICY "Authenticated can read athlete videos"
-ON storage.objects FOR SELECT TO authenticated
-USING (bucket_id = 'athlete-videos' AND name IS NOT NULL AND name != '');
-
-CREATE POLICY "Authenticated can read profile assets"
-ON storage.objects FOR SELECT TO authenticated
-USING (bucket_id = 'profile-assets' AND name IS NOT NULL AND name != '');
-```
-
-**Step 5 — Grant service_role access to brand-assets**
-```sql
--- service_role already has full access to storage.objects
--- No additional grant needed
-```
-
-### Visible Impact
-- Anonymous visitors cannot load media via public storage URLs — all 4 current URLs return 403
-- The `media-urls` Edge Function (using service_role key) bypasses RLS and still issues signed URLs
-- All image-rendering paths already route through the Edge Function with placeholder fallback
-- No UI changes — visitors see either the photo (via signed URL) or a placeholder
-- Authenticated users (owners, navigators, admins) can still read objects directly via the Supabase client
-
-### Rollback Procedure
-If anything breaks after Phase 2:
-```sql
--- Revert buckets to public
-UPDATE storage.buckets SET public = true
-WHERE id IN ('athlete-photos', 'athlete-videos', 'profile-assets');
-
--- Restore public SELECT policies
-DROP POLICY IF EXISTS "Authenticated can read athlete photos" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated can read athlete videos" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated can read profile assets" ON storage.objects;
-
-CREATE POLICY "Public can access athlete photo objects"
-ON storage.objects FOR SELECT TO anon, authenticated
-USING (bucket_id = 'athlete-photos' AND name IS NOT NULL AND name != '');
-
-CREATE POLICY "Public can access athlete video objects"
-ON storage.objects FOR SELECT TO anon, authenticated
-USING (bucket_id = 'athlete-videos' AND name IS NOT NULL AND name != '');
-
-CREATE POLICY "Public can access profile asset objects"
-ON storage.objects FOR SELECT TO anon, authenticated
-USING (bucket_id = 'profile-assets' AND name IS NOT NULL AND name != '');
-```
-
-### Gate Criteria for Phase 2 Completion
-- [ ] All 3 media buckets have `public = false`
-- [ ] `brand-assets` bucket created and public
-- [ ] No `storage/v1/object/public` URLs in page source
-- [ ] All 4 old public URLs return 403
-- [ ] Athlete profiles, directory, and journey evidence render correctly via signed URLs
-- [ ] `npm run build` passes
-
-### File Preservation Guarantee
-Phase 2 does NOT delete, move, or modify any storage objects. It only changes bucket visibility and SELECT policies. All files remain in their original buckets at their original paths. The Edge Function's `createSignedUrl` continues to work because it uses the service_role key, which bypasses RLS.
+### CDN Cache Note
+The Cloudflare CDN may serve previously-cached responses for old public URLs until cache expires. The origin denies all requests with HTTP 400. Cache-busting query parameters confirm the origin denial. The cache will clear naturally.
 
 ## Phase 3 — Quarantine Workflow
 
@@ -200,12 +137,12 @@ Phase 2 does NOT delete, move, or modify any storage objects. It only changes bu
 - [ ] Failed quarantine is retryable
 - [ ] Admin can restore from quarantine
 
-## Existing Public Storage URL Exposure
+## Public Storage URL Exposure — Closed
 
-Until Phase 2 completes, the 4 public storage URLs remain accessible:
-- `athlete-photos/a11bf416.../1778557730370-1000001162.png` (Tadiwa, active)
-- `athlete-photos/2b855933.../1779425543980-Hockey_Memphis.jpg` (Kenneth, hidden)
-- `athlete-videos/acf09f5e.../1778361542925-Player_13_Highlight_v1.mov` (Jacob, active)
-- `athlete-videos/2b855933.../1779425591208-Player_13_Highlight_v1.mov` (Kenneth, hidden)
+All 4 previously-public storage URLs are now denied at the origin (HTTP 400 "Bucket not found"):
+- `athlete-photos/a11bf416.../1778557730370-1000001162.png` (Tadiwa, active) — DENIED
+- `athlete-photos/2b855933.../1779425543980-Hockey_Memphis.jpg` (Kenneth, hidden) — DENIED
+- `athlete-videos/acf09f5e.../1778361542925-Player_13_Highlight_v1.mov` (Jacob, active) — DENIED
+- `athlete-videos/2b855933.../1779425591208-Player_13_Highlight_v1.mov` (Kenneth, hidden) — DENIED
 
-These URLs are embedded in page HTML and discoverable. They will return 403 only after Phase 2 sets buckets to private. This is accepted risk: tightening storage policies before signed URL delivery would break the live site.
+The Cloudflare CDN may serve cached responses temporarily. Cache-busting queries confirm the origin denies all requests. The cache will expire naturally.

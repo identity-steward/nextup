@@ -60,14 +60,27 @@ Deno.serve(async (req: Request) => {
 
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
+      if (token.length === 0) {
+        return new Response(JSON.stringify({ error: "Invalid credentials" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       try {
-        const { data: userData } = await adminClient.auth.getUser(token);
-        if (userData.user) {
-          callerUserId = userData.user.id;
-          callerRole = (userData.user.app_metadata?.role as string) ?? null;
+        const { data: userData, error: jwtError } = await adminClient.auth.getUser(token);
+        if (jwtError || !userData.user) {
+          return new Response(JSON.stringify({ error: "Invalid credentials" }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
+        callerUserId = userData.user.id;
+        callerRole = (userData.user.app_metadata?.role as string) ?? null;
       } catch {
-        // Invalid token — treat as anonymous
+        return new Response(JSON.stringify({ error: "Invalid credentials" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
     }
 

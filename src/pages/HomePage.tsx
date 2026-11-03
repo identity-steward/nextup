@@ -69,47 +69,42 @@ export function HomePage() {
   return (
     <div className="bg-navy-900">
       {/* ═══ Section 1: Hero ═══════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="relative min-h-[720px] h-[720px] sm:min-h-[600px] sm:h-[600px] flex items-end sm:items-center overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage:
-              'url(https://images.pexels.com/photos/13980451/pexels-photo-13980451.jpeg?auto=compress&cs=tinysrgb&w=1920&q=80)',
-          }}
+          className="absolute inset-0 bg-cover bg-[38%_58%] bg-no-repeat sm:bg-[center_54%]"
+          style={{ backgroundImage: "url('/images/nextup-golf-hero.jpg')" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy-950/95 via-navy-900/85 to-navy-900/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-transparent to-navy-900/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy-950/20 via-navy-900/55 to-navy-950/90" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-900/90 via-transparent to-navy-900/20" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-28 pb-20">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-blue-600/15 border border-blue-500/30 text-blue-300 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-8">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-20 pb-28 sm:py-20">
+          <div className="max-w-2xl sm:ml-auto">
+            <div className="inline-flex items-center gap-2 bg-blue-600/20 border border-blue-300/35 text-blue-100 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-8">
+              <span className="w-2 h-2 rounded-full bg-blue-300 animate-pulse" />
               NextUp Network
             </div>
 
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-[0.92] tracking-tight mb-6">
-              Help Opportunity{' '}
-              <span className="text-gradient-blue">Flow.</span>
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-[0.95] tracking-tight mb-6">
+              More Than the Game.
             </h1>
 
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-200 leading-relaxed mb-5 max-w-2xl font-medium">
-              Your story is more than a moment. We help turn what you're doing,
-              what you need, and where you're going into a pathway toward opportunity.
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-100 leading-relaxed max-w-xl font-medium">
+              Every young person has a journey worth recognizing. Discover the skills, character, and experiences shaping tomorrow's leaders.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mt-8">
               <Link
-                to="/start"
+                to="/youth"
                 className="group flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base px-8 py-4 rounded-xl transition-all duration-200 hover:scale-105 hover:glow-blue uppercase tracking-wide"
               >
-                Get Started
+                Explore Athletes
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
-                to="/how-it-works"
-                className="group flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 hover:border-white/40 text-white font-bold text-base px-8 py-4 rounded-xl transition-all duration-200"
+                to="/start"
+                className="group flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/30 hover:border-white/50 text-white font-bold text-base px-8 py-4 rounded-xl transition-all duration-200"
               >
-                Explore NextUp
+                Join NextUp
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -117,8 +112,8 @@ export function HomePage() {
         </div>
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-          <div className="w-px h-8 bg-gradient-to-b from-blue-400/60 to-transparent" />
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-400/60" />
+          <div className="w-px h-8 bg-gradient-to-b from-blue-300/70 to-transparent" />
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-300/70" />
         </div>
       </section>
 

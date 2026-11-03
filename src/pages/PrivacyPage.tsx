@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
+import { logInternalError } from '../lib/safeError';
 import { getParticipantHouseholdId, getPrivacyHistory, type PrivacyHistoryEntry } from '../services/privacyService';
 import type { ConsentGrant } from '../types/trust';
 
@@ -29,7 +30,7 @@ export function PrivacyPage() {
       setEntries(history.entries);
       setActiveConsents(history.activeConsents);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load privacy history.');
+      setError(logInternalError(e) || 'Failed to load privacy history.');
     } finally {
       setLoading(false);
     }

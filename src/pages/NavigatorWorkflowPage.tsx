@@ -7,6 +7,7 @@ import {
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { logInternalError } from '../lib/safeError';
 import type { HouseholdWithMembers, Need } from '../types/narration';
 import type { PathwayWithRelations, Referral, ReferralStatus, PathwayStatus } from '../types/pathway';
 import type { AuthorityToAct, ConsentGrant, Disclosure, DisclosureStatus, VerificationStatus } from '../types/trust';
@@ -65,7 +66,7 @@ export function NavigatorWorkflowPage() {
       }));
       setAssignments(mapped);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load assignments');
+      setError(logInternalError(e) || 'Failed to load assignments');
     } finally {
       setLoading(false);
     }
@@ -93,7 +94,7 @@ export function NavigatorWorkflowPage() {
       setNeeds(allNeeds);
       setStep('needs');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load household');
+      setError(logInternalError(e) || 'Failed to load household');
     } finally {
       setLoading(false);
     }
@@ -108,7 +109,7 @@ export function NavigatorWorkflowPage() {
       setPathways(pws);
       setStep('pathway');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load pathways');
+      setError(logInternalError(e) || 'Failed to load pathways');
     } finally {
       setLoading(false);
     }
@@ -134,7 +135,7 @@ export function NavigatorWorkflowPage() {
       setStep('authority');
       setSuccess('Pathway created.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create pathway');
+      setError(logInternalError(e) || 'Failed to create pathway');
     } finally {
       setLoading(false);
     }
@@ -150,7 +151,7 @@ export function NavigatorWorkflowPage() {
       setAuthorities(auths);
       setStep('authority');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load authority records');
+      setError(logInternalError(e) || 'Failed to load authority records');
     } finally {
       setLoading(false);
     }
@@ -203,7 +204,7 @@ export function NavigatorWorkflowPage() {
       setStep('awaiting_approval');
       setSuccess('Authority created. Participant approval is required through SharePage before disclosure can proceed.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create authority');
+      setError(logInternalError(e) || 'Failed to create authority');
     } finally {
       setLoading(false);
     }
@@ -234,7 +235,7 @@ export function NavigatorWorkflowPage() {
         setStep('awaiting_approval');
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to select authority');
+      setError(logInternalError(e) || 'Failed to select authority');
     } finally {
       setLoading(false);
     }
@@ -258,7 +259,7 @@ export function NavigatorWorkflowPage() {
         setStep('awaiting_approval');
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to check consent status');
+      setError(logInternalError(e) || 'Failed to check consent status');
     } finally {
       setLoading(false);
     }
@@ -289,7 +290,7 @@ export function NavigatorWorkflowPage() {
       setCtx((c) => ({ ...c, disclosureId: disc.id }));
       setSuccess('Disclosure prepared.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to prepare disclosure');
+      setError(logInternalError(e) || 'Failed to prepare disclosure');
     } finally {
       setLoading(false);
     }
@@ -309,7 +310,7 @@ export function NavigatorWorkflowPage() {
       setDisclosures(discs);
       setSuccess('Delivery started.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to start delivery');
+      setError(logInternalError(e) || 'Failed to start delivery');
     } finally {
       setLoading(false);
     }
@@ -337,7 +338,7 @@ export function NavigatorWorkflowPage() {
       setDisclosures(discs);
       setSuccess('Delivery confirmed. Disclosure is now sent.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to confirm delivery');
+      setError(logInternalError(e) || 'Failed to confirm delivery');
     } finally {
       setLoading(false);
     }
@@ -367,7 +368,7 @@ export function NavigatorWorkflowPage() {
       setStep('referral');
       setSuccess('Referral draft created.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create referral');
+      setError(logInternalError(e) || 'Failed to create referral');
     } finally {
       setLoading(false);
     }
@@ -391,7 +392,7 @@ export function NavigatorWorkflowPage() {
       setReferrals(refs);
       setSuccess('Disclosure linked. Referral is now ready.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to link disclosure');
+      setError(logInternalError(e) || 'Failed to link disclosure');
     } finally {
       setLoading(false);
     }
@@ -407,7 +408,7 @@ export function NavigatorWorkflowPage() {
       setReferrals(refs);
       setSuccess('Referral sent.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to send referral');
+      setError(logInternalError(e) || 'Failed to send referral');
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
+import { logInternalError } from '../lib/safeError';
 import { getParticipantHouseholdId } from '../services/privacyService';
 import * as trustService from '../services/trustService';
 import type { AuthorityToAct, ConsentGrant } from '../types/trust';
@@ -48,7 +49,7 @@ export function SharePage() {
       const cs = await trustService.getConsentGrants(householdInfo.householdId);
       setActiveConsents(cs.filter((c) => c.status === 'active'));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load sharing information.');
+      setError(logInternalError(e) || 'Failed to load sharing information.');
     } finally {
       setLoading(false);
     }
@@ -86,7 +87,7 @@ export function SharePage() {
       setForm({ recipientName: '', recipientType: '', purpose: '', dataCategories: 'education', expiresAt: '' });
       setSuccess('You have approved sharing. Your navigator can now prepare and send the disclosure.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create consent.');
+      setError(logInternalError(e) || 'Failed to create consent.');
     } finally {
       setApproving(false);
     }

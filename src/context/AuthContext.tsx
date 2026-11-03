@@ -43,20 +43,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        const { count } = await supabase
-          .from('navigator_assignments')
-          .select('id', { count: 'exact', head: true })
-          .eq('navigator_user_id', session.user.id)
-          .eq('assignment_status', 'active');
-        setIsNavigator((count ?? 0) > 0);
-      } else {
-        setIsNavigator(false);
-      }
-      setLoading(false);
+      (async () => {
+        if (session?.user) {
+          try {
+            const { count, error } = await supabase
+              .from('navigator_assignments')
+              .select('id', { count: 'exact', head: true })
+              .eq('navigator_user_id', session.user.id)
+              .eq('assignment_status', 'active');
+            if (error) {
+              setIsNavigator(false);
+            } else {
+              setIsNavigator((count ?? 0) > 0);
+            }
+          } catch {
+            setIsNavigator(false);
+          }
+        } else {
+          setIsNavigator(false);
+        }
+        setLoading(false);
+      })();
     });
 
     return () => subscription.unsubscribe();

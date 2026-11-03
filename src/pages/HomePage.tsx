@@ -55,7 +55,7 @@ const spotlightItems = [
     title: 'Jacob Fouse',
     category: 'Basketball',
     desc: 'A NextUp athlete profile showcasing the journey, traits, and highlights of a real Memphis youth athlete.',
-    path: '/youth/jacob-fouse',
+    path: '/youth/jacob-f',
   },
   {
     title: 'Athlete Spotlight',

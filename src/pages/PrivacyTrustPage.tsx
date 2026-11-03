@@ -23,6 +23,11 @@ export function PrivacyTrustPage() {
       title: 'Guardian consent is tracked',
       description: 'Parent and guardian consent is recorded separately from athlete profile data. Administrators review intake submissions before any next step.',
     },
+    {
+      icon: ShieldCheck,
+      title: 'Adult consent vs. guardian authorization',
+      description: 'Athletes who are legal adults can consent to sharing their own information. For athletes under 18, a parent or legal guardian must authorize sharing. NextUp does not treat a minor\'s own assent as guardian authorization.',
+    },
   ];
 
   return (
@@ -54,7 +59,7 @@ export function PrivacyTrustPage() {
           <div className="text-center mb-16">
             <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-3">How Privacy Works</p>
             <h2 className="text-4xl sm:text-5xl font-black text-navy-900 tracking-tight mb-4">
-              Four core principles
+              Five core principles
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
               These principles guide how NextUp handles athlete data, media, and sharing.
@@ -101,9 +106,10 @@ export function PrivacyTrustPage() {
                 <span className="text-gray-700 leading-relaxed">
                   <strong className="text-navy-900">Media consent status.</strong> Existing
                   media uploads currently have a consent status of "implied" rather than
-                  verified parental consent. NextUp is building a verified consent workflow
-                  to replace this. Until that workflow is in place, media is not published
-                  without administrative review.
+                  verified parental or adult self-consent. "Implied" consent does not
+                  authorize public publication. NextUp is building a verified consent
+                  workflow to replace this. Until that workflow is in place, media is not
+                  published without administrative review and verified consent.
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -179,11 +185,11 @@ export function PrivacyTrustPage() {
             </div>
 
             <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-              <h3 className="text-lg font-bold text-navy-900 mb-2">Supporter signups</h3>
+              <h3 className="text-lg font-bold text-navy-900 mb-2">Contact inquiries</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Supporter and sponsor inquiry forms collect name, email, organization, and
-                message. This information is used to respond to inquiries and is not shared
-                with third parties.
+                The contact form collects name, email, organization, inquiry type, and
+                message. This information is used to respond to inquiries and is reviewed by
+                NextUp administrators.
               </p>
             </div>
           </div>

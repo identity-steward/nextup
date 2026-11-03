@@ -52,6 +52,7 @@ import { AdminPathwaysPage } from './pages/AdminPathwaysPage';
 import { AdminOutcomesPage } from './pages/AdminOutcomesPage';
 import { AdminIdentityReviewPage } from './pages/AdminIdentityReviewPage';
 import { AdminYouthRelationshipPage } from './pages/AdminYouthRelationshipPage';
+import { AdminInquiriesPage } from './pages/AdminInquiriesPage';
 import { NavigatorWorkflowPage } from './pages/NavigatorWorkflowPage';
 
 const dashboardPrefixes = ['/admin', '/app', '/dashboard', '/profile-setup'];
@@ -127,6 +128,7 @@ function AppContent() {
           <Route path="/admin/outcomes" element={<ProtectedRoute requireAdmin><AdminOutcomesPage /></ProtectedRoute>} />
           <Route path="/admin/identity-review" element={<ProtectedRoute requireAdmin><AdminIdentityReviewPage /></ProtectedRoute>} />
           <Route path="/admin/youth-relationships" element={<ProtectedRoute requireAdmin><AdminYouthRelationshipPage /></ProtectedRoute>} />
+          <Route path="/admin/inquiries" element={<ProtectedRoute requireAdmin><AdminInquiriesPage /></ProtectedRoute>} />
           <Route path="/admin/navigator" element={<ProtectedRoute requireNavigator><NavigatorWorkflowPage /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

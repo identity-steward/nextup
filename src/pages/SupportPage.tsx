@@ -1,7 +1,7 @@
 import { Heart, Building2, Mail, User, CheckCircle, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { InquiryService } from '../services/inquiryService';
 import { STRIPE_LINKS } from '../config/stripeLinks';
 
 export default function SupportPage() {
@@ -11,6 +11,7 @@ export default function SupportPage() {
     companyName: '',
     email: '',
     interests: '',
+    website: '', // honeypot — hidden field, bots fill it
   });
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -37,31 +38,36 @@ export default function SupportPage() {
       return;
     }
 
+    // Honeypot: if the hidden field is filled, silently drop the request
+    if (form.website) {
+      setShowSuccess(true);
+      setForm({ firstName: '', lastName: '', companyName: '', email: '', interests: '', website: '' });
+      setTimeout(() => setShowSuccess(false), 6000);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      const { error } = await supabase.from('supporter_signups').insert([{
-        first_name: form.firstName,
-        last_name: form.lastName,
-        email: form.email,
-        phone: null,
-        support_type: 'corporate_sponsor',
-        preferred_athlete: form.companyName || null,
-        message: form.interests || null,
-        marketing_consent: false,
-        status: 'pending',
-      }]);
+      const result = await InquiryService.submit({
+        name: `${form.firstName.trim()} ${form.lastName.trim()}`,
+        email: form.email.trim(),
+        organization: form.companyName.trim() || null,
+        inquiryType: 'sponsorship',
+        message: form.interests.trim() || 'No additional details provided.',
+      });
 
-      if (error) throw error;
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
       setShowSuccess(true);
-      setForm({ firstName: '', lastName: '', companyName: '', email: '', interests: '' });
+      setForm({ firstName: '', lastName: '', companyName: '', email: '', interests: '', website: '' });
       setTimeout(() => setShowSuccess(false), 6000);
     } catch (err) {
-      console.error('SupportPage sponsorship submission error:', err);
+      const msg = err instanceof Error ? err.message : 'Failed to submit. Please try again.';
       setShowError(true);
-      console.error(err);
-      setErrorMessage('Failed to submit. Please try again.');
+      setErrorMessage(msg);
       setTimeout(() => setShowError(false), 6000);
     } finally {
       setSubmitting(false);
@@ -203,6 +209,18 @@ export default function SupportPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-2xl p-8">
+            {/* Honeypot field — hidden from users, bots fill it */}
+            <div className="absolute -left-[9999px]" aria-hidden="true">
+              <label>Website (leave empty)</label>
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={form.website}
+                onChange={handleChange}
+              />
+            </div>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-semibold text-navy mb-2">

@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AthleteProfileTemplate from '../components/AthleteProfileTemplate';
 import { supabase } from '../lib/supabase';
+import { getSignedUrls } from '../services/mediaUrlService';
 import type { Athlete } from '../types/athlete';
 import type { AthleteTag } from '../types/traits';
 
 interface ApprovedMedia {
   id: string;
   media_type: string;
-  public_url: string | null;
+  signedUrl: string | null;
   caption: string | null;
   featured: boolean;
 }
@@ -61,7 +62,7 @@ export function AthleteProfilePage({ fixedSlug }: AthleteProfilePageProps) {
       const [mediaResult, tagsResult] = await Promise.all([
         supabase
           .from('media_uploads')
-          .select('id, media_type, public_url, caption, featured')
+          .select('id, media_type, caption, featured')
           .eq('athlete_id', currentAthlete.id)
           .eq('status', 'approved')
           .neq('consent_status', 'revoked')
@@ -75,7 +76,19 @@ export function AthleteProfilePage({ fixedSlug }: AthleteProfilePageProps) {
 
       if (!active) return;
       setAthlete(currentAthlete);
-      setApprovedMedia((mediaResult.data ?? []) as ApprovedMedia[]);
+
+      // Resolve signed URLs for approved media
+      const mediaRows = (mediaResult.data ?? []) as Array<{ id: string; media_type: string; caption: string | null; featured: boolean }>;
+      const mediaIds = mediaRows.map(m => m.id);
+      const signedUrls = await getSignedUrls(mediaIds);
+      const mediaWithUrls: ApprovedMedia[] = mediaRows.map(m => ({
+        id: m.id,
+        media_type: m.media_type,
+        signedUrl: signedUrls[m.id] ?? null,
+        caption: m.caption,
+        featured: m.featured,
+      }));
+      setApprovedMedia(mediaWithUrls);
       setAthleteTags((tagsResult.data ?? []) as unknown as AthleteTag[]);
       if (mediaResult.error || tagsResult.error) {
         setError('Some profile details are temporarily unavailable. The published athlete information is still shown.');
@@ -101,6 +114,7 @@ export function AthleteProfilePage({ fixedSlug }: AthleteProfilePageProps) {
         approvedMedia={approvedMedia}
         athleteTags={athleteTags}
         showJourney
+        signedUrlRefreshFn={getSignedUrls}
       />
     </>
   );

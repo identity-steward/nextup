@@ -2,6 +2,7 @@ import { ArrowRight, Star, Users, Flame } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AthleteService } from '../services/athleteService';
+import { resolveAthleteImageUrl } from '../services/mediaUrlService';
 import type { Athlete } from '../types/athlete';
 
 const JACOB_STORY = 'Jacob is a Memphis 8th grader competing in AAU basketball this Spring. His profile documents his development — from composure under pressure to leadership on the bench — so his growth is visible long after the final buzzer.';
@@ -31,7 +32,7 @@ function ProgressBar({ raised, goal, goalLabel }: { raised: number; goal: number
   );
 }
 
-function JacobCard({ athlete }: { athlete: Athlete }) {
+function JacobCard({ athlete, resolvedImageUrl }: { athlete: Athlete; resolvedImageUrl: string | null }) {
   const raised = athlete.season_amount_raised ?? 120;
   const goal = athlete.season_goal_amount ?? 750;
   const supporters = athlete.supporters_count ?? 12;
@@ -43,9 +44,9 @@ function JacobCard({ athlete }: { athlete: Athlete }) {
 
       <div className="grid md:grid-cols-2 gap-0">
         <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[460px] overflow-hidden bg-gray-900">
-          {athlete.image_url ? (
+          {resolvedImageUrl ? (
             <img
-              src={athlete.image_url}
+              src={resolvedImageUrl}
               alt={`${athlete.first_name} ${athlete.last_initial}`}
               className="w-full h-full object-cover object-top"
             />
@@ -117,11 +118,16 @@ function JacobCard({ athlete }: { athlete: Athlete }) {
 
 export default function FeaturedAthletesPreview() {
   const [jacob, setJacob] = useState<Athlete | null>(null);
+  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    AthleteService.getFeaturedAthlete().then(featured => {
+    AthleteService.getFeaturedAthlete().then(async featured => {
       setJacob(featured);
+      if (featured) {
+        const resolved = await resolveAthleteImageUrl(featured.image_url, featured.id);
+        setResolvedImageUrl(resolved);
+      }
       setLoading(false);
     });
   }, []);
@@ -152,7 +158,7 @@ export default function FeaturedAthletesPreview() {
           <div className="rounded-2xl border border-white/5 bg-[#0a0e1a] h-64 animate-pulse" />
         )}
 
-        {!loading && jacob && <JacobCard athlete={jacob} />}
+        {!loading && jacob && <JacobCard athlete={jacob} resolvedImageUrl={resolvedImageUrl} />}
 
         {!loading && !jacob && (
           <div className="text-center py-20 text-gray-500">

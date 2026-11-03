@@ -6,6 +6,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { JourneyService } from '../../services/journeyService';
+import { getSignedUrls } from '../../services/mediaUrlService';
 import { getEntryTypeMeta, formatEntryDate } from '../../types/journey';
 import type { JourneyEntry } from '../../types/journey';
 
@@ -22,7 +23,7 @@ function EntryTypeIcon({ type }: { type: string }) {
 interface EvidenceMedia {
   id: string;
   media_type: string;
-  public_url: string | null;
+  signedUrl: string | null;
   caption: string | null;
 }
 
@@ -54,16 +55,23 @@ export default function ProfileUpdates({ athleteId, athleteName, limit = 3 }: Pr
       if (mediaIds.length > 0) {
         const { data: mediaData } = await supabase
           .from('media_uploads')
-          .select('id, media_type, public_url, caption')
+          .select('id, media_type, caption')
           .in('id', mediaIds)
           .eq('status', 'approved')
           .neq('consent_status', 'revoked')
           .in('usage_scope', ['platform', 'public']);
 
         if (mediaData) {
+          const mediaRows = mediaData as Array<{ id: string; media_type: string; caption: string | null }>;
+          const signedUrls = await getSignedUrls(mediaRows.map(m => m.id));
           const map: Record<string, EvidenceMedia> = {};
-          for (const m of mediaData as EvidenceMedia[]) {
-            map[m.id] = m;
+          for (const m of mediaRows) {
+            map[m.id] = {
+              id: m.id,
+              media_type: m.media_type,
+              signedUrl: signedUrls[m.id] ?? null,
+              caption: m.caption,
+            };
           }
           setEvidenceMap(map);
         }
@@ -154,11 +162,11 @@ export default function ProfileUpdates({ athleteId, athleteName, limit = 3 }: Pr
                     {entry.body && (
                       <p className="text-gray-500 text-sm leading-relaxed">{entry.body}</p>
                     )}
-                    {evidence && evidence.public_url && (
+                    {evidence && evidence.signedUrl && (
                       <div className="mt-3 rounded-lg overflow-hidden border border-white/10 max-w-xs">
                         {evidence.media_type === 'photo' ? (
                           <img
-                            src={evidence.public_url}
+                            src={evidence.signedUrl}
                             alt={evidence.caption ?? ''}
                             className="w-full h-auto"
                           />

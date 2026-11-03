@@ -1,11 +1,18 @@
 import { Play, Eye, Users, UserPlus } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import type { Athlete } from '../types/athlete';
+import { resolveAthleteImageWithConsent, MEDIA_PLACEHOLDER } from '../services/mediaUrlService';
 
 interface HighlightReelProps {
   athlete: Athlete;
 }
 
 export default function HighlightReel({ athlete }: HighlightReelProps) {
+  const [resolvedImage, setResolvedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    resolveAthleteImageWithConsent(athlete.image_url, athlete.id).then(setResolvedImage);
+  }, [athlete.id, athlete.image_url]);
   return (
     <section className="py-20 bg-navy text-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -26,7 +33,7 @@ export default function HighlightReel({ athlete }: HighlightReelProps) {
               </button>
             </div>
             <img
-              src={athlete.image_url || 'https://images.pexels.com/photos/2834914/pexels-photo-2834914.jpeg?auto=compress&cs=tinysrgb&w=1200'}
+              src={resolvedImage ?? MEDIA_PLACEHOLDER}
               alt={`${athlete.first_name} Highlights`}
               className="w-full h-full object-cover"
             />

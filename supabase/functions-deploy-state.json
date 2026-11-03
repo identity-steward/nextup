@@ -1,0 +1,13 @@
+{
+  "projectId": "60974817",
+  "functions": {
+    "media-revoke": {
+      "hasChanged": false,
+      "hash": "75ce66a287f6e0c9e92cbecd806a49b8ff8de9f3be29a202e8a78e3028666826"
+    },
+    "media-urls": {
+      "hasChanged": false,
+      "hash": "013cb0d8bee1cad552aa1e2f34e5e8d5b8f5c20417b72b82f0473706b53aba45"
+    }
+  }
+}

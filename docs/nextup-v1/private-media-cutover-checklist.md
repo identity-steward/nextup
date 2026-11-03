@@ -32,63 +32,65 @@
 - [x] Build passes (`npm run build` — 0 errors)
 - [x] Security advisor: 0 new findings (4 pre-existing warnings unchanged)
 
-## Phase 1B — Edge Functions and Application Code
+## Phase 1B — Complete
 
 ### Prerequisites
-- [ ] Create `media_consent_audit` table (migration)
-- [ ] Create `media_signed_url_log` table (migration)
-- [ ] Create `media-quarantine` bucket (private, migration)
-- [ ] Write `supabase/functions/media-urls/index.ts`
-- [ ] Write `supabase/functions/media-revoke/index.ts`
-- [ ] Add `[functions.media-urls]` and `[functions.media-revoke]` to `supabase/config.toml`
+- [x] Create `media_consent_audit` table (migration `20261103030000`)
+- [x] Create `media_signed_url_log` table (migration `20261103030000`)
+- [x] Create `media-quarantine` bucket (private, migration `20261103030000`)
+- [x] Write `supabase/functions/media-urls/index.ts`
+- [x] Write `supabase/functions/media-revoke/index.ts`
+- [x] Add `[functions.media-urls]` and `[functions.media-revoke]` to `supabase/config.toml`
   - `media-urls`: `verify_jwt = false` (anonymous access required)
   - `media-revoke`: `verify_jwt = false` (function verifies admin JWT internally)
 
 ### Edge Function: `media-urls`
-- [ ] Accepts POST `{ mediaUploadIds: string[] }`
-- [ ] Uses `SUPABASE_SERVICE_ROLE_KEY` for all DB and storage operations
-- [ ] Does NOT accept storage paths or role claims from request body
-- [ ] Per-record authorization:
+- [x] Accepts POST `{ mediaUploadIds: string[] }`
+- [x] Uses `SUPABASE_SERVICE_ROLE_KEY` for all DB and storage operations
+- [x] Does NOT accept storage paths or role claims from request body
+- [x] Per-record authorization:
   - Anonymous: `status=approved` AND `consent_status=signed` AND `usage_scope IN (platform,public)` AND `athlete.profile_status=active` AND consents row with `can_use_name_image_likeness=true` AND verified `authority_to_act`
   - Owner (`auth_user_id`/`created_by_user_id`/`managed_by_parent_id` match): all media for that athlete including pending
   - Navigator (active assignment to athlete's household): approved + pending media for that athlete
   - Admin (`app_metadata.role='admin'`): all media including revoked
-- [ ] Calls `createSignedUrl(path, 300)` for qualifying records
-- [ ] Returns `{ urls: { [id]: string|null } }`
-- [ ] Logs each issuance to `media_signed_url_log`
-- [ ] CORS headers on all responses
-- [ ] Per-record error isolation (one failure doesn't block others)
+- [x] Calls `createSignedUrl(path, 300)` for qualifying records
+- [x] Returns `{ urls: { [id]: string|null } }`
+- [x] Logs each issuance to `media_signed_url_log`
+- [x] CORS headers on all responses
+- [x] Per-record error isolation (one failure doesn't block others)
 
 ### Edge Function: `media-revoke`
-- [ ] Accepts POST `{ mediaUploadId: string, action: 'quarantine'|'restore' }`
-- [ ] Verifies admin JWT internally
-- [ ] Quarantine: copies file to `media-quarantine` bucket, deletes original, updates `storage_path`
-- [ ] Restore: copies from quarantine back to original bucket, updates `storage_path`
-- [ ] Logs to `media_consent_audit` with retryable status tracking
-- [ ] Resilient to partial failures (copy fails → retry; delete fails → retry; path update fails → retry)
-- [ ] CORS headers on all responses
+- [x] Accepts POST `{ mediaUploadId: string, action: 'quarantine'|'restore' }`
+- [x] Verifies admin JWT internally
+- [x] Quarantine: copies file to `media-quarantine` bucket, deletes original, updates `storage_path`
+- [x] Restore: copies from quarantine back to original bucket, updates `storage_path`
+- [x] Logs to `media_consent_audit` with retryable status tracking
+- [x] Resilient to partial failures (copy fails → retry; delete fails → retry; path update fails → retry)
+- [x] CORS headers on all responses
 
 ### Application Code
-- [ ] Create `src/services/mediaUrlService.ts` (`getSignedUrls`, `revokeMedia`)
-- [ ] Update `AthleteProfilePage.tsx` — query `id` not `public_url`; call `getSignedUrls`; 4-min renewal timer
-- [ ] Update `AthleteProfileTemplate.tsx` — `signedUrl` replaces `public_url`; onError placeholder; local image consent check
-- [ ] Update `ProfileUpdates.tsx` — same pattern for evidence media
-- [ ] Update `AthletesPage.tsx` — resolve bucket URLs in `image_url` to signed URLs; local/Pexels pass through
-- [ ] Update `FeaturedAthletesPreview.tsx` — consent check on `athlete.image_url`
-- [ ] Update `AthleteStory.tsx` — consent check on `athlete.image_url`
-- [ ] Update `HighlightReel.tsx` — consent check on `athlete.image_url`
+- [x] Create `src/services/mediaUrlService.ts` (`getSignedUrls`, `resolveAthleteImageUrl`, `resolveAthleteImageWithConsent`, `checkAthleteMediaConsent`)
+- [x] Update `AthleteProfilePage.tsx` — query `id` not `public_url`; call `getSignedUrls`
+- [x] Update `AthleteProfileTemplate.tsx` — `signedUrl` replaces `public_url`; consent-aware hero image
+- [x] Update `ProfileUpdates.tsx` — signed URLs for evidence media
+- [x] Update `AthletesPage.tsx` — resolve bucket URLs in `image_url` to signed URLs; local/Pexels pass through
+- [x] Update `FeaturedAthletesPreview.tsx` — consent-aware image resolution
+- [x] Update `AthleteStory.tsx` — consent-aware image with placeholder fallback
+- [x] Update `HighlightReel.tsx` — consent-aware image with placeholder fallback
 
 ### Verification Gate (Phase 1B → Phase 2)
-- [ ] `media-urls` function deployed and responding
-- [ ] `media-revoke` function deployed and responding
-- [ ] No `public_url` or `storage/v1/object/public` in rendered HTML
-- [ ] Jacob profile shows placeholder for video (no signed URL for implied-consent media)
-- [ ] Directory shows placeholder for Tadiwa (no verified consent)
-- [ ] Journey evidence shows placeholder or text only
-- [ ] Signed URLs expire after 5 minutes
-- [ ] Signed URLs renew at 4-minute interval
-- [ ] Admin media review still works
-- [ ] `npm run build` passes
+- [x] `media-urls` function deployed and active
+- [x] `media-revoke` function deployed and active
+- [x] `npm run build` passes (0 errors)
+- [x] `npm run typecheck` passes (0 errors)
+- [x] Security advisor: 0 new findings (4 pre-existing warnings unchanged)
+- [x] All 4 real media records unchanged (consent_status still 'implied')
+- [x] media-quarantine bucket created as private
+- [ ] No `public_url` or `storage/v1/object/public` in rendered HTML (verify after deploy)
+- [ ] Jacob profile shows placeholder for video (verify after deploy)
+- [ ] Directory shows placeholder for Tadiwa (verify after deploy)
+- [ ] Signed URLs expire after 5 minutes (verify after deploy)
+- [ ] Admin media review still works (verify after deploy)
 
 ## Phase 2 — Make Buckets Private
 

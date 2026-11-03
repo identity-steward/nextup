@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, Award, Heart, Share2, Copy, CheckCircle, Play, Users, Eye, Star, Zap, Shield, Trophy } from 'lucide-react';
 import type { Athlete } from '../types/athlete';
 import TraitSection from './TraitSection';
 import type { AthleteTag as TraitAthleteTag } from '../types/traits';
 import { safePaymentLink, safeVideoEmbedUrl } from '../lib/safeLinks';
+import { resolveAthleteImageWithConsent, MEDIA_PLACEHOLDER } from '../services/mediaUrlService';
 import ProfileUpdates from './jacob/ProfileUpdates';
 
 interface ApprovedMedia {
   id: string;
   media_type: string;
-  public_url: string | null;
+  signedUrl: string | null;
   caption: string | null;
   featured: boolean;
 }
@@ -20,6 +21,7 @@ interface AthleteProfileTemplateProps {
   approvedMedia?: ApprovedMedia[];
   athleteTags?: TraitAthleteTag[];
   showJourney?: boolean;
+  signedUrlRefreshFn?: (mediaIds: string[]) => Promise<Record<string, string | null>>;
 }
 
 const CHECK_ICON = (
@@ -95,8 +97,13 @@ function getVideoEmbedUrl(url: string) {
   return safeVideoEmbedUrl(url);
 }
 
-export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia = [], athleteTags = [], showJourney = false }: AthleteProfileTemplateProps) {
+export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia = [], athleteTags = [], showJourney = false, signedUrlRefreshFn }: AthleteProfileTemplateProps) {
   const [copied, setCopied] = useState(false);
+  const [heroImage, setHeroImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    resolveAthleteImageWithConsent(athlete.image_url, athlete.id).then(setHeroImage);
+  }, [athlete.id, athlete.image_url]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -180,7 +187,7 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-700">
               <img
-                src={athlete.image_url || 'https://images.pexels.com/photos/2834914/pexels-photo-2834914.jpeg?auto=compress&cs=tinysrgb&w=800'}
+                src={heroImage ?? MEDIA_PLACEHOLDER}
                 alt={`${athlete.first_name} ${athlete.last_initial}`}
                 className="w-full h-full object-cover"
               />
@@ -343,9 +350,9 @@ export default function AthleteProfileTemplate({ athlete, onBack, approvedMedia 
                   key={item.id}
                   className={`relative aspect-[4/3] rounded-xl overflow-hidden group ${item.featured ? 'ring-2 ring-amber-400 ring-offset-2' : ''}`}
                 >
-                  {item.media_type === 'photo' && item.public_url ? (
+                  {item.media_type === 'photo' && item.signedUrl ? (
                     <img
-                      src={item.public_url}
+                      src={item.signedUrl}
                       alt={item.caption ?? ''}
                       className="w-full h-full object-cover"
                     />

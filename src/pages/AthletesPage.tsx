@@ -2,10 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, MapPin } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { resolveAthleteImageUrl } from '../services/mediaUrlService';
 import type { Athlete } from '../types/athlete';
 
+interface DirectoryAthlete extends Athlete {
+  resolvedImageUrl?: string | null;
+}
+
 export function AthletesPage() {
-  const [athletes, setAthletes] = useState<Athlete[]>([]);
+  const [athletes, setAthletes] = useState<DirectoryAthlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +28,15 @@ export function AthletesPage() {
       if (queryError) {
         setError('Athlete profiles are temporarily unavailable. Please try again shortly.');
       } else {
-        setAthletes((data ?? []) as Athlete[]);
+        const athleteList = (data ?? []) as Athlete[];
+        // Resolve any storage-based image_urls to signed URLs
+        const resolved = await Promise.all(
+          athleteList.map(async (a) => ({
+            ...a,
+            resolvedImageUrl: await resolveAthleteImageUrl(a.image_url, a.id),
+          }))
+        );
+        setAthletes(resolved);
       }
       setLoading(false);
     })();
@@ -57,8 +70,8 @@ export function AthletesPage() {
             {athletes.map((athlete) => (
               <Link key={athlete.id} to={`/youth/${athlete.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300">
                 <div className="aspect-[4/3] bg-navy-900 overflow-hidden">
-                  {athlete.image_url ? (
-                    <img src={athlete.image_url} alt={`${athlete.first_name} ${athlete.last_initial}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  {athlete.resolvedImageUrl ? (
+                    <img src={athlete.resolvedImageUrl} alt={`${athlete.first_name} ${athlete.last_initial}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-blue-200 font-bold">NextUp Athlete</div>
                   )}

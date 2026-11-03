@@ -1,0 +1,17 @@
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-profile-approved-email]
+verify_jwt = false
+
+[functions.send-profile-update-reviewed-email]
+verify_jwt = false
+
+[functions.media-urls]
+verify_jwt = false
+
+[functions.media-revoke]
+verify_jwt = false

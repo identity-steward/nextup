@@ -1,11 +1,18 @@
 import { ArrowRight, Heart, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import type { Athlete } from '../types/athlete';
+import { resolveAthleteImageWithConsent, MEDIA_PLACEHOLDER } from '../services/mediaUrlService';
 
 interface AthleteStoryProps {
   athlete: Athlete;
 }
 
 export default function AthleteStory({ athlete }: AthleteStoryProps) {
+  const [resolvedImage, setResolvedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    resolveAthleteImageWithConsent(athlete.image_url, athlete.id).then(setResolvedImage);
+  }, [athlete.id, athlete.image_url]);
   return (
     <section id="story" className="py-24 bg-gray-50 scroll-mt-20">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -22,7 +29,7 @@ export default function AthleteStory({ athlete }: AthleteStoryProps) {
 
                 <div className="relative aspect-[3/4] max-w-sm mx-auto rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/50">
                   <img
-                    src={athlete.image_url || '/Untitled design.png'}
+                    src={resolvedImage ?? MEDIA_PLACEHOLDER}
                     alt={`${athlete.first_name} - NextUp Memphis Athlete`}
                     className="w-full h-full object-contain bg-white"
                     style={{ imageRendering: 'crisp-edges' }}

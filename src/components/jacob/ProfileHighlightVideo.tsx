@@ -1,12 +1,17 @@
 import { Play, ExternalLink, Eye } from 'lucide-react';
+import type { Athlete } from '../../types/athlete';
 
-export default function ProfileHighlightVideo() {
+interface ProfileHighlightVideoProps {
+  embedUrl: string;
+  athlete: Athlete;
+}
+
+export default function ProfileHighlightVideo({ embedUrl, athlete }: ProfileHighlightVideoProps) {
   return (
     <section id="highlights" className="relative py-24 scroll-mt-16 overflow-hidden" style={{ background: '#1c2028' }}>
 
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(56,189,248,0.4), transparent)' }} />
 
-      {/* Ambient glow */}
       <div
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at center, rgba(14,165,233,0.09) 0%, transparent 65%)' }}
@@ -28,13 +33,15 @@ export default function ProfileHighlightVideo() {
               </span>
             </h2>
             <p className="text-white/35 text-sm mt-4 max-w-sm leading-relaxed">
-              This is Jacob on the court — no hype, just game. Judge for yourself.
+              This is {athlete.first_name} on the court — no hype, just game. Judge for yourself.
             </p>
           </div>
-          <div className="flex items-center gap-2 text-white/25 text-xs font-bold uppercase tracking-wider shrink-0">
-            <Eye className="w-3.5 h-3.5 text-sky-400/60" />
-            Memphis AAU Circuit &nbsp;&bull;&nbsp; 2025
-          </div>
+          {athlete.team_name && (
+            <div className="flex items-center gap-2 text-white/25 text-xs font-bold uppercase tracking-wider shrink-0">
+              <Eye className="w-3.5 h-3.5 text-sky-400/60" />
+              {athlete.team_name}{athlete.team_circuit ? ` · ${athlete.team_circuit}` : ''}
+            </div>
+          )}
         </div>
 
         {/* Main video card */}
@@ -42,13 +49,11 @@ export default function ProfileHighlightVideo() {
 
           {/* Video embed */}
           <div className="relative group">
-            {/* Hover halo */}
             <div
               className="absolute -inset-6 rounded-3xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700"
               style={{ background: 'radial-gradient(ellipse at center, rgba(14,165,233,0.1) 0%, transparent 70%)' }}
             />
 
-            {/* Corner brackets */}
             <div className="absolute -top-3 -left-3 w-6 h-6 border-t-2 border-l-2 border-sky-500/40 rounded-tl z-10" />
             <div className="absolute -top-3 -right-3 w-6 h-6 border-t-2 border-r-2 border-sky-500/40 rounded-tr z-10" />
             <div className="absolute -bottom-3 -left-3 w-6 h-6 border-b-2 border-l-2 border-sky-500/25 rounded-bl z-10" />
@@ -73,25 +78,25 @@ export default function ProfileHighlightVideo() {
                   <div className="w-px h-4 bg-white/8" />
                   <div className="flex items-center gap-2">
                     <Play className="w-3 h-3 text-sky-400" fill="rgba(56,189,248,0.8)" />
-                    <span className="text-[11px] font-black text-white/60 uppercase tracking-[0.14em]">Official Highlight — Jacob Fouse</span>
+                    <span className="text-[11px] font-black text-white/60 uppercase tracking-[0.14em]">Official Highlight — {athlete.first_name} {athlete.last_initial}</span>
                   </div>
                 </div>
-                <button className="flex items-center gap-1.5 text-white/20 hover:text-white/50 transition-colors text-[10px] font-bold uppercase tracking-wider">
+                <a href={embedUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-white/20 hover:text-white/50 transition-colors text-[10px] font-bold uppercase tracking-wider">
                   <ExternalLink className="w-3 h-3" />
                   Open
-                </button>
+                </a>
               </div>
 
               {/* Embed */}
               <div className="relative" style={{ paddingBottom: '177.78%' }}>
                 <iframe
-                  src="https://www.instagram.com/reel/DV4BcPgEdOk/embed/"
+                  src={embedUrl}
                   className="absolute inset-0 w-full h-full"
                   frameBorder="0"
                   scrolling="no"
                   allowTransparency
                   allowFullScreen
-                  title="Jacob Fouse basketball highlights"
+                  title={`${athlete.first_name} ${athlete.last_initial} highlights`}
                   loading="lazy"
                 />
               </div>
@@ -104,14 +109,14 @@ export default function ProfileHighlightVideo() {
             {/* Scouting context */}
             <div className="bg-white/[0.04] border border-white/8 rounded-2xl p-5 hover:border-white/12 transition-colors">
               <p className="text-[10px] text-white/30 uppercase tracking-[0.14em] mb-3">Game Context</p>
-              <p className="text-white font-black text-lg leading-tight mb-1">Spring AAU Run</p>
-              <p className="text-white/35 text-sm mb-4">Memphis, TN &nbsp;&bull;&nbsp; 2025 Season</p>
+              <p className="text-white font-black text-lg leading-tight mb-1">{athlete.sport}</p>
+              <p className="text-white/35 text-sm mb-4">{athlete.city ?? ''}{athlete.city && athlete.grade ? ' · ' : ''}{athlete.grade}</p>
               <div className="space-y-2.5">
                 {[
-                  { label: 'Circuit', value: 'AAU Basketball' },
-                  { label: 'Level', value: '8th Grade' },
-                  { label: 'Role', value: 'Starting Guard' },
-                ].map(({ label, value }) => (
+                  { label: 'Position', value: athlete.position },
+                  { label: 'Team', value: athlete.team_name ?? '—' },
+                  { label: 'Grade', value: athlete.grade },
+                ].filter(({ value }) => value).map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between">
                     <span className="text-white/30 text-xs">{label}</span>
                     <span className="text-white text-xs font-bold">{value}</span>
@@ -140,7 +145,6 @@ export default function ProfileHighlightVideo() {
               </ul>
             </div>
 
-            {/* Live note */}
             <div className="border border-dashed border-white/8 rounded-2xl p-5 text-center">
               <p className="text-white/20 text-xs leading-relaxed">
                 New clips added as the season progresses

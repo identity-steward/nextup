@@ -4,27 +4,35 @@ import type { AthleteTag } from '../../types/traits';
 import { sortedTraits } from '../../types/traits';
 import TraitBadge from '../TraitBadge';
 
-export default function ProfileTraits() {
+interface ProfileTraitsProps {
+  athleteId?: string;
+  slug?: string;
+}
+
+export default function ProfileTraits({ athleteId, slug = 'jacob-f' }: ProfileTraitsProps) {
   const [traits, setTraits] = useState<ReturnType<typeof sortedTraits>>([]);
 
   useEffect(() => {
-    supabase
-      .from('athletes')
-      .select('id')
-      .eq('slug', 'jacob-f')
-      .maybeSingle()
-      .then(({ data: athlete }) => {
+    const fetchTraits = async () => {
+      let aid = athleteId;
+      if (!aid) {
+        const { data: athlete } = await supabase
+          .from('athletes')
+          .select('id')
+          .eq('slug', slug)
+          .maybeSingle();
         if (!athlete) return;
-        return supabase
-          .from('athlete_tags')
-          .select('visibility_tags(id, slug, label, category, sort_order)')
-          .eq('athlete_id', athlete.id);
-      })
-      .then(result => {
-        if (!result || result.error || !result.data) return;
-        setTraits(sortedTraits(result.data as unknown as AthleteTag[]));
-      });
-  }, []);
+        aid = athlete.id;
+      }
+      const result = await supabase
+        .from('athlete_tags')
+        .select('visibility_tags(id, slug, label, category, sort_order)')
+        .eq('athlete_id', aid);
+      if (!result || result.error || !result.data) return;
+      setTraits(sortedTraits(result.data as unknown as AthleteTag[]));
+    };
+    fetchTraits();
+  }, [athleteId, slug]);
 
   if (traits.length === 0) return null;
 

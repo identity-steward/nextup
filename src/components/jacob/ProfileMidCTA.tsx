@@ -1,19 +1,22 @@
 import { Heart, Shield, CheckCircle } from 'lucide-react';
+import type { Athlete } from '../../types/athlete';
 
 interface ProfileMidCTAProps {
   raised: number;
   goal: number;
   progressPct: number;
   onSupportClick: () => void;
+  athlete: Athlete;
 }
 
-export default function ProfileMidCTA({ raised, goal, progressPct, onSupportClick }: ProfileMidCTAProps) {
+export default function ProfileMidCTA({ raised, goal, progressPct, onSupportClick, athlete }: ProfileMidCTAProps) {
+  if (goal === 0) return null;
+
   return (
     <section className="relative py-14 overflow-hidden" style={{ background: '#1c2028' }}>
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.3), transparent)' }} />
       <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.2), transparent)' }} />
 
-      {/* Background glow */}
       <div
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[200px] pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at center, rgba(245,158,11,0.07) 0%, transparent 70%)' }}
@@ -24,13 +27,17 @@ export default function ProfileMidCTA({ raised, goal, progressPct, onSupportClic
 
           {/* Left — Text */}
           <div className="flex-1 text-center md:text-left">
-            <p className="text-amber-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">April 18–19 Tournament</p>
+            {athlete.competition_status && (
+              <p className="text-amber-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">{athlete.competition_status}</p>
+            )}
             <h3 className="text-2xl md:text-3xl font-black text-white leading-tight mb-2">
-              Help Jacob Compete
+              Help {athlete.first_name} Compete
             </h3>
-            <p className="text-white/40 text-sm leading-relaxed">
-              Every contribution brings him closer to the courts that matter.
-            </p>
+            {athlete.next_goal_description && (
+              <p className="text-white/40 text-sm leading-relaxed">
+                {athlete.next_goal_description}
+              </p>
+            )}
 
             {/* Progress inline */}
             <div className="mt-4 max-w-xs mx-auto md:mx-0">
@@ -60,12 +67,11 @@ export default function ProfileMidCTA({ raised, goal, progressPct, onSupportClic
                 boxShadow: '0 0 40px rgba(245,158,11,0.5), 0 4px 20px rgba(0,0,0,0.4)',
               }}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent translate-x:[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
               <Heart className="w-5 h-5 flex-shrink-0" fill="white" />
-              Support Jacob
+              Support {athlete.first_name}
             </button>
 
-            {/* Trust micro-row */}
             <div className="flex items-center gap-3 text-[11px] text-white/25">
               <span className="flex items-center gap-1">
                 <Shield className="w-3 h-3 text-emerald-500/60" />
@@ -74,7 +80,7 @@ export default function ProfileMidCTA({ raised, goal, progressPct, onSupportClic
               <span className="w-1 h-1 rounded-full bg-white/15" />
               <span className="flex items-center gap-1">
                 <CheckCircle className="w-3 h-3 text-emerald-500/60" />
-                Family-approved
+                NextUp reviewed
               </span>
             </div>
           </div>

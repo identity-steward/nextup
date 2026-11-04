@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { Share2, Copy, Users, CheckCircle } from 'lucide-react';
 
-export default function ProfileShare() {
+interface ProfileShareProps {
+  athleteName: string;
+}
+
+export default function ProfileShare({ athleteName }: ProfileShareProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopyLink = () => {
@@ -17,7 +21,7 @@ export default function ProfileShare() {
           <Share2 className="w-4 h-4 text-sky-400" />
           <p className="text-sky-400 text-xs font-black uppercase tracking-widest">Spread the Word</p>
         </div>
-        <h2 className="text-2xl md:text-3xl font-black text-white mb-2">Help Jacob Get Seen</h2>
+        <h2 className="text-2xl md:text-3xl font-black text-white mb-2">Help {athleteName} Get Seen</h2>
         <p className="text-gray-500 text-sm mb-8">
           Share with family, friends, and anyone who believes in Memphis youth sports.
         </p>

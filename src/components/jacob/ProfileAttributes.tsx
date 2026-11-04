@@ -1,4 +1,9 @@
 import { Eye, Flame, Zap, BookOpen, Target, Trophy } from 'lucide-react';
+import type { Athlete } from '../../types/athlete';
+
+interface ProfileAttributesProps {
+  athlete: Athlete;
+}
 
 const attributes = [
   {
@@ -84,7 +89,7 @@ const barWidths: Record<string, string> = {
   Proven: 'w-[88%]',
 };
 
-export default function ProfileAttributes() {
+export default function ProfileAttributes({ athlete: _athlete }: ProfileAttributesProps) {
   return (
     <section className="relative py-20 overflow-hidden" style={{ background: '#1c2028' }}>
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent)' }} />
@@ -108,9 +113,6 @@ export default function ProfileAttributes() {
               <span className="text-white/25">&amp; Traits</span>
             </h2>
           </div>
-          <p className="text-white/20 text-sm max-w-xs text-right hidden sm:block">
-            Assessed from game film and coach feedback
-          </p>
         </div>
 
         {/* Attribute cards grid */}
@@ -122,17 +124,14 @@ export default function ProfileAttributes() {
                 key={label}
                 className={`group relative bg-white/[0.03] border border-white/8 ${c.glow} rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] overflow-hidden`}
               >
-                {/* Background accent */}
                 <div className={`absolute top-0 right-0 w-24 h-24 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-y-1/2 translate-x-1/2`}
                   style={{ background: `radial-gradient(circle, ${color === 'sky' ? 'rgba(14,165,233,0.12)' : color === 'amber' ? 'rgba(245,158,11,0.12)' : color === 'emerald' ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)'} 0%, transparent 70%)` }}
                 />
 
-                {/* Icon */}
                 <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-4 ${c.iconBg}`}>
                   <Icon className={`w-5 h-5 ${c.icon}`} />
                 </div>
 
-                {/* Content */}
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h3 className="text-white font-black text-base leading-tight">{label}</h3>
                   <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border flex-shrink-0 ${c.metric}`}>
@@ -142,7 +141,6 @@ export default function ProfileAttributes() {
 
                 <p className="text-white/40 text-sm leading-relaxed mb-4">{description}</p>
 
-                {/* Rating bar */}
                 <div className="h-1 bg-white/6 rounded-full overflow-hidden">
                   <div className={`h-full rounded-full ${c.bar} ${barWidths[metric] ?? 'w-3/4'} transition-all duration-700`} />
                 </div>

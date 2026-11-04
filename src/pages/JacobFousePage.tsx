@@ -1,5 +1,5 @@
-import { AthleteProfilePage } from './AthleteProfilePage';
+import { JacobPremiumProfile } from './JacobPremiumProfile';
 
 export function JacobFousePage() {
-  return <AthleteProfilePage fixedSlug="jacob-f" />;
+  return <JacobPremiumProfile />;
 }

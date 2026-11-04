@@ -33,6 +33,7 @@ export interface AthleteCardProps {
   onSupportClick?: () => void;
   onHighlightsClick?: () => void;
   variant?: 'hero' | 'directory' | 'compact';
+  heroImageUrl?: string | null;
 }
 
 const SPORT_COLORS: Record<string, string> = {
@@ -227,11 +228,7 @@ export default function AthleteCard({
   school,
   team,
   jerseyNumber,
-  stats = [
-    { label: 'PPG', value: '14.2', primary: true },
-    { label: 'APG', value: '6.1' },
-    { label: 'SPG', value: '2.4' },
-  ],
+  stats = [],
   recruitingStatus = 'open',
   raised,
   goal,
@@ -244,6 +241,7 @@ export default function AthleteCard({
   recentNote,
   onSupportClick,
   onHighlightsClick,
+  heroImageUrl,
 }: AthleteCardProps) {
   const accentColor = SPORT_COLORS[sport] ?? SPORT_COLORS.default;
   const showProgress = raised !== undefined && goal !== undefined && progressPct !== undefined;
@@ -292,6 +290,17 @@ export default function AthleteCard({
             <span className="text-[9.5px] font-black text-emerald-400/80 tracking-wider">Profile Active</span>
           </div>
         </div>
+
+        {/* ── ATHLETE IMAGE ── */}
+        {heroImageUrl && (
+          <div className="relative mx-5 mt-5 rounded-2xl overflow-hidden" style={{ height: '240px' }}>
+            <img
+              src={heroImageUrl}
+              alt={name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
 
         {/* ── SPORT PANEL ── */}
         <SportPanel
@@ -363,7 +372,7 @@ export default function AthleteCard({
         <div className="mx-5 h-px mb-3.5" style={{ background: `linear-gradient(90deg, transparent, ${accentColor}18, transparent)` }} />
 
         {/* ── STAT ROW ── */}
-        <StatRow stats={stats} accentColor={accentColor} />
+        {stats.length > 0 && <StatRow stats={stats} accentColor={accentColor} />}
 
         {/* ── FUNDRAISING BLOCK ── */}
         {showProgress && (

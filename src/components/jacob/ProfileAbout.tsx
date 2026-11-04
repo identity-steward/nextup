@@ -1,18 +1,22 @@
 import { MapPin, Award, Shield, Users, TrendingUp } from 'lucide-react';
+import type { Athlete } from '../../types/athlete';
 
-const quickStats = [
-  { label: 'Hometown', value: 'Memphis, TN', icon: MapPin },
-  { label: 'Sport', value: 'Basketball', icon: Award },
-  { label: 'Position', value: 'Guard', icon: Shield },
-  { label: 'Grade', value: '8th Grade', icon: Users },
-];
+interface ProfileAboutProps {
+  athlete: Athlete;
+}
 
-export default function ProfileAbout() {
+export default function ProfileAbout({ athlete }: ProfileAboutProps) {
+  const quickStats = [
+    { label: 'Hometown', value: athlete.city ?? 'Memphis, TN', icon: MapPin },
+    { label: 'Sport', value: athlete.sport, icon: Award },
+    { label: 'Position', value: athlete.position, icon: Shield },
+    { label: 'Grade', value: athlete.grade, icon: Users },
+  ];
+
   return (
     <section className="relative py-20 overflow-hidden" style={{ background: '#1e2230' }}>
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(56,189,248,0.25), transparent)' }} />
 
-      {/* Left ambient glow */}
       <div
         className="absolute left-0 top-1/2 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at left, rgba(14,165,233,0.06) 0%, transparent 65%)', transform: 'translate(-30%, -50%)' }}
@@ -32,24 +36,30 @@ export default function ProfileAbout() {
               <p className="text-sky-400 text-[10px] font-black uppercase tracking-[0.2em]">His Story</p>
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-white leading-none tracking-tight mb-8">
-              Discipline Before
+              {athlete.strength || 'Discipline Before'}
               <br />
               <span className="text-white/25">the Recognition</span>
             </h2>
 
             {/* Opening line */}
-            <p className="text-white text-xl font-semibold leading-relaxed mb-5">
-              Jacob Fouse is an 8th grade guard from Memphis putting in the daily work long before anyone is watching.
-            </p>
+            {athlete.bio && (
+              <p className="text-white text-xl font-semibold leading-relaxed mb-5">
+                {athlete.bio}
+              </p>
+            )}
 
             {/* Body narrative */}
             <div className="space-y-4">
-              <p className="text-white/45 text-base leading-relaxed">
-                He trains year-round, competes on the AAU circuit, and approaches the game with a level of focus you don't often see at this age. Not just skilled — self-aware. He studies the game, works his weaknesses, and shows up every day with something to prove.
-              </p>
-              <p className="text-white/45 text-base leading-relaxed">
-                He's not waiting for his moment. He's building it. Tournament by tournament, rep by rep, one consistent performance at a time.
-              </p>
+              {athlete.goal && (
+                <p className="text-white/45 text-base leading-relaxed">
+                  {athlete.goal}
+                </p>
+              )}
+              {athlete.descriptor && (
+                <p className="text-white/45 text-base leading-relaxed">
+                  {athlete.descriptor}
+                </p>
+              )}
             </div>
 
             {/* Trait callouts */}
@@ -93,13 +103,17 @@ export default function ProfileAbout() {
             ))}
 
             {/* Momentum card — spans full width */}
-            <div className="col-span-2 bg-gradient-to-br from-sky-500/8 to-transparent border border-sky-500/20 rounded-2xl p-5">
-              <p className="text-sky-400 text-[10px] font-black uppercase tracking-[0.14em] mb-2">Right Now</p>
-              <p className="text-white font-black text-sm leading-snug">Competing this April</p>
-              <p className="text-white/35 text-xs mt-1 leading-relaxed">
-                Spring AAU tournament season. This is the run where exposure starts to compound.
-              </p>
-            </div>
+            {athlete.competition_status && (
+              <div className="col-span-2 bg-gradient-to-br from-sky-500/8 to-transparent border border-sky-500/20 rounded-2xl p-5">
+                <p className="text-sky-400 text-[10px] font-black uppercase tracking-[0.14em] mb-2">Right Now</p>
+                <p className="text-white font-black text-sm leading-snug">{athlete.competition_status}</p>
+                {athlete.team_name && (
+                  <p className="text-white/35 text-xs mt-1 leading-relaxed">
+                    {athlete.team_name}{athlete.team_circuit ? ` · ${athlete.team_circuit}` : ''}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

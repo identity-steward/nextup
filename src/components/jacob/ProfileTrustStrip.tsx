@@ -1,12 +1,19 @@
 import { Shield, CheckCircle, BadgeCheck } from 'lucide-react';
+import type { Athlete } from '../../types/athlete';
 
-const trustItems = [
-  { icon: Shield, text: 'Parent-managed profile', sub: 'A verified guardian manages this account' },
-  { icon: CheckCircle, text: 'Funds athlete development', sub: 'Travel, training & tournament fees only' },
-  { icon: BadgeCheck, text: 'NextUp Verified Athlete', sub: 'Reviewed and approved by NextUp' },
-];
+interface ProfileTrustStripProps {
+  athlete: Athlete;
+}
 
-export default function ProfileTrustStrip() {
+export default function ProfileTrustStrip({ athlete }: ProfileTrustStripProps) {
+  const isVerified = athlete.identity_confirmed_at != null;
+
+  const trustItems = [
+    { icon: Shield, text: 'NextUp reviewed', sub: 'Profile reviewed before publishing' },
+    { icon: CheckCircle, text: 'Athlete development', sub: 'Funds support training, travel & fees' },
+    { icon: BadgeCheck, text: isVerified ? 'Identity verified' : 'Profile active', sub: isVerified ? 'Identity confirmed by NextUp' : 'Published and visible on NextUp' },
+  ];
+
   return (
     <section className="py-8 border-t" style={{ background: '#1c2028', borderColor: 'rgba(255,255,255,0.05)' }}>
       <div className="max-w-3xl mx-auto px-6 lg:px-8">

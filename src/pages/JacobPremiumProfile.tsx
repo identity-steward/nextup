@@ -1,15 +1,12 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getSignedUrls, useSignedUrlRenewal, resolveAthleteImageWithConsent, MEDIA_PLACEHOLDER } from '../services/mediaUrlService';
 import { safeVideoEmbedUrl, safePaymentLink } from '../lib/safeLinks';
 import type { Athlete } from '../types/athlete';
-import type { AthleteTag } from '../types/traits';
 
 import ProfileHero from '../components/jacob/ProfileHero';
 import ProfileAbout from '../components/jacob/ProfileAbout';
 import ProfileAttributes from '../components/jacob/ProfileAttributes';
-import ProfileTraits from '../components/jacob/ProfileTraits';
 import ProfileHighlightVideo from '../components/jacob/ProfileHighlightVideo';
 import ProfileHighlightGrid from '../components/jacob/ProfileHighlightGrid';
 import ProfileUpdates from '../components/jacob/ProfileUpdates';
@@ -30,11 +27,8 @@ interface ApprovedMedia {
 }
 
 export function JacobPremiumProfile() {
-  const navigate = useNavigate();
-
   const [athlete, setAthlete] = useState<Athlete | null>(null);
   const [approvedMedia, setApprovedMedia] = useState<ApprovedMedia[]>([]);
-  const [athleteTags, setAthleteTags] = useState<AthleteTag[]>([]);
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -68,26 +62,21 @@ export function JacobPremiumProfile() {
       }
 
       const currentAthlete = data as Athlete;
-      const [mediaResult, tagsResult, heroImg] = await Promise.all([
+      const [mediaResult, heroImg] = await Promise.all([
         supabase
           .from('media_uploads')
           .select('id, media_type, caption, featured')
           .eq('athlete_id', currentAthlete.id)
           .eq('status', 'approved')
-          .neq('consent_status', 'revoked')
+          .eq('consent_status', 'signed')
           .in('usage_scope', ['platform', 'public'])
           .order('featured', { ascending: false }),
-        supabase
-          .from('athlete_tags')
-          .select('visibility_tags(id, slug, label, category, sort_order)')
-          .eq('athlete_id', currentAthlete.id),
         resolveAthleteImageWithConsent(currentAthlete.image_url, currentAthlete.id),
       ]);
 
       if (!active) return;
       setAthlete(currentAthlete);
       setHeroImageUrl(heroImg ?? MEDIA_PLACEHOLDER);
-      setAthleteTags((tagsResult.data ?? []) as unknown as AthleteTag[]);
 
       const mediaRows = (mediaResult.data ?? []) as Array<{ id: string; media_type: string; caption: string | null; featured: boolean }>;
       const mediaIds = mediaRows.map(m => m.id);
@@ -101,7 +90,7 @@ export function JacobPremiumProfile() {
       }));
       setApprovedMedia(mediaWithUrls);
 
-      if (mediaResult.error || tagsResult.error) {
+      if (mediaResult.error) {
         setError('Some profile details are temporarily unavailable. The published athlete information is still shown.');
       }
       setLoading(false);
@@ -143,7 +132,6 @@ export function JacobPremiumProfile() {
   const videoEmbedUrl = safeVideoEmbedUrl(athlete.highlight_video_embed_url);
   const paymentLink = safePaymentLink(athlete.stripe_payment_link);
 
-  const hasTags = athleteTags.length > 0;
   const hasMedia = approvedMedia.length > 0;
   const hasVideo = Boolean(videoEmbedUrl);
 
@@ -170,8 +158,6 @@ export function JacobPremiumProfile() {
       <ProfileAbout athlete={athlete} />
 
       <ProfileAttributes athlete={athlete} />
-
-      {hasTags && <ProfileTraits athleteId={athlete.id} />}
 
       <div ref={highlightsRef}>
         {hasVideo ? (

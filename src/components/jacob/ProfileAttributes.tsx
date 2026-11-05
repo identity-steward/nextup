@@ -99,9 +99,9 @@ export default function ProfileAttributes({ athlete }: ProfileAttributesProps) {
               <p className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em]">Athlete Profile</p>
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-white leading-none tracking-tight">
-              Strengths
+              Documented
               <br />
-              <span className="text-white/25">&amp; Traits</span>
+              <span className="text-white/25">Strengths &amp; Traits</span>
             </h2>
           </div>
           <p className="text-white/20 text-sm max-w-xs text-right hidden sm:block">

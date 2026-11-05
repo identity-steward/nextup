@@ -30,7 +30,7 @@ The `auth_user_id` on Jacob's athlete record appears to be an admin account (sam
    - Verification method should be documented (e.g., "admin_verified_guardian_email", "in_person_guardian_confirmation")
 
 5. **Establish media consent** before publishing any photos or videos:
-   - Create a `consents` row with `consent_status='granted'` and `can_use_name_image_likeness=true`
+   - Create a `consents` row with `consent_status='accepted'` and `can_use_name_image_likeness=true`
    - This must be signed/submitted by the verified guardian
    - Without this, the consent-gated image resolver will block Jacob's photo from displaying
 

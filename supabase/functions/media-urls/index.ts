@@ -126,27 +126,15 @@ Deno.serve(async (req: Request) => {
       return a && a.profile_status === "active";
     });
 
-    const consentMap = new Map<string, boolean>();
-    const authorityMap = new Map<string, boolean>();
+    // publicationMap[athleteId] = true when all conditions met:
+    //   1. Accepted consent with can_use_name_image_likeness by the same user who holds
+    //      verified authority_to_act for that athlete's household and subject person
+    //   2. Authority is verified_by_qualified_authority, not disputed, not expired
+    //   3. Authority subject_person_id matches the athlete's person
+    const publicationMap = new Map<string, boolean>();
 
     if (athleteIdsForConsent.length > 0) {
-      const { data: consentRows } = await adminClient
-        .from("consents")
-        .select("athlete_id, consent_status, can_use_name_image_likeness")
-        .in("athlete_id", athleteIdsForConsent);
-
-      for (const c of (consentRows ?? []) as Array<{
-        athlete_id: string;
-        consent_status: string;
-        can_use_name_image_likeness: boolean;
-      }>) {
-        if (c.consent_status === "granted" && c.can_use_name_image_likeness) {
-          consentMap.set(c.athlete_id, true);
-        }
-      }
-
-      // Fetch household IDs for these athletes to check authority_to_act
-      // Join: athletes.auth_user_id -> persons.auth_user_id -> household_memberships -> authority_to_act
+      // Fetch person records for active athletes (auth_user_id -> persons)
       const personAuthIds: string[] = [];
       for (const aid of athleteIdsForConsent) {
         const a = athleteMap.get(aid);
@@ -159,44 +147,86 @@ Deno.serve(async (req: Request) => {
           .select("id, auth_user_id")
           .in("auth_user_id", personAuthIds);
 
-        const personIds = (personRows ?? []).map((p: { id: string }) => p.id);
+        const authUserToPersonId = new Map<string, string>();
+        for (const p of (personRows ?? []) as Array<{ id: string; auth_user_id: string }>) {
+          authUserToPersonId.set(p.auth_user_id, p.id);
+        }
+
+        const personIds = [...authUserToPersonId.values()];
         if (personIds.length > 0) {
+          // Fetch household memberships for these persons
           const { data: householdRows } = await adminClient
             .from("household_memberships")
             .select("person_id, household_id")
             .in("person_id", personIds);
 
-          const householdIds = [...new Set((householdRows ?? []).map((h: { household_id: string }) => h.household_id))];
+          const personToHouseholds = new Map<string, string[]>();
+          for (const h of (householdRows ?? []) as Array<{ person_id: string; household_id: string }>) {
+            if (!personToHouseholds.has(h.person_id)) personToHouseholds.set(h.person_id, []);
+            personToHouseholds.get(h.person_id)!.push(h.household_id);
+          }
+
+          const householdIds = [...new Set([...personToHouseholds.values()].flat())];
+
           if (householdIds.length > 0) {
+            // Fetch verified, non-disputed, non-expired authority_to_act records
+            // with actor_user_id populated (the authority holder)
             const { data: authorityRows } = await adminClient
               .from("authority_to_act")
-              .select("household_id, verification_status")
+              .select("household_id, subject_person_id, actor_user_id, verification_status, disputed, expires_at")
               .in("household_id", householdIds)
-              .eq("verification_status", "verified");
+              .eq("verification_status", "verified_by_qualified_authority")
+              .eq("disputed", false);
 
-            const verifiedHouseholds = new Set((authorityRows ?? []).map((a: { household_id: string }) => a.household_id));
+            // Filter out expired records (expires_at in the past)
+            const now = new Date();
+            const validAuthorityRows = (authorityRows ?? []).filter(
+              (a: { expires_at: string | null; household_id: string; subject_person_id: string; actor_user_id: string | null }) =>
+                a.actor_user_id !== null &&
+                (a.expires_at === null || new Date(a.expires_at) >= now)
+            );
 
-            // Map athlete_id -> has verified authority
-            const personToHousehold = new Map<string, string[]>();
-            for (const h of (householdRows ?? []) as Array<{ person_id: string; household_id: string }>) {
-              if (!personToHousehold.has(h.person_id)) personToHousehold.set(h.person_id, []);
-              personToHousehold.get(h.person_id)!.push(h.household_id);
+            // Fetch consents for these athletes — include user_id to bind to authority holder
+            const { data: consentRows } = await adminClient
+              .from("consents")
+              .select("athlete_id, user_id, consent_status, can_use_name_image_likeness")
+              .in("athlete_id", athleteIdsForConsent)
+              .eq("consent_status", "accepted")
+              .eq("can_use_name_image_likeness", true);
+
+            // Build: athlete_id -> Set of consent giver user_ids
+            const consentGiversByAthlete = new Map<string, Set<string>>();
+            for (const c of (consentRows ?? []) as Array<{
+              athlete_id: string;
+              user_id: string;
+              consent_status: string;
+              can_use_name_image_likeness: boolean;
+            }>) {
+              if (!consentGiversByAthlete.has(c.athlete_id)) consentGiversByAthlete.set(c.athlete_id, new Set());
+              consentGiversByAthlete.get(c.athlete_id)!.add(c.user_id);
             }
 
-            const authUserToPerson = new Map<string, string>();
-            for (const p of (personRows ?? []) as Array<{ id: string; auth_user_id: string }>) {
-              authUserToPerson.set(p.auth_user_id, p.id);
-            }
-
+            // For each athlete, check if any consent giver matches a verified authority actor
+            // for the same household and subject person
             for (const aid of athleteIdsForConsent) {
               const a = athleteMap.get(aid);
               if (!a?.auth_user_id) continue;
-              const personId = authUserToPerson.get(a.auth_user_id);
+              const personId = authUserToPersonId.get(a.auth_user_id);
               if (!personId) continue;
-              const households = personToHousehold.get(personId);
+              const households = personToHouseholds.get(personId);
               if (!households) continue;
-              const hasVerified = households.some((hid: string) => verifiedHouseholds.has(hid));
-              if (hasVerified) authorityMap.set(aid, true);
+
+              const givers = consentGiversByAthlete.get(aid);
+              if (!givers || givers.size === 0) continue;
+
+              const hasBinding = validAuthorityRows.some(
+                (ata: { household_id: string; subject_person_id: string; actor_user_id: string }) =>
+                  households.includes(ata.household_id) &&
+                  ata.subject_person_id === personId &&
+                  givers.has(ata.actor_user_id)
+              );
+
+              if (hasBinding) publicationMap.set(aid, true);
             }
           }
         }
@@ -277,8 +307,7 @@ Deno.serve(async (req: Request) => {
             media.consent_status === "signed" &&
             (media.usage_scope === "platform" || media.usage_scope === "public") &&
             athlete.profile_status === "active" &&
-            consentMap.get(media.athlete_id) === true &&
-            authorityMap.get(media.athlete_id) === true
+            publicationMap.get(media.athlete_id) === true
           ) {
             authorized = true;
             authorizationBasis = "authenticated_public";
@@ -291,8 +320,7 @@ Deno.serve(async (req: Request) => {
           media.consent_status === "signed" &&
           (media.usage_scope === "platform" || media.usage_scope === "public") &&
           athlete.profile_status === "active" &&
-          consentMap.get(media.athlete_id) === true &&
-          authorityMap.get(media.athlete_id) === true
+          publicationMap.get(media.athlete_id) === true
         ) {
           authorized = true;
           authorizationBasis = "anonymous_public";

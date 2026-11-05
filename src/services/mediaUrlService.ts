@@ -105,7 +105,7 @@ export async function checkAthleteMediaConsent(athleteId: string): Promise<boole
       .from('consents')
       .select('id')
       .eq('athlete_id', athleteId)
-      .eq('consent_status', 'granted')
+      .eq('consent_status', 'accepted')
       .eq('can_use_name_image_likeness', true)
       .limit(1)
       .maybeSingle();

@@ -41,7 +41,7 @@ export function ParentIntakePage() {
     setError(null);
     setSubmitting(true);
 
-    const { error: submitError } = await supabase.from('parent_intake').insert({
+    const { data, error: submitError } = await supabase.from('parent_intake').insert({
       parent_first_name: form.parentFirstName.trim(),
       parent_last_name: form.parentLastName.trim(),
       parent_email: form.parentEmail.trim(),
@@ -57,7 +57,7 @@ export function ParentIntakePage() {
       support_needed: form.supportNeeded.trim() || null,
       consent_given: form.consentGiven,
       status: 'pending',
-    });
+    }).select('id').single();
 
     setSubmitting(false);
     if (submitError) {
@@ -65,23 +65,24 @@ export function ParentIntakePage() {
       return;
     }
     setSubmitted(true);
-    try {
-      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-signup-confirmation`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          parent_email: form.parentEmail.trim(),
-          parent_name: `${form.parentFirstName.trim()} ${form.parentLastName.trim()}`,
-          youth_first_name: form.athleteFirstName.trim(),
-          submission_type: 'parent_intake',
-          submission_date: new Date().toISOString(),
-        }),
-      });
-    } catch {
-      // Email failure does not affect the saved submission
+    const recordId = data?.id;
+    if (recordId) {
+      try {
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-submission-notifications`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            source_table: 'parent_intake',
+            source_record_id: recordId,
+            notification_type: 'parent_confirmation',
+          }),
+        });
+      } catch {
+        // Email failure does not affect the saved submission
+      }
     }
   };
 

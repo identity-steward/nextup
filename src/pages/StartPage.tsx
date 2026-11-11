@@ -98,8 +98,8 @@ export function StartPage() {
         <div className="grid md:grid-cols-2 gap-6">
           <Link to="/signup/player" className="group bg-white rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-xl p-8 transition-all">
             <UserPlus className="w-8 h-8 text-blue-600 mb-6" />
-            <h3 className="text-2xl font-black text-navy-900 mb-3">Sign up a young person</h3>
-            <p className="text-gray-600 leading-relaxed mb-6">Share a young person's story and interests so NextUp can review it and help build a public profile. Open to all youth — not just established athletes.</p>
+            <h3 className="text-2xl font-black text-navy-900 mb-3">Create an athlete profile</h3>
+            <p className="text-gray-600 leading-relaxed mb-6">Submit your athlete's info and we'll review it and build their profile. No cost. Parent-managed. Currently for athletes with a sport or activity.</p>
             <span className="inline-flex items-center gap-2 text-blue-600 font-bold">Get started <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></span>
           </Link>
           <Link to="/signup/parent" className="group bg-navy-900 rounded-2xl border border-navy-700 hover:border-blue-400 hover:shadow-xl p-8 transition-all text-white">
@@ -128,7 +128,7 @@ export function StartPage() {
               <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-3">Live Now</p>
               <ul className="space-y-2">
                 {[
-                  'Youth profile creation and review',
+                  'Athlete profile creation and review',
                   'Parent/guardian intake form',
                   'Premium profile display with journey entries',
                   'Profile update requests',

@@ -9,13 +9,9 @@
       "hasChanged": false,
       "hash": "6fcc5803bb86b1903bdc62c84a9906329e14197b68821c7171ae51008450cff7"
     },
-    "send-admin-notification": {
+    "process-submission-notifications": {
       "hasChanged": false,
-      "hash": "c5da5722f2fd6a5705701323d191da0d0b3bfa5b47741ccb1d58a2798355d7d7"
-    },
-    "send-signup-confirmation": {
-      "hasChanged": false,
-      "hash": "cdc6ff48fb8a648ef1c7ffb706e03314a33cb765ff55db8dac0df4fb7f1dafcb"
+      "hash": "fa574995e7137e25f3fd959b31bdb4c455b8b4877828ab86438416847ffed16e"
     }
   }
 }

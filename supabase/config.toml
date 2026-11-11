@@ -16,8 +16,5 @@ verify_jwt = false
 [functions.media-revoke]
 verify_jwt = false
 
-[functions.send-admin-notification]
-verify_jwt = false
-
-[functions.send-signup-confirmation]
+[functions.process-submission-notifications]
 verify_jwt = false

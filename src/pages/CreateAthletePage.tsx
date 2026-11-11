@@ -48,7 +48,7 @@ export default function CreateAthletePage({ onNavigate }: CreateAthletePageProps
 
     setSubmitState('submitting');
 
-    const { error } = await supabase.from('athlete_signups').insert([{
+    const { data, error } = await supabase.from('athlete_signups').insert([{
       parent_first_name: form.parentFirstName.trim() || form.athleteFirstName.trim(),
       parent_last_name: form.parentLastName.trim() || form.athleteLastName.trim(),
       parent_email: form.email.trim(),
@@ -60,30 +60,31 @@ export default function CreateAthletePage({ onNavigate }: CreateAthletePageProps
       athlete_school: form.school.trim() || null,
       athlete_team: form.team.trim() || null,
       status: 'pending',
-    }]);
+    }]).select('id').single();
 
     if (error) {
       setErrorMsg('Something went wrong. Please try again or email info@NextUpMemphis.com.');
       setSubmitState('error');
     } else {
       setSubmitState('success');
-      try {
-        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-signup-confirmation`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            parent_email: form.email.trim(),
-            parent_name: `${form.parentFirstName.trim() || form.athleteFirstName.trim()} ${form.parentLastName.trim() || form.athleteLastName.trim()}`,
-            youth_first_name: form.athleteFirstName.trim(),
-            submission_type: 'athlete_signup',
-            submission_date: new Date().toISOString(),
-          }),
-        });
-      } catch {
-        // Email failure does not affect the saved submission
+      const recordId = data?.id;
+      if (recordId) {
+        try {
+          await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-submission-notifications`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              source_table: 'athlete_signups',
+              source_record_id: recordId,
+              notification_type: 'parent_confirmation',
+            }),
+          });
+        } catch {
+          // Email failure does not affect the saved submission
+        }
       }
     }
   };

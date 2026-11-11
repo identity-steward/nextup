@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserPlus, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { UserPlus, ArrowRight, CheckCircle, AlertCircle, Mail } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface CreateAthletePageProps {
@@ -67,6 +67,24 @@ export default function CreateAthletePage({ onNavigate }: CreateAthletePageProps
       setSubmitState('error');
     } else {
       setSubmitState('success');
+      try {
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-signup-confirmation`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            parent_email: form.email.trim(),
+            parent_name: `${form.parentFirstName.trim() || form.athleteFirstName.trim()} ${form.parentLastName.trim() || form.athleteLastName.trim()}`,
+            youth_first_name: form.athleteFirstName.trim(),
+            submission_type: 'athlete_signup',
+            submission_date: new Date().toISOString(),
+          }),
+        });
+      } catch {
+        // Email failure does not affect the saved submission
+      }
     }
   };
 
@@ -81,9 +99,13 @@ export default function CreateAthletePage({ onNavigate }: CreateAthletePageProps
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
-          <h2 className="text-3xl font-bold text-navy mb-3">Application Submitted!</h2>
+          <h2 className="text-3xl font-bold text-navy mb-3">Submission Received</h2>
+          <div className="flex items-center justify-center gap-2 text-blue-600 mb-4">
+            <Mail className="w-5 h-5" />
+            <span className="text-sm font-semibold">Check your email for a confirmation receipt</span>
+          </div>
           <p className="text-gray-600 leading-relaxed mb-8">
-            We'll review your athlete's information and reach out within 48 hours to get their profile set up.
+            We've sent a confirmation to <strong>{form.email}</strong>. Our team will review the submission and reach out to you using the contact information you provided.
           </p>
           <button
             onClick={() => onNavigate?.('athletes')}

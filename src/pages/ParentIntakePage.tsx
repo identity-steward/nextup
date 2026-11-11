@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { CheckCircle, Send } from 'lucide-react';
+import { CheckCircle, Send, Mail } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 type FormState = {
@@ -65,13 +65,31 @@ export function ParentIntakePage() {
       return;
     }
     setSubmitted(true);
+    try {
+      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-signup-confirmation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          parent_email: form.parentEmail.trim(),
+          parent_name: `${form.parentFirstName.trim()} ${form.parentLastName.trim()}`,
+          youth_first_name: form.athleteFirstName.trim(),
+          submission_type: 'parent_intake',
+          submission_date: new Date().toISOString(),
+        }),
+      });
+    } catch {
+      // Email failure does not affect the saved submission
+    }
   };
 
   const inputClass = 'w-full rounded-xl border border-gray-200 px-4 py-3 text-navy-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100';
   const labelClass = 'block text-sm font-semibold text-navy-900 mb-2';
 
   if (submitted) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6"><div className="max-w-lg text-center bg-white rounded-2xl border border-gray-200 p-10"><CheckCircle className="w-12 h-12 text-emerald-600 mx-auto mb-5" /><h1 className="text-3xl font-black text-navy-900 mb-3">Thank you for sharing.</h1><p className="text-gray-600 leading-relaxed">Your intake has been received for review. NextUp will follow up using the contact information you provided.</p></div></div>;
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6"><div className="max-w-lg text-center bg-white rounded-2xl border border-gray-200 p-10"><CheckCircle className="w-12 h-12 text-emerald-600 mx-auto mb-5" /><h1 className="text-3xl font-black text-navy-900 mb-3">Thank you for sharing.</h1><p className="text-gray-600 leading-relaxed mb-4">Your intake has been received for review. NextUp will follow up using the contact information you provided.</p><div className="flex items-center justify-center gap-2 text-blue-600 mb-2"><Mail className="w-5 h-5" /><span className="text-sm font-semibold">Check your email for a confirmation receipt</span></div><p className="text-sm text-gray-500">We've sent a confirmation to <strong>{form.parentEmail}</strong>.</p></div></div>;
   }
 
   return (

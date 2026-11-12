@@ -22,9 +22,19 @@ export function SignInPage() {
     setLoading(true);
     setError('');
     const { error } = await signIn(email, password);
+    if (error) {
+      setError(error);
+      setLoading(false);
+      return;
+    }
+    const { data: { session } } = await supabase.auth.getSession();
+    const role = session?.user?.app_metadata?.role;
     setLoading(false);
-    if (error) setError(error);
-    else navigate('/dashboard');
+    if (role === 'admin') {
+      navigate('/admin');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {

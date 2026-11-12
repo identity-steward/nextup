@@ -7,6 +7,7 @@ import {
   type AthleteSignupRecord,
   type AthleteSignupStatus,
 } from '../services/athleteSignupService';
+import { ShieldAlert, Inbox } from 'lucide-react';
 import {
   Search, RefreshCw, Mail, Phone, Clock, CheckCircle2,
   AlertTriangle, FileText, User, Calendar, MessageSquare, Trophy,
@@ -28,11 +29,18 @@ export function AdminAthletesPage() {
   const [notesDraft, setNotesDraft] = useState('');
   const [acting, setActing] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [queryError, setQueryError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const data = await AthleteSignupService.getAll();
-    setRecords(data);
+    setQueryError(null);
+    const { data, error } = await AthleteSignupService.getAll();
+    if (error) {
+      setRecords([]);
+      setQueryError(error);
+    } else {
+      setRecords(data);
+    }
     setLoading(false);
   }, []);
 
@@ -183,9 +191,22 @@ export function AdminAthletesPage() {
           <div className="flex justify-center py-20">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
+        ) : queryError ? (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+            <ShieldAlert className="w-8 h-8 text-red-400 mx-auto mb-3" />
+            <p className="text-sm font-semibold text-red-800 mb-1">Unable to load athlete signups</p>
+            <p className="text-xs text-red-600">
+              {queryError.includes('permission') || queryError.includes('policy') || queryError.includes('RLS')
+                ? 'Your account may not have administrator access to view these records.'
+                : `A database error occurred: ${queryError}`}
+            </p>
+            <p className="text-xs text-red-500 mt-2">Check the browser console for technical details.</p>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center">
+            <Inbox className="w-8 h-8 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-400 text-sm">No athlete signups found.</p>
+            <p className="text-gray-300 text-xs mt-1">New submissions will appear here for review.</p>
           </div>
         ) : (
           <div className="space-y-4">

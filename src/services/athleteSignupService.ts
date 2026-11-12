@@ -22,17 +22,22 @@ export interface AthleteSignupRecord {
   match_source: string | null;
 }
 
+export interface AthleteSignupResult {
+  data: AthleteSignupRecord[];
+  error: string | null;
+}
+
 export class AthleteSignupService {
-  static async getAll(): Promise<AthleteSignupRecord[]> {
+  static async getAll(): Promise<AthleteSignupResult> {
     const { data, error } = await supabase
       .from('athlete_signups')
       .select('*')
       .order('created_at', { ascending: false });
     if (error) {
       console.error('Error fetching athlete signups:', error);
-      return [];
+      return { data: [], error: error.message };
     }
-    return (data || []) as AthleteSignupRecord[];
+    return { data: (data || []) as AthleteSignupRecord[], error: null };
   }
 
   static async updateStatus(id: string, status: AthleteSignupStatus): Promise<boolean> {

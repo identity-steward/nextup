@@ -19,6 +19,7 @@ import SupportPage from './pages/SupportPage';
 import SponsorsPage from './pages/SponsorsPage';
 import PartnersPage from './pages/PartnersPage';
 import { SignInPage } from './pages/SignInPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { SignupPage } from './pages/SignupPage';
 import { JoinPage } from './pages/JoinPage';
 import { ParentIntakePage } from './pages/ParentIntakePage';
@@ -87,6 +88,7 @@ function AppContent() {
           <Route path="/sponsors" element={<SponsorsPage />} />
           <Route path="/partners" element={<PartnersPage />} />
           <Route path="/signin" element={<SignInPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route path="/athletes" element={<Navigate to="/youth" replace />} />
           <Route path="/athletes/jacob-fouse" element={<Navigate to="/youth/jacob-fouse" replace />} />
